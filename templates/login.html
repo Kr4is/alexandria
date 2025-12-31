@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-md mx-auto paper-texture p-12 mt-12 text-center">
+    <h2 class="text-4xl font-bold mb-8">Librarian Access</h2>
+    <p class="italic opacity-60 mb-10">Identify yourself to manage the private archives.</p>
+
+    <form action="{{ url_for('login') }}" method="POST" class="flex flex-col gap-6">
+        <div class="text-left">
+            <label for="username" class="text-xs uppercase tracking-widest opacity-40 mb-2 block">Username</label>
+            <input type="text" id="username" name="username" required
+                class="w-full bg-transparent border-b border-black/20 py-2 outline-none focus:border-black transition-soft italic text-xl">
+        </div>
+        <div class="text-left">
+            <label for="password" class="text-xs uppercase tracking-widest opacity-40 mb-2 block">Secret Key</label>
+            <input type="password" id="password" name="password" required
+                class="w-full bg-transparent border-b border-black/20 py-2 outline-none focus:border-black transition-soft italic text-xl">
+        </div>
+
+        <button type="submit"
+            class="mt-8 py-4 bg-emerald-900 text-stone-100 uppercase tracking-[0.2em] font-bold hover:bg-emerald-800 transition-soft shadow-xl">
+            Authorize Entry
+        </button>
+    </form>
+
+    <div class="mt-12 pt-8 border-t border-black/5 opacity-30 italic text-sm">
+        "Knowledge is the only wealth that grows when shared, but some ledgers require a steady hand to maintain."
+    </div>
+</div>
+{% endblock %}

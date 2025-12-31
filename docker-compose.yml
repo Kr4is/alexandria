@@ -1,0 +1,17 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - APP_NAME=Alexandria
+      - SECRET_KEY=change-this-in-production
+      - LIBRARIAN_USERNAME=admin
+      - LIBRARIAN_PASSWORD=alexandria
+      - DATABASE_URL=sqlite:///instance/alexandria.db
+    volumes:
+      - ./instance:/app/instance
+    restart: unless-stopped
+
+volumes:
+  instance:

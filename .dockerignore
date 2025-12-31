@@ -1,0 +1,8 @@
+__pycache__/
+.venv/
+.git/
+.env
+instance/
+*.db
+.python-version
+.uv/

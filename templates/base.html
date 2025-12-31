@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ config['APP_NAME'] }} - Personal Library</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --vintage-cream: #f4ece1;
+            --vintage-paper: #f9f4ef;
+            --vintage-ink: #2c2420;
+            --vintage-gold: #c5a059;
+            --vintage-wood: #4a3728;
+        }
+
+        body {
+            font-family: 'EB Garamond', serif;
+            background-color: var(--vintage-cream);
+            color: var(--vintage-ink);
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        .font-serif-display {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .paper-texture {
+            background-color: var(--vintage-paper);
+            background-image: url("https://www.transparenttextures.com/patterns/notebook.png");
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), inset 0 0 50px rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .vintage-border {
+            border: 3px double var(--vintage-gold);
+        }
+
+        .transition-soft {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--vintage-cream);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--vintage-gold);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body class="h-full flex flex-col min-h-screen">
+    <nav class="border-b border-black/10 py-6">
+        <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="{{ url_for('index') }}" class="group flex items-center gap-3">
+                    <img src="{{ url_for('static', filename='logo.svg') }}" alt="Logo"
+                        class="w-10 h-10 object-contain text-emerald-900 sepia-[.3] group-hover:sepia-0 transition-soft">
+                    <div>
+                        <h1 class="text-3xl font-bold tracking-tight group-hover:text-emerald-900 transition-soft">
+                            {{ config['APP_NAME'] }}</h1>
+                        <div class="h-0.5 w-0 group-hover:w-full bg-emerald-900 transition-soft"></div>
+                    </div>
+                </a>
+            </div>
+            <div class="flex items-center gap-8 text-lg">
+                <a href="{{ url_for('index') }}" class="hover:italic transition-soft">Collection</a>
+                <a href="{{ url_for('search') }}" class="hover:italic transition-soft">Search Archive</a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('logout') }}"
+                    class="text-sm uppercase tracking-widest opacity-60 hover:opacity-100 transition-soft">Logout</a>
+                {% else %}
+                <a href="{{ url_for('login') }}"
+                    class="text-sm uppercase tracking-widest opacity-60 hover:opacity-100 transition-soft">Librarian
+                    Access</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-6xl mx-auto px-6 py-12 w-full">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for message in messages %}
+        <div class="mb-8 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 italic">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="py-12 border-t border-black/5 text-center opacity-40 italic text-sm">
+        <div class="max-w-6xl mx-auto px-6">
+            &mdash; Catalogued in the year 2025 &mdash;
+        </div>
+    </footer>
+</body>
+
+</html>
