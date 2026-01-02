@@ -88,6 +88,7 @@ def logout():
     return redirect(url_for('index'))
 
 @app.route('/search')
+@login_required
 def search():
     query = request.args.get('q')
     results = []

@@ -1,90 +1,99 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
+<div class="max-w-5xl mx-auto">
     <div class="mb-12">
         <a href="{{ url_for('index') }}"
-            class="inline-flex items-center gap-2 text-sm uppercase tracking-widest opacity-40 hover:opacity-100 transition-soft">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
+            class="inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.25em] font-bold opacity-40 hover:opacity-100 hover:text-vintage-accent transition-soft group">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:-translate-x-1"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to Collection
+            Return to Study
         </a>
     </div>
 
-    <div class="paper-texture p-12 md:p-20 shadow-2xl relative overflow-hidden">
-        <!-- Decorative corner -->
-        <div class="absolute top-0 right-0 w-32 h-32 opacity-5 pointer-events-none">
-            <svg viewBox="0 0 100 100" class="w-full h-full text-black">
-                <path d="M0,0 L100,0 L100,100 Z" fill="currentColor" />
-            </svg>
+    <div class="paper-texture p-8 md:p-16 lg:p-24 shadow-2xl relative overflow-hidden">
+        <!-- Decorative subtle element -->
+        <div class="absolute -top-12 -right-12 w-48 h-48 opacity-[0.03] pointer-events-none rotate-12">
+            <img src="{{ url_for('static', filename='logo.svg') }}" class="w-full h-full object-contain">
         </div>
 
-        <div class="flex flex-col md:flex-row gap-16 relative">
-            <div class="w-full md:w-1/3 flex-shrink-0">
-                <div class="vintage-border p-1 shadow-2xl rotate-1">
-                    <div class="aspect-[2/3] overflow-hidden bg-stone-200">
+        <div class="flex flex-col lg:flex-row gap-12 lg:gap-20 relative">
+            <div class="w-full lg:w-72 flex-shrink-0">
+                <div class="vintage-border p-1 shadow-2xl rotate-1 mx-auto lg:mx-0 max-w-[280px] lg:max-w-none">
+                    <div class="aspect-[3/4] overflow-hidden bg-stone-100">
                         {% if book.thumbnail %}
                         <img src="{{ book.thumbnail }}" alt="{{ book.title }}" class="w-full h-full object-cover">
                         {% else %}
-                        <div class="w-full h-full flex items-center justify-center italic opacity-30 text-center p-8">
-                            Manuscript without illustration</div>
+                        <div
+                            class="w-full h-full flex items-center justify-center italic opacity-20 text-center p-8 text-sm">
+                            Manuscript without illustration
+                        </div>
                         {% endif %}
                     </div>
                 </div>
 
-                <div class="mt-12 space-y-6 pt-8 border-t border-black/5">
-                    <div>
-                        <span class="text-[10px] uppercase tracking-widest opacity-40 block mb-1">Catalog Status</span>
+                <div
+                    class="mt-12 space-y-8 pt-8 border-t border-black/5 flex flex-col sm:flex-row lg:flex-col gap-6 sm:gap-12 lg:gap-8">
+                    <div class="sm:flex-1 lg:flex-none">
+                        <span class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 block mb-2">Registry
+                            Status</span>
                         <span
-                            class="text-sm font-bold uppercase tracking-widest px-2 py-0.5 border border-black/10 inline-block">
+                            class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 border border-vintage-ink/10 inline-block bg-vintage-ink/5 text-vintage-ink/80">
                             {{ 'Currently Reading' if book.status == 'reading' else 'Completed Voyage' }}
                         </span>
                     </div>
-                    <div>
-                        <span class="text-[10px] uppercase tracking-widest opacity-40 block mb-1">Date Logged</span>
-                        <span class="italic">{{ book.date_added.strftime('%B %d, %Y') }}</span>
+
+                    <div class="sm:flex-1 lg:flex-none">
+                        <span class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 block mb-2">Temporal
+                            Log</span>
+                        <div class="space-y-1 text-sm italic opacity-70">
+                            <p>Logged: {{ book.date_added.strftime('%B %d, %Y') }}</p>
+                            {% if book.date_finished %}
+                            <p>Completed: {{ book.date_finished.strftime('%B %d, %Y') }}</p>
+                            {% endif %}
+                        </div>
                     </div>
-                    {% if book.date_finished %}
-                    <div>
-                        <span class="text-[10px] uppercase tracking-widest opacity-40 block mb-1">Date Completed</span>
-                        <span class="italic">{{ book.date_finished.strftime('%B %d, %Y') }}</span>
-                    </div>
-                    {% endif %}
+
                     {% if book.categories %}
-                    <div>
-                        <span class="text-[10px] uppercase tracking-widest opacity-40 block mb-1">Classification</span>
-                        <span class="text-xs uppercase tracking-widest opacity-60">{{ book.categories }}</span>
+                    <div class="sm:flex-1 lg:flex-none">
+                        <span
+                            class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 block mb-2">Classification</span>
+                        <span class="text-xs uppercase tracking-widest opacity-60 font-medium">{{ book.categories
+                            }}</span>
                     </div>
                     {% endif %}
                 </div>
             </div>
 
-            <div class="flex-1 space-y-10">
-                <header>
-                    <h2 class="text-5xl font-bold leading-tight mb-4 text-emerald-950">{{ book.title }}</h2>
-                    <p class="text-2xl italic opacity-70">by {{ book.authors or 'Anonymous' }}</p>
+            <div class="flex-1 space-y-12">
+                <header class="space-y-4">
+                    <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] text-vintage-ink">{{ book.title
+                        }}</h2>
+                    <p class="text-xl md:text-2xl italic opacity-60">Hand-scribed by <span
+                            class="text-vintage-accent opacity-100">{{ book.authors or 'Anonymous' }}</span></p>
                 </header>
 
-                <div class="prose prose-stone max-w-none">
-                    <div class="h-px w-20 bg-emerald-900/20 mb-10"></div>
+                <div class="prose prose-stone prose-lg max-w-none">
+                    <div class="h-px w-16 bg-vintage-accent/20 mb-12"></div>
                     <div
-                        class="text-xl leading-relaxed italic opacity-80 first-letter:text-5xl first-letter:font-bold first-letter:mr-3 first-letter:float-left first-letter:mt-1">
+                        class="text-lg md:text-xl leading-relaxed italic text-vintage-ink/80 
+                                first-letter:text-6xl first-letter:font-bold first-letter:mr-4 first-letter:float-left first-letter:mt-2 first-letter:text-vintage-accent">
                         {% if book.description %}
                         {{ book.description|safe }}
                         {% else %}
-                        <p class="opacity-40 italic">No description has been recorded for this volume yet.</p>
+                        <p class="opacity-30 italic">No description has been recorded for this volume yet.</p>
                         {% endif %}
                     </div>
                 </div>
 
                 {% if current_user.is_authenticated %}
-                <div class="pt-12 flex gap-6">
+                <div class="pt-16 flex flex-wrap gap-6 items-center border-t border-black/5">
                     {% if book.status == 'reading' %}
                     <form action="{{ url_for('finish_book', book_id=book.id) }}" method="POST">
                         <button type="submit"
-                            class="bg-emerald-900 text-stone-100 px-8 py-3 uppercase tracking-widest font-bold hover:bg-emerald-800 transition-soft shadow-lg">
+                            class="bg-vintage-accent text-vintage-cream px-10 py-4 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-ink transition-soft shadow-xl">
                             Close Chapter
                         </button>
                     </form>
@@ -92,7 +101,7 @@
                     <form action="{{ url_for('delete_book', book_id=book.id) }}" method="POST"
                         onsubmit="return confirm('Are you sure you wish to remove this volume from the archives?');">
                         <button type="submit"
-                            class="border border-red-900/20 text-red-900/60 hover:text-red-900 hover:border-red-900/40 px-6 py-3 uppercase tracking-widest font-bold text-xs transition-soft">
+                            class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 hover:opacity-100 hover:text-red-800 transition-soft px-4 py-2">
                             Discard Volume
                         </button>
                     </form>
@@ -101,9 +110,10 @@
             </div>
         </div>
 
-        <!-- Bottom signature style decoration -->
-        <div class="mt-20 text-right opacity-10 font-serif italic text-2xl">
-            Alexandria Archives
+        <!-- Footnote signature -->
+        <div class="mt-24 pt-12 border-t border-black/5 flex justify-between items-end opacity-20 italic text-sm">
+            <span>&mdash; Alexandria Archives &mdash;</span>
+            <span class="text-xs uppercase tracking-widest font-serif not-italic">MS-{{ book.id }}</span>
         </div>
     </div>
 </div>

@@ -1,56 +1,64 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<header class="mb-16 text-center">
-    <h2 class="text-5xl font-bold mb-4">Consult the Archives</h2>
-    <p class="text-xl italic opacity-70">Seek out new volumes to add to your personal shelves.</p>
+<header class="mb-20 text-center max-w-2xl mx-auto">
+    <h2 class="text-4xl md:text-5xl font-bold mb-6 text-vintage-ink">Consult the Archives</h2>
+    <p class="text-lg italic opacity-60">Seek out new volumes to add to your personal shelves from the infinite digital
+        repository.</p>
 </header>
 
-<div class="max-w-3xl mx-auto mb-20">
+<div class="max-w-2xl mx-auto mb-24">
     <form action="{{ url_for('search') }}" method="GET" class="relative group">
         <input type="text" name="q" value="{{ query or '' }}" placeholder="Search by title, author, or ISBN..."
-            class="w-full pl-8 pr-32 py-5 bg-transparent border-b-2 border-black/10 focus:border-black/40 transition-soft text-2xl outline-none italic placeholder:opacity-30">
+            class="w-full px-6 py-6 bg-paper-texture border-b-2 border-vintage-gold/20 focus:border-vintage-gold transition-soft text-xl md:text-2xl outline-none italic placeholder:opacity-30 paper-texture">
         <button type="submit"
-            class="absolute right-0 top-1/2 -translate-y-1/2 text-sm uppercase tracking-widest font-bold hover:italic transition-soft px-4 py-2">Search</button>
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-[0.2em] font-bold hover:text-vintage-accent transition-soft px-6 py-3">
+            Seek
+        </button>
     </form>
 </div>
 
 {% if results %}
-<div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16">
     {% for book in results %}
-    <div class="flex gap-8 group">
-        <div class="w-40 flex-shrink-0">
-            <div class="aspect-[2/3] shadow-xl vintage-border overflow-hidden bg-stone-200">
+    <div
+        class="flex flex-col sm:flex-row gap-8 group paper-texture p-6 transition-soft hover:-translate-y-1 hover:shadow-2xl">
+        <div class="w-32 md:w-40 flex-shrink-0 mx-auto sm:mx-0">
+            <div class="aspect-[2/3] shadow-lg vintage-border overflow-hidden bg-stone-100">
                 {% if book.thumbnail %}
                 <img src="{{ book.thumbnail }}" alt="{{ book.title }}"
-                    class="w-full h-full object-cover transition-soft group-hover:scale-105">
+                    class="w-full h-full object-cover transition-soft duration-500 group-hover:scale-105">
                 {% else %}
-                <div class="w-full h-full flex items-center justify-center italic opacity-30 text-xs p-4 text-center">No
-                    Cover Found</div>
+                <div
+                    class="w-full h-full flex items-center justify-center italic opacity-20 text-[10px] p-4 text-center">
+                    No Cover Found</div>
                 {% endif %}
             </div>
         </div>
-        <div class="flex flex-col flex-1 py-1">
-            <div class="flex-grow">
-                <h3 class="text-2xl font-bold leading-tight mb-2">{{ book.title }}</h3>
-                <p class="text-emerald-900 italic font-medium mb-4">{{ book.authors or 'Author Unknown' }}</p>
+        <div class="flex flex-col flex-1 py-1 text-center sm:text-left">
+            <div class="flex-grow space-y-3">
+                <h3 class="text-xl md:text-2xl font-bold leading-tight line-clamp-2 text-vintage-ink">{{ book.title }}
+                </h3>
+                <p class="text-vintage-accent italic font-medium text-sm">by {{ book.authors or 'Author Unknown' }}</p>
                 {% if book.description %}
-                <p class="text-sm opacity-60 line-clamp-4 leading-relaxed italic mb-4">"{{ book.description[:300]|safe
-                    }}{%
-                    if book.description|length > 300 %}...{% endif %}"</p>
+                <p class="text-[13px] opacity-60 line-clamp-3 leading-relaxed italic">
+                    "{{ book.description[:200]|safe }}{% if book.description|length > 200 %}...{% endif %}"
+                </p>
                 {% endif %}
             </div>
-            <div class="mt-4 flex items-center justify-between border-t border-black/5 pt-4">
-                <span class="text-[10px] opacity-40 uppercase tracking-widest">{{ book.categories or 'Miscellaneous'
-                    }}</span>
+            <div class="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-black/5 pt-4">
+                <span class="text-[9px] opacity-40 uppercase tracking-widest font-bold">{{ book.categories or
+                    'Miscellaneous' }}</span>
                 {% if current_user.is_authenticated %}
-                <form action="{{ url_for('add_book', google_books_id=book.google_books_id) }}" method="POST">
+                <form action="{{ url_for('add_book', google_books_id=book.google_books_id) }}" method="POST"
+                    class="w-full sm:w-auto">
                     <button type="submit"
-                        class="text-xs uppercase tracking-widest font-bold hover:bg-black hover:text-white border border-black px-4 py-2 transition-soft">Acquire
-                        Volume</button>
+                        class="w-full sm:w-auto text-[10px] uppercase tracking-[0.2em] font-bold bg-vintage-ink text-vintage-cream hover:bg-vintage-accent px-6 py-2.5 transition-soft shadow-lg">
+                        Acquire
+                    </button>
                 </form>
                 {% else %}
-                <span class="text-[10px] italic opacity-30">Librarian access required to add</span>
+                <span class="text-[9px] italic opacity-30 uppercase tracking-widest">Librarian access required</span>
                 {% endif %}
             </div>
         </div>
@@ -59,7 +67,13 @@
 </div>
 {% elif query %}
 <div class="text-center py-32 opacity-30 italic">
-    <p class="text-2xl">Alas, the archives remain silent on "{{ query }}".</p>
+    <div class="mb-6 flex justify-center opacity-40">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+    </div>
+    <p class="text-xl md:text-2xl">Alas, the archives remain silent on "{{ query }}".</p>
 </div>
 {% endif %}
 {% endblock %}
