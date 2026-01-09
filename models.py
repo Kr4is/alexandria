@@ -23,6 +23,7 @@ class Book(db.Model):
     authors = db.Column(db.String(200))
     thumbnail = db.Column(db.String(500))
     description = db.Column(db.Text)
+    page_count = db.Column(db.Integer)
     categories = db.Column(db.String(200))
     status = db.Column(db.String(20), default='reading')  # 'reading', 'finished'
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
@@ -35,6 +36,7 @@ class Book(db.Model):
             'authors': self.authors,
             'thumbnail': self.thumbnail,
             'description': self.description,
+            'page_count': self.page_count,
             'categories': self.categories,
             'status': self.status,
             'date_finished': self.date_finished.strftime('%Y-%m-%d') if self.date_finished else None

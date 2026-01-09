@@ -23,6 +23,7 @@ def search_books(query):
                 'authors': ", ".join(volume_info.get('authors', [])),
                 'thumbnail': volume_info.get('imageLinks', {}).get('thumbnail'),
                 'description': volume_info.get('description'),
+                'page_count': volume_info.get('pageCount'),
                 'categories': ", ".join(volume_info.get('categories', [])),
             })
         return results
@@ -42,6 +43,7 @@ def get_book_details(google_books_id):
             'authors': ", ".join(volume_info.get('authors', [])),
             'thumbnail': volume_info.get('imageLinks', {}).get('thumbnail'),
             'description': volume_info.get('description'),
+            'page_count': volume_info.get('pageCount'),
             'categories': ", ".join(volume_info.get('categories', [])),
         }
     return None

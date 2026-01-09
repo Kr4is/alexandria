@@ -108,12 +108,75 @@ def add_book(google_books_id):
                 authors=details['authors'],
                 thumbnail=details['thumbnail'],
                 description=details['description'],
+                page_count=details.get('page_count'),
                 categories=details['categories'],
                 status='reading'
             )
             db.session.add(new_book)
             db.session.commit()
     return redirect(url_for('index'))
+
+@app.route('/stats')
+def stats():
+    # Base queries
+    all_books = Book.query.all()
+    finished_books = [b for b in all_books if b.status == 'finished' and b.date_finished]
+    
+    # 1. Overview Metrics
+    total_books_read = len(finished_books)
+    total_pages_read = sum(b.page_count for b in finished_books if b.page_count)
+    avg_pages_per_book = int(total_pages_read / total_books_read) if total_books_read > 0 else 0
+    
+    # 2. Books by Year/Month
+    # Structure: {'2024': {'Jan': 2, 'Feb': 1, ...}, '2023': ...}
+    books_by_year_month = {}
+    
+    for book in finished_books:
+        year = book.date_finished.strftime('%Y')
+        month = book.date_finished.strftime('%B')
+        
+        if year not in books_by_year_month:
+            books_by_year_month[year] = {}
+        
+        books_by_year_month[year][month] = books_by_year_month[year].get(month, 0) + 1
+        
+    # 3. Pages by Year (for a chart)
+    pages_by_year = {}
+    for book in finished_books:
+        if book.page_count:
+            year = book.date_finished.strftime('%Y')
+            pages_by_year[year] = pages_by_year.get(year, 0) + book.page_count
+
+    # 4. Top Authors
+    author_counts = {}
+    for book in finished_books:
+        if book.authors:
+            # Handle multiple authors if comma separated
+            authors = [a.strip() for a in book.authors.split(',')]
+            for author in authors:
+                author_counts[author] = author_counts.get(author, 0) + 1
+    
+    # Sort and take top 5
+    top_authors = sorted(author_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+    
+    # 5. Categories Distribution
+    category_counts = {}
+    for book in all_books: # Include reading books for categories
+        if book.categories:
+            cats = [c.strip() for c in book.categories.split(',')]
+            for cat in cats:
+                category_counts[cat] = category_counts.get(cat, 0) + 1
+                
+    top_categories = sorted(category_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+
+    return render_template('stats.html', 
+                           total_books=total_books_read,
+                           total_pages=total_pages_read,
+                           avg_pages=avg_pages_per_book,
+                           books_by_year_month=books_by_year_month,
+                           pages_by_year=pages_by_year,
+                           top_authors=top_authors,
+                           top_categories=top_categories)
 
 @app.route('/finish/<int:book_id>', methods=['POST'])
 @login_required

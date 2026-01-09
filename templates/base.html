@@ -119,6 +119,8 @@
                 <div class="flex gap-4 md:gap-8 text-[11px] md:text-sm uppercase tracking-[0.15em] font-medium">
                     <a href="{{ url_for('index') }}"
                         class="nav-link hover:text-vintage-accent transition-soft">Collection</a>
+                    <a href="{{ url_for('stats') }}"
+                        class="nav-link hover:text-vintage-accent transition-soft">Stats</a>
                     {% if current_user.is_authenticated %}
                     <a href="{{ url_for('search') }}"
                         class="nav-link hover:text-vintage-accent transition-soft">Search</a>
