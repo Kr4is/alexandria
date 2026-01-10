@@ -25,6 +25,9 @@ def search_books(query):
                 'description': volume_info.get('description'),
                 'page_count': volume_info.get('pageCount'),
                 'categories': ", ".join(volume_info.get('categories', [])),
+                'published_year': volume_info.get('publishedDate', '')[:4] if volume_info.get('publishedDate') else None,
+                'language': volume_info.get('language'),
+                'average_rating': volume_info.get('averageRating'),
             })
         return results
     return []
@@ -45,5 +48,8 @@ def get_book_details(google_books_id):
             'description': volume_info.get('description'),
             'page_count': volume_info.get('pageCount'),
             'categories': ", ".join(volume_info.get('categories', [])),
+            'published_year': volume_info.get('publishedDate', '')[:4] if volume_info.get('publishedDate') else None,
+            'language': volume_info.get('language'),
+            'average_rating': volume_info.get('averageRating'),
         }
     return None

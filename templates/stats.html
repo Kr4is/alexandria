@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto">
+<div class="max-w-6xl mx-auto">
     <!-- Header -->
-    <header class="mb-16 text-center">
+    <header class="mb-12 text-center">
         <h2 class="text-4xl md:text-5xl font-bold mb-4 text-vintage-ink">Library Metrics</h2>
         <div class="flex justify-center items-center gap-4 mb-6">
             <div class="h-px w-12 bg-vintage-gold/30"></div>
@@ -13,183 +13,250 @@
         <p class="text-lg italic opacity-60">Quantifying the journey through pages and time.</p>
     </header>
 
-    <!-- Key Metrics Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
-        <!-- Total Books -->
-        <div class="text-center p-8 paper-texture vintage-border relative group hover:-translate-y-1 transition-soft">
-            <div
-                class="absolute top-0 left-0 w-full h-1 bg-vintage-gold opacity-20 group-hover:opacity-100 transition-soft">
-            </div>
-            <h3 class="text-xs uppercase tracking-[0.2em] opacity-40 mb-2 font-bold">Volumes Completed</h3>
-            <p class="text-5xl md:text-6xl font-bold font-serif-display text-vintage-accent">{{ total_books }}</p>
+    <!-- 1. Overview Cards -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div class="p-6 paper-texture vintage-border text-center">
+            <h3 class="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Volumes</h3>
+            <p class="text-4xl font-serif-display font-bold text-vintage-ink">{{ total_books }}</p>
         </div>
-
-        <!-- Total Pages -->
-        <div class="text-center p-8 paper-texture vintage-border relative group hover:-translate-y-1 transition-soft">
-            <div
-                class="absolute top-0 left-0 w-full h-1 bg-vintage-gold opacity-20 group-hover:opacity-100 transition-soft">
-            </div>
-            <h3 class="text-xs uppercase tracking-[0.2em] opacity-40 mb-2 font-bold">Pages Turned</h3>
-            <p class="text-5xl md:text-6xl font-bold font-serif-display text-vintage-ink">{{ "{:,}".format(total_pages)
-                }}</p>
+        <div class="p-6 paper-texture vintage-border text-center">
+            <h3 class="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Total Pages</h3>
+            <p class="text-4xl font-serif-display font-bold text-vintage-accent">{{ "{:,}".format(total_pages) }}</p>
         </div>
-
-        <!-- Avg Pages -->
-        <div class="text-center p-8 paper-texture vintage-border relative group hover:-translate-y-1 transition-soft">
-            <div
-                class="absolute top-0 left-0 w-full h-1 bg-vintage-gold opacity-20 group-hover:opacity-100 transition-soft">
-            </div>
-            <h3 class="text-xs uppercase tracking-[0.2em] opacity-40 mb-2 font-bold">Avg. Length</h3>
-            <p class="text-5xl md:text-6xl font-bold font-serif-display text-vintage-ink opacity-70">{{ avg_pages }}</p>
-            <span class="text-xs italic opacity-40">pages/vol</span>
+        <div class="p-6 paper-texture vintage-border text-center">
+            <h3 class="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Reading Time</h3>
+            <p class="text-4xl font-serif-display font-bold text-vintage-ink">{{ "{:,}".format(reading_hours) }} <span
+                    class="text-sm font-normal opacity-50">hrs</span></p>
+        </div>
+        <div class="p-6 paper-texture vintage-border text-center">
+            <h3 class="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Completion</h3>
+            <p class="text-4xl font-serif-display font-bold text-vintage-ink">{{ completion_rate }}<span
+                    class="text-2xl opacity-50">%</span></p>
         </div>
     </div>
 
-    <!-- Charts Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
-        <!-- Reading Activity Chart -->
-        <div class="space-y-6">
-            <div class="flex items-baseline justify-between border-b border-black/5 pb-2">
-                <h3 class="text-xl font-bold italic text-vintage-accent opacity-80">Chronicle of Activity</h3>
+    <!-- 2. Volume Analysis -->
+    <section class="mb-20">
+        <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-2">
+            <h3 class="text-2xl font-bold italic text-vintage-ink">Volume Analysis</h3>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Chart -->
+            <div class="lg:col-span-2 paper-texture vintage-border p-6">
+                <h4 class="text-xs uppercase tracking-widest opacity-40 mb-4 font-bold text-center">Pages per Month</h4>
+                <div class="h-[250px]">
+                    <canvas id="pagesHistoryChart"></canvas>
+                </div>
             </div>
-            <div class="paper-texture p-6 vintage-border h-[300px]">
-                <canvas id="activityChart"></canvas>
+            <!-- Stats -->
+            <div class="flex flex-col gap-6">
+                <div
+                    class="flex-1 paper-texture vintage-border p-6 flex flex-col justify-center items-center text-center">
+                    <h4 class="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Monthly Average</h4>
+                    <p class="text-4xl font-bold text-vintage-gold">{{ "{:,}".format(avg_pages_month) }}</p>
+                    <span class="text-xs italic opacity-40">pages / month</span>
+                </div>
+                <div
+                    class="flex-1 paper-texture vintage-border p-6 flex flex-col justify-center items-center text-center">
+                    <h4 class="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Yearly Projection</h4>
+                    <p class="text-4xl font-bold text-vintage-accent">{{ "{:,}".format(avg_pages_year) }}</p>
+                    <span class="text-xs italic opacity-40">pages / year</span>
+                </div>
             </div>
         </div>
+    </section>
 
-        <!-- Categories Chart -->
-        <div class="space-y-6">
-            <div class="flex items-baseline justify-between border-b border-black/5 pb-2">
-                <h3 class="text-xl font-bold italic text-vintage-accent opacity-80">Distribution of Wisdom</h3>
-            </div>
-            <div class="paper-texture p-6 vintage-border h-[300px] flex items-center justify-center">
-                <canvas id="categoriesChart"></canvas>
-            </div>
+    <!-- 3. Hall of Fame (Records) -->
+    <section class="mb-20">
+        <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-2">
+            <h3 class="text-2xl font-bold italic text-vintage-ink">Hall of Fame</h3>
         </div>
-    </div>
-
-    <!-- Detailed Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 text-sm">
-        <!-- Top Authors -->
-        <div>
-            <div class="flex items-baseline justify-between mb-6 border-b border-black/5 pb-2">
-                <h3 class="text-xl font-bold italic text-vintage-ink opacity-90">Most Read Authors</h3>
-            </div>
-
-            {% if top_authors %}
-            <ul class="space-y-4">
-                {% for author, count in top_authors %}
-                <li class="flex items-center justify-between group">
-                    <span class="font-medium opacity-80 group-hover:text-vintage-accent transition-colors">{{ author
-                        }}</span>
-                    <div class="flex items-center gap-3">
-                        <div class="h-px w-16 bg-black/5 group-hover:bg-vintage-gold/30 transition-colors"></div>
-                        <span class="font-serif-display font-bold text-lg">{{ count }}</span>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
-            {% else %}
-            <p class="italic opacity-40">Not enough data to determine favorites.</p>
-            {% endif %}
-        </div>
-
-        <!-- Monthly Breakdown (Text) -->
-        <div>
-            <div class="flex items-baseline justify-between mb-6 border-b border-black/5 pb-2">
-                <h3 class="text-xl font-bold italic text-vintage-ink opacity-90">Monthly Ledger</h3>
-            </div>
-
-            {% if books_by_year_month %}
-            <div class="space-y-6 h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                {% for year, months in books_by_year_month.items()|sort(reverse=True) %}
-                <div>
-                    <h4
-                        class="text-xs uppercase tracking-widest font-bold mb-3 opacity-40 sticky top-0 bg-vintage-cream z-10 py-1">
-                        {{ year }}</h4>
-                    <div class="grid grid-cols-2 gap-x-4 gap-y-2">
-                        {% for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
-                        'September', 'October', 'November', 'December'] %}
-                        {% if month in months %}
-                        <div class="flex justify-between items-center py-1 border-b border-dashed border-black/5">
-                            <span class="italic opacity-70">{{ month }}</span>
-                            <span class="font-bold text-vintage-accent">{{ months[month] }}</span>
-                        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {% macro record_card(title, book, value, label) %}
+            <div
+                class="group relative paper-texture vintage-border p-6 flex flex-col h-full hover:-translate-y-1 transition-soft">
+                <h4
+                    class="text-[10px] uppercase tracking-widest opacity-40 mb-4 font-bold border-b border-black/5 pb-2">
+                    {{ title }}</h4>
+                {% if book %}
+                <div class="flex-grow flex flex-col text-center">
+                    <div class="mb-4 mx-auto w-20 h-28 shadow-md rotate-2 group-hover:rotate-0 transition-soft">
+                        {% if book.thumbnail %}
+                        <img src="{{ book.thumbnail }}"
+                            class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-soft">
+                        {% else %}
+                        <div
+                            class="w-full h-full bg-vintage-paper border border-black/10 flex items-center justify-center text-[8px]">
+                            No Cover</div>
                         {% endif %}
-                        {% endfor %}
+                    </div>
+                    <p class="font-bold text-sm leading-tight mb-1 line-clamp-2">{{ book.title }}</p>
+                    <p class="text-xs italic opacity-50 mb-3 line-clamp-1">{{ book.authors }}</p>
+                    <div class="mt-auto pt-3 border-t border-black/5">
+                        <span class="text-xl font-bold text-vintage-accent">{{ value }}</span>
+                        <span class="text-[10px] uppercase tracking-wider opacity-60 ml-1">{{ label }}</span>
                     </div>
                 </div>
-                {% endfor %}
+                {% else %}
+                <div class="flex-grow flex items-center justify-center italic opacity-30 text-sm">No Record Yet</div>
+                {% endif %}
             </div>
-            {% else %}
-            <p class="italic opacity-40">No records found.</p>
-            {% endif %}
+            {% endmacro %}
+
+            {{ record_card("Longest Journey", longest_book, longest_book.page_count, "pages") }}
+            {{ record_card("Brief Encounter", shortest_book, shortest_book.page_count, "pages") }}
+            {{ record_card("Fastest Read", fastest_book, fastest_days, "days") }}
+            {{ record_card("Slowest Burn", slowest_book, slowest_days, "days") }}
         </div>
-    </div>
+    </section>
+
+    <!-- 4. Trends & Speed -->
+    <section class="mb-20">
+        <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-2">
+            <h3 class="text-2xl font-bold italic text-vintage-ink">Habits & Trends</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Velocity -->
+            <div class="paper-texture vintage-border p-8 flex flex-col justify-center items-center text-center">
+                <div
+                    class="w-16 h-16 rounded-full border-2 border-vintage-gold flex items-center justify-center mb-4 text-vintage-ink">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h4 class="text-xs uppercase tracking-widest opacity-40 mb-2 font-bold">Reading Velocity</h4>
+                <p class="text-5xl font-bold text-vintage-ink mb-1">{{ avg_days }}</p>
+                <span class="text-sm italic opacity-60">avg. days per book</span>
+            </div>
+
+            <!-- Seasons Chart -->
+            <div class="paper-texture vintage-border p-6 relative">
+                <h4 class="text-xs uppercase tracking-widest opacity-40 mb-4 font-bold text-center">Seasonal Preference
+                </h4>
+                <div class="h-[200px] flex justify-center">
+                    <canvas id="seasonsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Categories Chart -->
+            <div class="paper-texture vintage-border p-6 relative">
+                <h4 class="text-xs uppercase tracking-widest opacity-40 mb-4 font-bold text-center">Top Categories</h4>
+                <div class="h-[200px] flex justify-center">
+                    <canvas id="categoriesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Curiosities -->
+    <section class="mb-20">
+        <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-2">
+            <h3 class="text-2xl font-bold italic text-vintage-ink">Curiosities</h3>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            {% macro stat_tile(title, value, unit) %}
+            <div
+                class="bg-vintage-paper border border-black/5 p-4 text-center hover:bg-vintage-cream transition-colors">
+                <div class="text-[9px] uppercase tracking-widest opacity-50 mb-1">{{ title }}</div>
+                <div class="font-bold text-xl text-vintage-ink">{{ value }}</div>
+                <div class="text-[9px] italic opacity-40">{{ unit }}</div>
+            </div>
+            {% endmacro %}
+            {{ stat_tile("The Tower", tower_height ~ " m", "stack height") }}
+            {{ stat_tile("Ink Consumed", ink_litres ~ " L", "eye travel fluid") }}
+            {{ stat_tile("The Marathon", distance_km ~ " km", "eye travel dist.") }}
+            {{ stat_tile("Word Count", words_million ~ " M", "words read") }}
+            {{ stat_tile("Time Machine", most_read_decade, "favorite era") }}
+            {{ stat_tile("Golden Era", oldest_book.published_year if oldest_book else '-', "oldest book") }}
+            {{ stat_tile("Polyglot", num_languages, "languages") }}
+            {{ stat_tile("Solo vs Co-op", solo_ratio ~ "%", "single author") }}
+            {{ stat_tile("Critic's Choice", avg_public_rating, "avg public rating") }}
+            {{ stat_tile("Favorite Day", favorite_day, "to finish books") }}
+        </div>
+    </section>
+
+
+    <!-- 6. Monthly Ledger -->
+    <section>
+        <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-2">
+            <h3 class="text-2xl font-bold italic text-vintage-ink opacity-80">The Monthly Ledger</h3>
+        </div>
+
+        {% if books_by_year_month %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for year, months in books_by_year_month.items()|sort(reverse=True) %}
+            <div class="paper-texture vintage-border p-6">
+                <h4 class="text-xl font-serif-display font-bold mb-4 text-vintage-accent">{{ year }}</h4>
+                <div class="space-y-3">
+                    {% for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
+                    'September', 'October', 'November', 'December'] %}
+                    {% if month in months %}
+                    <div class="flex justify-between items-center py-2 border-b border-dashed border-black/10 text-sm">
+                        <span class="italic opacity-70">{{ month }}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-vintage-ink">{{ months[month] }}</span>
+                            <span class="text-[9px] uppercase tracking-widest opacity-40">vols</span>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-center italic opacity-40 py-12">No records found in the ledger.</p>
+        {% endif %}
+    </section>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    // Configuration
     Chart.defaults.font.family = "'EB Garamond', serif";
     Chart.defaults.color = 'rgba(26, 22, 20, 0.6)';
 
-    // Activity Chart (Pages per Year)
-    const pagesCtx = document.getElementById('activityChart').getContext('2d');
-    const pagesData = {{ pages_by_year| tojson }};
-    const years = Object.keys(pagesData).sort();
-
-    new Chart(pagesCtx, {
-        type: 'line',
+    // Pages History Chart
+    const histCtx = document.getElementById('pagesHistoryChart').getContext('2d');
+    new Chart(histCtx, {
+        type: 'bar',
         data: {
-            labels: years,
-            datasets: [{
-                label: 'Pages Read',
-                data: years.map(y => pagesData[y]),
-                borderColor: '#b58d4a',
-                backgroundColor: 'rgba(181, 141, 74, 0.1)',
-                borderWidth: 2,
-                tension: 0.4,
-                fill: true,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: '#2d4a3e',
-                pointRadius: 4
+            labels: {{ pages_history_labels| tojson }},
+        datasets: [{
+            label: 'Pages Read',
+            data: {{ pages_history_data| tojson }},
+        backgroundColor: 'rgba(181, 141, 74, 0.6)',
+        borderColor: '#b58d4a',
+        borderWidth: 1,
+        barThickness: 20
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { display: false }
-                },
-                x: {
-                    grid: { display: false }
-                }
-            }
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+            x: { grid: { display: false } }
         }
+    }
     });
 
-    // Categories Chart
-    const catsCtx = document.getElementById('categoriesChart').getContext('2d');
-    const catsData = {{ top_categories| tojson }};
-
-    new Chart(catsCtx, {
-        type: 'doughnut',
+    // Seasons Chart
+    const seasonsCtx = document.getElementById('seasonsChart').getContext('2d');
+    const seasonData = {{ seasons| tojson }};
+    new Chart(seasonsCtx, {
+        type: 'polarArea',
         data: {
-            labels: catsData.map(c => c[0]),
+            labels: Object.keys(seasonData),
             datasets: [{
-                data: catsData.map(c => c[1]),
+                data: Object.values(seasonData),
                 backgroundColor: [
-                    '#2d4a3e', // emerald
-                    '#b58d4a', // gold
-                    '#1a1614', // ink
-                    '#8c7b75', // taupe
-                    '#d4c5b0'  // beige
+                    'rgba(45, 74, 62, 0.7)',  // Winter
+                    'rgba(181, 141, 74, 0.7)', // Spring
+                    'rgba(212, 197, 176, 0.9)', // Summer
+                    'rgba(26, 22, 20, 0.7)'    // Autumn
                 ],
                 borderWidth: 0
             }]
@@ -198,24 +265,34 @@
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    position: 'right',
-                    labels: { boxWidth: 12 }
-                }
+                legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }
             },
-            cutout: '70%'
+            scales: { r: { ticks: { display: false } } }
         }
     });
+
+    // Categories Chart
+    const catCtx = document.getElementById('categoriesChart').getContext('2d');
+    new Chart(catCtx, {
+        type: 'doughnut',
+        data: {
+            labels: {{ cat_labels| tojson }},
+        datasets: [{
+            data: {{ cat_data| tojson }},
+        backgroundColor: [
+            '#2d4a3e', '#b58d4a', '#1a1614', '#8c7b75', '#d4c5b0', '#5c524b'
+        ],
+        borderWidth: 0
+            }]
+        },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }
+        },
+        cutout: '60%'
+    }
+    });
 </script>
-
-<style>
-    .custom-scrollbar::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-        background-color: rgba(26, 22, 20, 0.1);
-        border-radius: 4px;
-    }
-</style>
 {% endblock %}

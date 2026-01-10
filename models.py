@@ -25,6 +25,9 @@ class Book(db.Model):
     description = db.Column(db.Text)
     page_count = db.Column(db.Integer)
     categories = db.Column(db.String(200))
+    published_year = db.Column(db.String(4))
+    language = db.Column(db.String(10))
+    average_rating = db.Column(db.Float)
     status = db.Column(db.String(20), default='reading')  # 'reading', 'finished'
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
     date_finished = db.Column(db.DateTime, nullable=True)
@@ -38,6 +41,9 @@ class Book(db.Model):
             'description': self.description,
             'page_count': self.page_count,
             'categories': self.categories,
+            'published_year': self.published_year,
+            'language': self.language,
+            'average_rating': self.average_rating,
             'status': self.status,
             'date_finished': self.date_finished.strftime('%Y-%m-%d') if self.date_finished else None
         }
