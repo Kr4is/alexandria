@@ -5,6 +5,7 @@ from api import search_books, get_book_details
 from datetime import datetime, UTC
 import os
 from dotenv import load_dotenv
+from loguru import logger
 
 load_dotenv()
 
@@ -56,6 +57,34 @@ with app.app_context():
         admin.set_password(admin_pass)
         db.session.add(admin)
         db.session.commit()
+
+    # Automatic Metadata Refresh
+    # Updates existing books with the latest data from Google Books API
+    try:
+        logger.info("--- Starting Library Metadata Refresh ---")
+        books = Book.query.all()
+        count = 0
+        for book in books:
+            if book.google_books_id:
+                details = get_book_details(book.google_books_id)
+                if details:
+                    book.title = details['title']
+                    book.authors = details['authors']
+                    book.thumbnail = details['thumbnail']
+                    book.description = details['description']
+                    book.page_count = details['page_count']
+                    book.categories = details['categories']
+                    book.published_year = details['published_year']
+                    book.language = details['language']
+                    book.average_rating = details['average_rating']
+                    count += 1
+        if count > 0:
+            db.session.commit()
+            logger.info(f"--- Refreshed metadata for {count} books ---")
+        else:
+            logger.info("--- No books needed updating or library is empty ---")
+    except Exception as e:
+        logger.warning(f"Warning: Metadata refresh encountered an error: {e}")
 
 @app.route('/')
 def index():
