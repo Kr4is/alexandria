@@ -4,14 +4,25 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - APP_NAME=Alexandria
-      - SECRET_KEY=change-this-in-production
-      - LIBRARIAN_USERNAME=admin
-      - LIBRARIAN_PASSWORD=alexandria
-      - DATABASE_URL=sqlite:///instance/alexandria.db
+      - APP_NAME=${APP_NAME}
+      - SECRET_KEY=${SECRET_KEY}
+      - LIBRARIAN_USERNAME=${LIBRARIAN_USERNAME}
+      - LIBRARIAN_PASSWORD=${LIBRARIAN_PASSWORD}
+      - DATABASE_URL=${DATABASE_URL}
     volumes:
       - ./instance:/app/instance
     restart: unless-stopped
+
+  adminer:
+    image: adminer
+    restart: always
+    environment:
+      - ADMINER_PASSWORD=${ADMINER_PASSWORD}
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./instance:/db
+      - ./adminer-plugins/login-password-less.php:/var/www/html/plugins-enabled/login-password-less.php
 
 volumes:
   instance:
