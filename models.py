@@ -45,5 +45,6 @@ class Book(db.Model):
             'language': self.language,
             'average_rating': self.average_rating,
             'status': self.status,
+            'date_added': self.date_added.strftime('%Y-%m-%d') if self.date_added else None,
             'date_finished': self.date_finished.strftime('%Y-%m-%d') if self.date_finished else None
         }

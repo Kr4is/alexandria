@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="mb-12">
+        <a href="{{ url_for('book_detail', book_id=book.id) }}"
+            class="inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.25em] font-bold opacity-40 hover:opacity-100 hover:text-vintage-accent transition-soft group">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:-translate-x-1"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Return to Volume
+        </a>
+    </div>
+
+    <div class="paper-texture p-8 md:p-12 lg:p-16 shadow-2xl relative overflow-hidden">
+        <!-- Decorative subtle element -->
+        <div class="absolute -top-12 -right-12 w-48 h-48 opacity-[0.03] pointer-events-none rotate-12">
+            <img src="{{ url_for('static', filename='logo.svg') }}" class="w-full h-full object-contain">
+        </div>
+
+        <header class="mb-12 space-y-4">
+            <h2 class="text-3xl md:text-4xl font-bold leading-[1.1] text-vintage-ink">Amend Registry Entry</h2>
+            <p class="text-lg italic opacity-60">Editing: <span class="text-vintage-accent opacity-100">{{ book.title }}</span></p>
+            <p class="text-sm opacity-40">by {{ book.authors or 'Anonymous' }}</p>
+        </header>
+
+        <form method="POST" action="{{ url_for('edit_book', book_id=book.id) }}" class="space-y-10">
+            <!-- Status -->
+            <div class="space-y-3">
+                <label for="status" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
+                    Registry Status
+                </label>
+                <select name="status" id="status"
+                    class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base
+                           focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20
+                           transition-soft appearance-none cursor-pointer"
+                    style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%231a1614%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem center;">
+                    <option value="reading" {% if book.status == 'reading' %}selected{% endif %}>Currently Reading</option>
+                    <option value="finished" {% if book.status == 'finished' %}selected{% endif %}>Completed Voyage</option>
+                </select>
+            </div>
+
+            <!-- Date Started (uses date_added) -->
+            <div class="space-y-3">
+                <label for="date_added" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
+                    Date Started Reading
+                </label>
+                <input type="date" name="date_added" id="date_added"
+                    value="{{ book.date_added.strftime('%Y-%m-%d') if book.date_added else '' }}"
+                    class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base
+                           focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20
+                           transition-soft">
+                <p class="text-xs italic opacity-40">When you began reading this volume</p>
+            </div>
+
+            <!-- Date Finished -->
+            <div class="space-y-3">
+                <label for="date_finished" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
+                    Date Finished
+                </label>
+                <input type="date" name="date_finished" id="date_finished"
+                    value="{{ book.date_finished.strftime('%Y-%m-%d') if book.date_finished else '' }}"
+                    class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base
+                           focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20
+                           transition-soft">
+                <p class="text-xs italic opacity-40">When the voyage through this volume was completed</p>
+            </div>
+
+            <!-- Divider -->
+            <div class="h-px w-full bg-black/5"></div>
+
+            <!-- Actions -->
+            <div class="flex flex-wrap gap-4 items-center justify-between pt-4">
+                <button type="submit"
+                    class="bg-vintage-accent text-vintage-cream px-10 py-4 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-ink transition-soft shadow-xl">
+                    Save Amendments
+                </button>
+                <a href="{{ url_for('book_detail', book_id=book.id) }}"
+                    class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 hover:opacity-100 transition-soft px-4 py-2">
+                    Cancel
+                </a>
+            </div>
+        </form>
+
+        <!-- Footnote signature -->
+        <div class="mt-16 pt-8 border-t border-black/5 flex justify-between items-end opacity-20 italic text-sm">
+            <span>&mdash; Registry Amendment Form &mdash;</span>
+            <span class="text-xs uppercase tracking-widest font-serif not-italic">MS-{{ book.id }}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

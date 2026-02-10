@@ -200,9 +200,6 @@ def stats():
     
     for b in finished_books:
         if b.date_added and b.date_finished:
-            # Ensure timezone awareness match or ignore if naive
-            # SQLite default is naive, usually. 
-            # safe subtraction:
             start = b.date_added
             end = b.date_finished
             days = (end - start).days
@@ -381,6 +378,41 @@ def finish_book(book_id):
     book.date_finished = datetime.now(UTC)
     db.session.commit()
     return redirect(url_for('index'))
+
+@app.route('/edit/<int:book_id>', methods=['GET', 'POST'])
+@login_required
+def edit_book(book_id):
+    book = Book.query.get_or_404(book_id)
+    
+    if request.method == 'POST':
+        # Update status
+        new_status = request.form.get('status')
+        if new_status in ['reading', 'finished']:
+            book.status = new_status
+        
+        # Update date_added
+        date_added_str = request.form.get('date_added')
+        if date_added_str:
+            try:
+                book.date_added = datetime.strptime(date_added_str, '%Y-%m-%d')
+            except ValueError:
+                flash('Invalid date format for Date Added')
+        
+        # Update date_finished
+        date_finished_str = request.form.get('date_finished')
+        if date_finished_str:
+            try:
+                book.date_finished = datetime.strptime(date_finished_str, '%Y-%m-%d')
+            except ValueError:
+                flash('Invalid date format for Date Finished')
+        else:
+            book.date_finished = None
+        
+        db.session.commit()
+        flash('Book details updated successfully')
+        return redirect(url_for('book_detail', book_id=book.id))
+    
+    return render_template('edit_book.html', book=book)
 
 @app.route('/delete/<int:book_id>', methods=['POST'])
 @login_required
