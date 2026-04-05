@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en" class="h-full scroll-smooth" style="scroll-padding-top: 5rem;">
 
 <head>
     <meta charset="UTF-8">
@@ -7,6 +7,21 @@
     <title>{{ config['APP_NAME'] }} - Personal Library</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'vintage-cream': '#f4ece1',
+                        'vintage-paper': '#f9f4ef',
+                        'vintage-ink': '#1a1614',
+                        'vintage-gold': '#b58d4a',
+                        'vintage-accent': '#2d4a3e',
+                    }
+                }
+            }
+        }
+    </script>
     <link
         href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap"
         rel="stylesheet">
@@ -17,7 +32,6 @@
             --vintage-ink: #1a1614;
             --vintage-gold: #b58d4a;
             --vintage-accent: #2d4a3e;
-            /* Deep emerald */
             --transition-speed: 0.3s;
         }
 
@@ -76,18 +90,47 @@
             width: 100%;
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 640px) {
-            h1 {
-                font-size: 1.5rem;
+        .book-cover-img {
+            image-rendering: auto;
+        }
+
+        .modal-open {
+            overflow: hidden;
+        }
+
+        .flash-dismiss {
+            animation: flash-in 0.35s ease-out;
+        }
+
+        @keyframes flash-in {
+            from {
+                opacity: 0;
+                transform: translateY(-0.5rem);
             }
 
-            .nav-text {
-                display: none;
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
 
-        /* Custom scrollbar */
+        .flash-leave {
+            animation: flash-out 0.35s ease-in forwards;
+        }
+
+        @keyframes flash-out {
+            to {
+                opacity: 0;
+                transform: translateY(-0.25rem);
+            }
+        }
+
+        @media (max-width: 639px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -104,46 +147,76 @@
 </head>
 
 <body class="h-full flex flex-col min-h-screen antialiased">
-    <nav class="sticky top-0 z-50 bg-vintage-cream/80 backdrop-blur-md border-b border-black/5 py-4">
-        <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
-            <a href="{{ url_for('index') }}" class="flex items-center gap-2 md:gap-3 group flex-shrink-0">
+    <nav class="sticky top-0 z-50 bg-vintage-cream/80 backdrop-blur-md border-b border-black/5 py-3 sm:py-4">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 flex justify-between items-center gap-3">
+            <a href="{{ url_for('index') }}" class="flex items-center gap-2 md:gap-3 group flex-shrink-0 min-h-[44px] min-w-0">
                 <img src="{{ url_for('static', filename='logo.svg') }}" alt="Logo"
-                    class="w-7 h-7 md:w-8 md:h-8 object-contain transition-soft group-hover:rotate-12">
+                    class="w-7 h-7 md:w-8 md:h-8 object-contain transition-soft group-hover:rotate-12 flex-shrink-0">
                 <h1
-                    class="text-xl md:text-2xl font-bold tracking-tight text-vintage-ink/90 group-hover:text-vintage-accent transition-soft">
+                    class="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-vintage-ink/90 group-hover:text-vintage-accent transition-soft truncate">
                     {{ config['APP_NAME'] }}
                 </h1>
             </a>
 
-            <div class="flex items-center gap-4 md:gap-10">
-                <div class="flex gap-4 md:gap-8 text-[11px] md:text-sm uppercase tracking-[0.15em] font-medium">
+            <div class="hidden sm:flex items-center gap-4 md:gap-10">
+                <div class="flex gap-4 md:gap-8 text-sm uppercase tracking-[0.15em] font-medium">
                     <a href="{{ url_for('index') }}"
-                        class="nav-link hover:text-vintage-accent transition-soft">Collection</a>
+                        class="nav-link hover:text-vintage-accent transition-soft py-2">Collection</a>
                     <a href="{{ url_for('stats') }}"
-                        class="nav-link hover:text-vintage-accent transition-soft">Stats</a>
+                        class="nav-link hover:text-vintage-accent transition-soft py-2">Stats</a>
                     {% if current_user.is_authenticated %}
                     <a href="{{ url_for('search') }}"
-                        class="nav-link hover:text-vintage-accent transition-soft">Search</a>
+                        class="nav-link hover:text-vintage-accent transition-soft py-2">Search</a>
                     {% endif %}
                 </div>
-
                 {% if current_user.is_authenticated %}
                 <div class="h-4 w-px bg-black/10"></div>
                 <a href="{{ url_for('logout') }}"
-                    class="text-[9px] uppercase tracking-widest opacity-40 hover:opacity-100 hover:text-red-800 transition-soft">Logout</a>
+                    class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 hover:text-red-800 transition-soft py-2 min-h-[44px] inline-flex items-center">Logout</a>
+                {% endif %}
+            </div>
+
+            <button type="button" id="mobile-nav-toggle"
+                class="sm:hidden min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded border border-black/10 text-vintage-ink hover:bg-black/5 transition-soft"
+                aria-expanded="false" aria-controls="mobile-nav-panel" aria-label="Open menu">
+                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+        </div>
+
+        <div id="mobile-nav-panel" class="hidden sm:hidden border-t border-black/5 bg-vintage-cream/95 backdrop-blur-md">
+            <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-1">
+                <a href="{{ url_for('index') }}"
+                    class="py-3 px-2 text-sm uppercase tracking-[0.15em] font-medium hover:text-vintage-accent border-b border-black/5">Collection</a>
+                <a href="{{ url_for('stats') }}"
+                    class="py-3 px-2 text-sm uppercase tracking-[0.15em] font-medium hover:text-vintage-accent border-b border-black/5">Stats</a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('search') }}"
+                    class="py-3 px-2 text-sm uppercase tracking-[0.15em] font-medium hover:text-vintage-accent border-b border-black/5">Search</a>
+                <a href="{{ url_for('logout') }}"
+                    class="py-3 px-2 text-xs uppercase tracking-widest opacity-60 hover:opacity-100 hover:text-red-800">Logout</a>
                 {% endif %}
             </div>
         </div>
     </nav>
 
-    <main class="flex-grow max-w-6xl mx-auto px-6 py-8 md:py-16 w-full">
-        {% with messages = get_flashed_messages() %}
+    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-16 w-full">
+        {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <div class="max-w-4xl mx-auto">
-            {% for message in messages %}
+        <div class="max-w-4xl mx-auto space-y-3 mb-6" id="flash-container" role="status" aria-live="polite">
+            {% for category, message in messages %}
+            {% set cls = {
+                'success': 'bg-emerald-50/80 border-l-2 border-emerald-600 text-emerald-900',
+                'error': 'bg-red-50/50 border-l-2 border-red-400 text-red-800',
+                'warning': 'bg-amber-50/80 border-l-2 border-amber-500 text-amber-900',
+                'info': 'bg-stone-50/80 border-l-2 border-vintage-gold text-vintage-ink'
+            }.get(category, 'bg-stone-50/80 border-l-2 border-vintage-gold text-vintage-ink') %}
             <div
-                class="mb-8 p-4 bg-red-50/50 border-l-2 border-red-400 text-red-800 text-sm italic animate-in fade-in slide-in-from-top-4 duration-500">
-                {{ message }}
+                class="flash-dismiss flex items-start gap-3 p-4 pr-10 {{ cls }} text-sm italic relative shadow-sm rounded-sm">
+                <span class="flex-1">{{ message }}</span>
+                <button type="button" class="flash-close absolute top-3 right-3 min-w-[36px] min-h-[36px] flex items-center justify-center rounded opacity-50 hover:opacity-100 not-italic text-lg leading-none"
+                    aria-label="Dismiss notification">&times;</button>
             </div>
             {% endfor %}
         </div>
@@ -162,10 +235,185 @@
             </div>
 
             <p class="text-[10px] md:text-xs uppercase tracking-[0.3em] opacity-30 italic">
-                Catalogued in the year {{ now.year if now else '2025' }}
+                Catalogued in the year {{ now.year }}
             </p>
         </div>
     </footer>
+
+    <!-- Finish book confirmation -->
+    <div id="modal-finish" class="fixed inset-0 z-[200] hidden" aria-hidden="true">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm modal-backdrop-close" data-modal-backdrop></div>
+        <div class="relative flex min-h-full items-center justify-center p-4 pointer-events-none">
+            <div class="paper-texture vintage-border max-w-md w-full p-8 shadow-2xl pointer-events-auto relative"
+                role="dialog" aria-modal="true" aria-labelledby="modal-finish-title" tabindex="-1" data-modal-panel>
+                <button type="button"
+                    class="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center opacity-40 hover:opacity-100 text-xl leading-none modal-close-btn"
+                    aria-label="Close">&times;</button>
+                <h3 id="modal-finish-title" class="font-serif-display text-2xl text-vintage-ink mb-2 pr-8">Close this
+                    chapter?</h3>
+                <p class="text-sm italic opacity-70 mb-6" id="modal-finish-body">Mark this volume as completed.</p>
+                <form id="modal-finish-form" method="POST" action="" class="js-submit-loading">
+                    <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                        <button type="button"
+                            class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink/5 modal-close-btn">Cancel</button>
+                        <button type="submit"
+                            class="min-h-[44px] px-6 py-3 bg-vintage-accent text-vintage-cream text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-vintage-ink transition-soft">Confirm</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete book confirmation -->
+    <div id="modal-delete" class="fixed inset-0 z-[200] hidden" aria-hidden="true">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm modal-backdrop-close" data-modal-backdrop></div>
+        <div class="relative flex min-h-full items-center justify-center p-4 pointer-events-none">
+            <div class="paper-texture vintage-border max-w-md w-full p-8 shadow-2xl pointer-events-auto relative"
+                role="dialog" aria-modal="true" aria-labelledby="modal-delete-title" tabindex="-1" data-modal-panel>
+                <button type="button"
+                    class="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center opacity-40 hover:opacity-100 text-xl leading-none modal-close-btn"
+                    aria-label="Close">&times;</button>
+                <h3 id="modal-delete-title" class="font-serif-display text-2xl text-vintage-ink mb-2 pr-8">Remove from
+                    archives?</h3>
+                <p class="text-sm italic opacity-70 mb-6" id="modal-delete-body">This cannot be undone.</p>
+                <form id="modal-delete-form" method="POST" action="" class="js-submit-loading">
+                    <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
+                        <button type="button"
+                            class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink/5 modal-close-btn">Cancel</button>
+                        <button type="submit"
+                            class="min-h-[44px] px-6 py-3 bg-red-900 text-vintage-cream text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-red-800 transition-soft">Remove</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var toggle = document.getElementById('mobile-nav-toggle');
+            var panel = document.getElementById('mobile-nav-panel');
+            if (toggle && panel) {
+                toggle.addEventListener('click', function () {
+                    panel.classList.toggle('hidden');
+                    var open = !panel.classList.contains('hidden');
+                    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+                });
+            }
+
+            function dismissFlash(el) {
+                el.classList.add('flash-leave');
+                setTimeout(function () { el.remove(); }, 350);
+            }
+
+            document.querySelectorAll('.flash-close').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var row = btn.closest('.flash-dismiss');
+                    if (row) dismissFlash(row);
+                });
+            });
+
+            document.querySelectorAll('.flash-dismiss').forEach(function (row) {
+                setTimeout(function () { if (row.parentNode) dismissFlash(row); }, 4500);
+            });
+
+            document.querySelectorAll('form.js-submit-loading').forEach(function (form) {
+                form.addEventListener('submit', function () {
+                    var btn = form.querySelector('[type="submit"]');
+                    if (btn && !btn.disabled) {
+                        btn.disabled = true;
+                        btn.classList.add('opacity-60', 'cursor-wait');
+                    }
+                });
+            });
+
+            var lastFocus = null;
+
+            function getFocusable(root) {
+                return root.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])');
+            }
+
+            function openModal(id) {
+                var modal = document.getElementById(id);
+                if (!modal) return;
+                lastFocus = document.activeElement;
+                modal.classList.remove('hidden');
+                document.body.classList.add('modal-open');
+                modal.setAttribute('aria-hidden', 'false');
+                var panel = modal.querySelector('[data-modal-panel]');
+                var focusables = panel ? getFocusable(panel) : [];
+                if (focusables.length) focusables[0].focus();
+                function onKey(e) {
+                    if (e.key === 'Escape') {
+                        e.preventDefault();
+                        closeModal(modal);
+                    }
+                    if (e.key === 'Tab' && panel) {
+                        var list = getFocusable(panel);
+                        if (!list.length) return;
+                        var first = list[0];
+                        var last = list[list.length - 1];
+                        if (e.shiftKey && document.activeElement === first) {
+                            e.preventDefault();
+                            last.focus();
+                        } else if (!e.shiftKey && document.activeElement === last) {
+                            e.preventDefault();
+                            first.focus();
+                        }
+                    }
+                }
+                modal._onKey = onKey;
+                document.addEventListener('keydown', onKey);
+            }
+
+            function closeModal(modal) {
+                if (!modal || modal.classList.contains('hidden')) return;
+                modal.classList.add('hidden');
+                document.body.classList.remove('modal-open');
+                modal.setAttribute('aria-hidden', 'true');
+                if (modal._onKey) {
+                    document.removeEventListener('keydown', modal._onKey);
+                    modal._onKey = null;
+                }
+                if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+            }
+
+            document.querySelectorAll('[data-modal-backdrop], .modal-backdrop-close').forEach(function (el) {
+                el.addEventListener('click', function (e) {
+                    if (e.target !== el) return;
+                    closeModal(el.closest('[id^="modal-"]'));
+                });
+            });
+
+            document.querySelectorAll('.modal-close-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    closeModal(btn.closest('[id^="modal-"]'));
+                });
+            });
+
+            window.AlexandriaModal = {
+                openFinish: function (actionUrl, bookTitle) {
+                    var form = document.getElementById('modal-finish-form');
+                    var body = document.getElementById('modal-finish-body');
+                    if (form) form.action = actionUrl;
+                    if (body) body.textContent = bookTitle ? ('“' + bookTitle + '” will be marked as completed.') : 'Mark this volume as completed.';
+                    openModal('modal-finish');
+                },
+                openDelete: function (actionUrl, bookTitle) {
+                    var form = document.getElementById('modal-delete-form');
+                    var body = document.getElementById('modal-delete-body');
+                    if (form) form.action = actionUrl;
+                    if (body) body.textContent = bookTitle ? ('“' + bookTitle + '” will be removed from your collection.') : 'This cannot be undone.';
+                    openModal('modal-delete');
+                },
+                close: function (id) {
+                    var modal = id ? document.getElementById(id) : document.querySelector('[id^="modal-"]:not(.hidden)');
+                    if (modal) closeModal(modal);
+                }
+            };
+        })();
+    </script>
+    {% block scripts %}{% endblock %}
 </body>
 
 </html>

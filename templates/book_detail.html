@@ -2,10 +2,10 @@
 
 {% block content %}
 <div class="max-w-5xl mx-auto">
-    <div class="mb-12">
+    <div class="mb-8 sm:mb-12">
         <a href="{{ url_for('index') }}"
-            class="inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.25em] font-bold opacity-40 hover:opacity-100 hover:text-vintage-accent transition-soft group">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:-translate-x-1"
+            class="inline-flex items-center gap-3 min-h-[44px] text-[10px] uppercase tracking-[0.25em] font-bold opacity-40 hover:opacity-100 hover:text-vintage-accent transition-soft group">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:-translate-x-1 flex-shrink-0"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
@@ -13,18 +13,18 @@
         </a>
     </div>
 
-    <div class="paper-texture p-8 md:p-16 lg:p-24 shadow-2xl relative overflow-hidden">
-        <!-- Decorative subtle element -->
+    <div class="paper-texture p-6 sm:p-8 md:p-16 lg:p-24 shadow-2xl relative overflow-hidden">
         <div class="absolute -top-12 -right-12 w-48 h-48 opacity-[0.03] pointer-events-none rotate-12">
-            <img src="{{ url_for('static', filename='logo.svg') }}" class="w-full h-full object-contain">
+            <img src="{{ url_for('static', filename='logo.svg') }}" class="w-full h-full object-contain" alt="">
         </div>
 
-        <div class="flex flex-col lg:flex-row gap-12 lg:gap-20 relative">
-            <div class="w-full lg:w-72 flex-shrink-0">
-                <div class="vintage-border p-1 shadow-2xl rotate-1 mx-auto lg:mx-0 max-w-[280px] lg:max-w-none">
+        <div class="flex flex-col lg:flex-row gap-10 lg:gap-20 relative">
+            <div class="w-full lg:w-72 flex-shrink-0 flex flex-col items-center lg:items-stretch">
+                <div class="vintage-border p-1 shadow-2xl rotate-1 w-full max-w-[280px] lg:max-w-none mx-auto lg:mx-0">
                     <div class="aspect-[3/4] overflow-hidden bg-stone-100">
                         {% if book.thumbnail %}
-                        <img src="{{ book.thumbnail }}" alt="{{ book.title }}" class="w-full h-full object-cover">
+                        <img src="{{ book.thumbnail }}" alt="{{ book.title }}"
+                            class="book-cover-img w-full h-full object-cover" width="400" height="533" fetchpriority="high">
                         {% else %}
                         <div
                             class="w-full h-full flex items-center justify-center italic opacity-20 text-center p-8 text-sm">
@@ -35,7 +35,7 @@
                 </div>
 
                 <div
-                    class="mt-12 space-y-8 pt-8 border-t border-black/5 flex flex-col sm:flex-row lg:flex-col gap-6 sm:gap-12 lg:gap-8">
+                    class="mt-8 sm:mt-12 space-y-6 sm:space-y-8 pt-8 border-t border-black/5 w-full max-w-md lg:max-w-none flex flex-col sm:flex-row lg:flex-col gap-6 sm:gap-8 lg:gap-8">
                     <div class="sm:flex-1 lg:flex-none">
                         <span class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 block mb-2">Registry
                             Status</span>
@@ -60,65 +60,334 @@
                     <div class="sm:flex-1 lg:flex-none">
                         <span
                             class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 block mb-2">Classification</span>
-                        <span class="text-xs uppercase tracking-widest opacity-60 font-medium">{{ book.categories
-                            }}</span>
+                        <div class="flex flex-wrap gap-2">
+                            {% for cat in book.categories|categories_list %}
+                            <span
+                                class="text-[9px] uppercase tracking-widest px-2 py-1 bg-vintage-accent/5 text-vintage-accent border border-vintage-accent/10">{{ cat }}</span>
+                            {% endfor %}
+                        </div>
                     </div>
                     {% endif %}
+
+                    <div class="sm:flex-1 lg:flex-none space-y-4">
+                        <span class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 block">Volume
+                            particulars</span>
+                        <div class="flex flex-wrap gap-2">
+                            {% if book.page_count %}
+                            <span
+                                class="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2.5 py-1.5 bg-black/[0.04] border border-black/10 text-vintage-ink/80">
+                                <svg class="w-3.5 h-3.5 opacity-50 flex-shrink-0" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                                {{ book.page_count }} pages
+                            </span>
+                            {% endif %}
+                            {% if book.published_year %}
+                            <span
+                                class="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2.5 py-1.5 bg-black/[0.04] border border-black/10 text-vintage-ink/80">
+                                <svg class="w-3.5 h-3.5 opacity-50 flex-shrink-0" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                {{ book.published_year }}
+                            </span>
+                            {% endif %}
+                            {% if book.language %}
+                            <span
+                                class="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2.5 py-1.5 bg-black/[0.04] border border-black/10 text-vintage-ink/80">
+                                {{ book.language|language_display }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% if book.average_rating %}
+                        <div class="flex items-center gap-2 pt-1" title="Average public rating">
+                            <span class="text-[9px] uppercase tracking-widest opacity-40 font-bold">Rating</span>
+                            <div class="flex items-center gap-0.5 text-vintage-gold" role="img"
+                                aria-label="{{ book.average_rating }} out of 5 stars">
+                                {% for n in [1,2,3,4,5] %}
+                                <svg class="w-4 h-4 {{ 'text-vintage-gold' if n <= book.average_rating else 'text-black/15' }}"
+                                    viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path
+                                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                {% endfor %}
+                            </div>
+                            <span class="text-sm font-medium text-vintage-ink/80">{{ "%.1f"|format(book.average_rating)
+                                }}<span class="text-xs opacity-40">/5</span></span>
+                        </div>
+                        {% endif %}
+                        {% if book.google_books_id %}
+                        <a href="https://books.google.com/books?id={{ book.google_books_id }}" target="_blank"
+                            rel="noopener noreferrer"
+                            class="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.15em] font-bold text-vintage-accent hover:underline min-h-[44px]">
+                            View on Google Books
+                            <svg class="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                        </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
-            <div class="flex-1 space-y-12">
-                <header class="space-y-4">
-                    <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] text-vintage-ink">{{ book.title
-                        }}</h2>
-                    <p class="text-xl md:text-2xl italic opacity-60">Hand-scribed by <span
+            <div class="flex-1 space-y-8 sm:space-y-12 min-w-0">
+                <header class="space-y-4 text-center lg:text-left">
+                    <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] text-vintage-ink">{{
+                        book.title }}</h2>
+                    <p class="text-lg sm:text-xl md:text-2xl italic opacity-60">Hand-scribed by <span
                             class="text-vintage-accent opacity-100">{{ book.authors or 'Anonymous' }}</span></p>
                 </header>
 
                 <div class="prose prose-stone prose-lg max-w-none">
-                    <div class="h-px w-16 bg-vintage-accent/20 mb-12"></div>
-                    <div
-                        class="text-lg md:text-xl leading-relaxed italic text-vintage-ink/80 
-                                first-letter:text-6xl first-letter:font-bold first-letter:mr-4 first-letter:float-left first-letter:mt-2 first-letter:text-vintage-accent">
-                        {% if book.description %}
-                        {{ book.description|safe }}
-                        {% else %}
-                        <p class="opacity-30 italic">No description has been recorded for this volume yet.</p>
+                    <div class="h-px w-16 bg-vintage-accent/20 mb-8 sm:mb-12 mx-auto lg:mx-0"></div>
+                    {% set plain_desc = book.description|book_plaintext %}
+                    {% set paras = book.description|book_paragraphs %}
+                    {% if plain_desc %}
+                    <div id="book-desc-block" class="relative" data-collapsible="{{ 'true' if plain_desc|length > 300 else 'false' }}">
+                        <div id="book-desc-inner"
+                            class="transition-[max-height] duration-500 ease-out{% if plain_desc|length > 300 %} book-desc-collapsed{% endif %}">
+                            {% for p in paras %}
+                            <p
+                                class="text-base sm:text-lg md:text-xl leading-relaxed text-vintage-ink/80 mb-4 last:mb-0 {% if loop.first %}book-dropcap italic{% else %}italic{% endif %}">
+                                {{ p }}</p>
+                            {% endfor %}
+                        </div>
+                        {% if plain_desc|length > 300 %}
+                        <div id="book-desc-fade"
+                            class="pointer-events-none absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-vintage-paper to-transparent">
+                        </div>
+                        <button type="button" id="book-desc-toggle"
+                            class="mt-4 text-[10px] uppercase tracking-[0.2em] font-bold text-vintage-accent border-b border-vintage-accent/30 hover:border-vintage-accent min-h-[44px] px-1">
+                            Show more
+                        </button>
                         {% endif %}
                     </div>
+                    {% else %}
+                    <p class="opacity-30 italic text-lg">No description has been recorded for this volume yet.</p>
+                    {% endif %}
                 </div>
 
                 {% if current_user.is_authenticated %}
-                <div class="pt-16 flex flex-wrap gap-6 items-center border-t border-black/5">
+                <div
+                    class="pt-10 sm:pt-16 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center border-t border-black/5">
                     {% if book.status == 'reading' %}
-                    <form action="{{ url_for('finish_book', book_id=book.id) }}" method="POST">
-                        <button type="submit"
-                            class="bg-vintage-accent text-vintage-cream px-10 py-4 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-ink transition-soft shadow-xl">
-                            Close Chapter
-                        </button>
-                    </form>
+                    <button type="button"
+                        class="min-h-[44px] w-full sm:w-auto bg-vintage-accent text-vintage-cream px-8 sm:px-10 py-3.5 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-ink transition-soft shadow-xl js-open-finish-modal"
+                        data-finish-url="{{ url_for('finish_book', book_id=book.id) }}"
+                        data-book-title="{{ book.title|e }}">
+                        Close Chapter
+                    </button>
                     {% endif %}
-                    <a href="{{ url_for('edit_book', book_id=book.id) }}"
-                        class="border border-vintage-accent text-vintage-accent px-10 py-4 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-accent hover:text-vintage-cream transition-soft">
+                    <button type="button"
+                        class="min-h-[44px] w-full sm:w-auto border border-vintage-accent text-vintage-accent px-8 sm:px-10 py-3.5 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-accent hover:text-vintage-cream transition-soft"
+                        id="open-edit-modal">
                         Amend Entry
+                    </button>
+                    <a href="{{ url_for('edit_book', book_id=book.id) }}"
+                        class="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 hover:opacity-100 transition-soft px-4 py-2 border border-transparent hover:border-black/10">
+                        Open full-page form
                     </a>
-                    <form action="{{ url_for('delete_book', book_id=book.id) }}" method="POST"
-                        onsubmit="return confirm('Are you sure you wish to remove this volume from the archives?');">
-                        <button type="submit"
-                            class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 hover:opacity-100 hover:text-red-800 transition-soft px-4 py-2">
-                            Discard Volume
-                        </button>
-                    </form>
+                    <button type="button"
+                        class="min-h-[44px] w-full sm:w-auto text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 hover:opacity-100 hover:text-red-800 transition-soft px-4 py-2 text-left sm:text-center js-open-delete-modal"
+                        data-delete-url="{{ url_for('delete_book', book_id=book.id) }}"
+                        data-book-title="{{ book.title|e }}">
+                        Discard Volume
+                    </button>
                 </div>
                 {% endif %}
             </div>
         </div>
 
-        <!-- Footnote signature -->
-        <div class="mt-24 pt-12 border-t border-black/5 flex justify-between items-end opacity-20 italic text-sm">
+        <div
+            class="mt-16 sm:mt-24 pt-8 sm:pt-12 border-t border-black/5 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 opacity-20 italic text-sm">
             <span>&mdash; Alexandria Archives &mdash;</span>
             <span class="text-xs uppercase tracking-widest font-serif not-italic">MS-{{ book.id }}</span>
         </div>
     </div>
 </div>
+
+{% if current_user.is_authenticated %}
+<div id="modal-edit" class="fixed inset-0 z-[200] hidden" aria-hidden="true">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-pointer" data-edit-backdrop aria-hidden="true"></div>
+    <div class="relative flex min-h-full items-center justify-center p-4 pointer-events-none overflow-y-auto">
+        <div class="paper-texture vintage-border max-w-lg w-full p-6 sm:p-10 shadow-2xl pointer-events-auto relative my-8"
+            role="dialog" aria-modal="true" aria-labelledby="modal-edit-title" tabindex="-1" data-modal-panel>
+            <button type="button"
+                class="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center opacity-40 hover:opacity-100 text-xl leading-none z-10"
+                id="close-edit-modal" aria-label="Close">&times;</button>
+            <h3 id="modal-edit-title" class="font-serif-display text-2xl text-vintage-ink mb-2 pr-10">Amend Registry
+                Entry</h3>
+            <p class="text-sm italic opacity-60 mb-8">Editing: <span class="text-vintage-accent">{{ book.title }}</span>
+            </p>
+            <form method="POST" action="{{ url_for('edit_book', book_id=book.id) }}"
+                class="space-y-8 js-submit-loading">
+                <div class="space-y-3">
+                    <label for="modal-status" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
+                        Registry Status
+                    </label>
+                    <select name="status" id="modal-status"
+                        class="w-full min-h-[44px] px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20 transition-soft appearance-none cursor-pointer"
+                        style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%231a1614%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem center;">
+                        <option value="reading" {% if book.status == 'reading' %}selected{% endif %}>Currently Reading
+                        </option>
+                        <option value="finished" {% if book.status == 'finished' %}selected{% endif %}>Completed Voyage
+                        </option>
+                    </select>
+                </div>
+                <div class="space-y-3">
+                    <label for="modal-date-added"
+                        class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
+                        Date Started Reading
+                    </label>
+                    <input type="date" name="date_added" id="modal-date-added"
+                        value="{{ book.date_added.strftime('%Y-%m-%d') if book.date_added else '' }}"
+                        class="w-full min-h-[44px] px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20 transition-soft">
+                    <p class="text-xs italic opacity-40">When you began reading this volume</p>
+                </div>
+                <div class="space-y-3">
+                    <label for="modal-date-finished"
+                        class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
+                        Date Finished
+                    </label>
+                    <input type="date" name="date_finished" id="modal-date-finished"
+                        value="{{ book.date_finished.strftime('%Y-%m-%d') if book.date_finished else '' }}"
+                        class="w-full min-h-[44px] px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20 transition-soft">
+                    <p class="text-xs italic opacity-40">Leave empty if not yet completed</p>
+                </div>
+                <div class="h-px w-full bg-black/5"></div>
+                <div class="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center pt-2">
+                    <button type="submit"
+                        class="min-h-[44px] bg-vintage-accent text-vintage-cream px-8 py-3.5 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-ink transition-soft shadow-xl">
+                        Save Amendments
+                    </button>
+                    <button type="button"
+                        class="min-h-[44px] text-[9px] uppercase tracking-[0.2em] font-bold opacity-40 hover:opacity-100 px-4"
+                        id="cancel-edit-modal">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .book-dropcap::first-letter {
+        float: left;
+        font-size: 3.5rem;
+        line-height: 0.85;
+        margin-right: 0.35rem;
+        margin-top: 0.15rem;
+        font-weight: 700;
+        font-family: 'Playfair Display', serif;
+        color: var(--vintage-accent);
+    }
+
+    .book-desc-collapsed {
+        max-height: 14rem;
+        overflow: hidden;
+    }
+
+    @media (min-width: 640px) {
+        .book-desc-collapsed {
+            max-height: 18rem;
+        }
+    }
+
+    #book-desc-inner.book-desc-expanded {
+        max-height: none;
+        overflow: visible;
+    }
+</style>
+<script>
+    (function () {
+        var block = document.getElementById('book-desc-block');
+        if (block && block.getAttribute('data-collapsible') === 'true') {
+            var inner = document.getElementById('book-desc-inner');
+            var fade = document.getElementById('book-desc-fade');
+            var btn = document.getElementById('book-desc-toggle');
+            var expanded = false;
+            if (btn && inner) {
+                btn.addEventListener('click', function () {
+                    expanded = !expanded;
+                    if (expanded) {
+                        inner.classList.remove('book-desc-collapsed');
+                        inner.classList.add('book-desc-expanded');
+                        if (fade) fade.classList.add('hidden');
+                        btn.textContent = 'Show less';
+                    } else {
+                        inner.classList.add('book-desc-collapsed');
+                        inner.classList.remove('book-desc-expanded');
+                        if (fade) fade.classList.remove('hidden');
+                        btn.textContent = 'Show more';
+                    }
+                });
+            }
+        }
+
+        document.querySelectorAll('.js-open-finish-modal').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var url = btn.getAttribute('data-finish-url');
+                var title = btn.getAttribute('data-book-title') || '';
+                if (window.AlexandriaModal && url) window.AlexandriaModal.openFinish(url, title);
+            });
+        });
+
+        document.querySelectorAll('.js-open-delete-modal').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var url = btn.getAttribute('data-delete-url');
+                var title = btn.getAttribute('data-book-title') || '';
+                if (window.AlexandriaModal && url) window.AlexandriaModal.openDelete(url, title);
+            });
+        });
+
+        var editModal = document.getElementById('modal-edit');
+        var openEdit = document.getElementById('open-edit-modal');
+        var closeEdit = document.getElementById('close-edit-modal');
+        var cancelEdit = document.getElementById('cancel-edit-modal');
+
+        function trapEditModal(e) {
+            if (e.key === 'Escape' && editModal && !editModal.classList.contains('hidden')) {
+                e.preventDefault();
+                closeEditModal();
+            }
+        }
+
+        function openEditModal() {
+            if (!editModal) return;
+            editModal.classList.remove('hidden');
+            document.body.classList.add('modal-open');
+            editModal.setAttribute('aria-hidden', 'false');
+            var panel = editModal.querySelector('[data-modal-panel]');
+            var first = panel ? panel.querySelector('select, input, button') : null;
+            if (first) first.focus();
+            document.addEventListener('keydown', trapEditModal);
+        }
+
+        function closeEditModal() {
+            if (!editModal) return;
+            editModal.classList.add('hidden');
+            document.body.classList.remove('modal-open');
+            editModal.setAttribute('aria-hidden', 'true');
+            document.removeEventListener('keydown', trapEditModal);
+            if (openEdit) openEdit.focus();
+        }
+
+        if (openEdit) openEdit.addEventListener('click', openEditModal);
+        if (closeEdit) closeEdit.addEventListener('click', closeEditModal);
+        if (cancelEdit) cancelEdit.addEventListener('click', closeEditModal);
+        if (editModal) {
+            editModal.querySelectorAll('[data-edit-backdrop]').forEach(function (el) {
+                el.addEventListener('click', function (e) {
+                    if (e.target === el) closeEditModal();
+                });
+            });
+        }
+    })();
+</script>
 {% endblock %}

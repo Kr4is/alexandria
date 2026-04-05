@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto">
+<div class="max-w-6xl mx-auto px-1 sm:px-0">
     <!-- Header -->
-    <header class="mb-12 text-center">
-        <h2 class="text-4xl md:text-5xl font-bold mb-4 text-vintage-ink">Library Metrics</h2>
+    <header class="mb-8 sm:mb-12 text-center">
+        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-vintage-ink">Library Metrics</h2>
         <div class="flex justify-center items-center gap-4 mb-6">
             <div class="h-px w-12 bg-vintage-gold/30"></div>
             <div class="w-2 h-2 rounded-full border border-vintage-gold/30"></div>
@@ -14,24 +14,24 @@
     </header>
 
     <!-- 1. Overview Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-        <div class="p-6 paper-texture vintage-border text-center">
-            <h3 class="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Volumes</h3>
-            <p class="text-4xl font-serif-display font-bold text-vintage-ink">{{ total_books }}</p>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-12 sm:mb-16">
+        <div class="p-4 sm:p-6 paper-texture vintage-border text-center min-h-[100px] flex flex-col justify-center">
+            <h3 class="text-[9px] sm:text-[10px] uppercase tracking-widest opacity-40 mb-1 sm:mb-2 font-bold">Volumes</h3>
+            <p class="text-2xl sm:text-4xl font-serif-display font-bold text-vintage-ink">{{ total_books }}</p>
         </div>
-        <div class="p-6 paper-texture vintage-border text-center">
-            <h3 class="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Total Pages</h3>
-            <p class="text-4xl font-serif-display font-bold text-vintage-accent">{{ "{:,}".format(total_pages) }}</p>
+        <div class="p-4 sm:p-6 paper-texture vintage-border text-center min-h-[100px] flex flex-col justify-center">
+            <h3 class="text-[9px] sm:text-[10px] uppercase tracking-widest opacity-40 mb-1 sm:mb-2 font-bold">Total Pages</h3>
+            <p class="text-2xl sm:text-4xl font-serif-display font-bold text-vintage-accent break-all sm:break-normal">{{ "{:,}".format(total_pages) }}</p>
         </div>
-        <div class="p-6 paper-texture vintage-border text-center">
-            <h3 class="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Reading Time</h3>
-            <p class="text-4xl font-serif-display font-bold text-vintage-ink">{{ "{:,}".format(reading_hours) }} <span
-                    class="text-sm font-normal opacity-50">hrs</span></p>
+        <div class="p-4 sm:p-6 paper-texture vintage-border text-center min-h-[100px] flex flex-col justify-center">
+            <h3 class="text-[9px] sm:text-[10px] uppercase tracking-widest opacity-40 mb-1 sm:mb-2 font-bold">Reading Time</h3>
+            <p class="text-2xl sm:text-4xl font-serif-display font-bold text-vintage-ink">{{ "{:,}".format(reading_hours) }} <span
+                    class="text-xs sm:text-sm font-normal opacity-50">hrs</span></p>
         </div>
-        <div class="p-6 paper-texture vintage-border text-center">
-            <h3 class="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Completion</h3>
-            <p class="text-4xl font-serif-display font-bold text-vintage-ink">{{ completion_rate }}<span
-                    class="text-2xl opacity-50">%</span></p>
+        <div class="p-4 sm:p-6 paper-texture vintage-border text-center min-h-[100px] flex flex-col justify-center">
+            <h3 class="text-[9px] sm:text-[10px] uppercase tracking-widest opacity-40 mb-1 sm:mb-2 font-bold">Completion</h3>
+            <p class="text-2xl sm:text-4xl font-serif-display font-bold text-vintage-ink">{{ completion_rate }}<span
+                    class="text-lg sm:text-2xl opacity-50">%</span></p>
         </div>
     </div>
 
@@ -42,9 +42,9 @@
         </div>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Chart -->
-            <div class="lg:col-span-2 paper-texture vintage-border p-6">
+            <div class="lg:col-span-2 paper-texture vintage-border p-4 sm:p-6 min-w-0 overflow-hidden">
                 <h4 class="text-xs uppercase tracking-widest opacity-40 mb-4 font-bold text-center">Pages per Month</h4>
-                <div class="h-[250px]">
+                <div class="h-[220px] sm:h-[250px] w-full min-w-0 relative">
                     <canvas id="pagesHistoryChart"></canvas>
                 </div>
             </div>
@@ -82,8 +82,8 @@
                 <div class="flex-grow flex flex-col text-center">
                     <div class="mb-4 mx-auto w-20 h-28 shadow-md rotate-2 group-hover:rotate-0 transition-soft">
                         {% if book.thumbnail %}
-                        <img src="{{ book.thumbnail }}"
-                            class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-soft">
+                        <img src="{{ book.thumbnail }}" alt="" loading="lazy" decoding="async"
+                            class="book-cover-img w-full h-full object-cover grayscale group-hover:grayscale-0 transition-soft">
                         {% else %}
                         <div
                             class="w-full h-full bg-vintage-paper border border-black/10 flex items-center justify-center text-[8px]">
@@ -132,18 +132,18 @@
             </div>
 
             <!-- Seasons Chart -->
-            <div class="paper-texture vintage-border p-6 relative">
+            <div class="paper-texture vintage-border p-4 sm:p-6 relative min-w-0 overflow-hidden">
                 <h4 class="text-xs uppercase tracking-widest opacity-40 mb-4 font-bold text-center">Seasonal Preference
                 </h4>
-                <div class="h-[200px] flex justify-center">
+                <div class="h-[200px] w-full min-w-0 flex justify-center">
                     <canvas id="seasonsChart"></canvas>
                 </div>
             </div>
 
             <!-- Categories Chart -->
-            <div class="paper-texture vintage-border p-6 relative">
+            <div class="paper-texture vintage-border p-4 sm:p-6 relative min-w-0 overflow-hidden">
                 <h4 class="text-xs uppercase tracking-widest opacity-40 mb-4 font-bold text-center">Top Categories</h4>
-                <div class="h-[200px] flex justify-center">
+                <div class="h-[200px] w-full min-w-0 flex justify-center">
                     <canvas id="categoriesChart"></canvas>
                 </div>
             </div>
@@ -155,13 +155,13 @@
         <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-2">
             <h3 class="text-2xl font-bold italic text-vintage-ink">Curiosities</h3>
         </div>
-        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-4">
             {% macro stat_tile(title, value, unit) %}
             <div
-                class="bg-vintage-paper border border-black/5 p-4 text-center hover:bg-vintage-cream transition-colors">
-                <div class="text-[9px] uppercase tracking-widest opacity-50 mb-1">{{ title }}</div>
-                <div class="font-bold text-xl text-vintage-ink">{{ value }}</div>
-                <div class="text-[9px] italic opacity-40">{{ unit }}</div>
+                class="bg-vintage-paper border border-black/5 p-3 sm:p-4 text-center hover:bg-vintage-cream transition-colors min-h-[88px] flex flex-col justify-center">
+                <div class="text-[8px] sm:text-[9px] uppercase tracking-widest opacity-50 mb-1">{{ title }}</div>
+                <div class="font-bold text-lg sm:text-xl text-vintage-ink break-words">{{ value }}</div>
+                <div class="text-[8px] sm:text-[9px] italic opacity-40">{{ unit }}</div>
             </div>
             {% endmacro %}
             {{ stat_tile("The Tower", tower_height ~ " m", "stack height") }}

@@ -1,32 +1,32 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<header class="mb-20 text-center max-w-2xl mx-auto">
-    <h2 class="text-4xl md:text-6xl font-bold mb-6 text-vintage-ink">The Private Collection</h2>
-    <p class="text-lg md:text-xl italic opacity-60 leading-relaxed">A ledger of stories discovered and voyages completed
+<header class="mb-12 sm:mb-20 text-center max-w-2xl mx-auto px-1">
+    <h2 class="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 text-vintage-ink">The Private Collection</h2>
+    <p class="text-base sm:text-lg md:text-xl italic opacity-60 leading-relaxed">A ledger of stories discovered and voyages completed
         through the infinite sea of ink.</p>
-    <div class="mt-8 flex justify-center items-center gap-4">
+    <div class="mt-6 sm:mt-8 flex justify-center items-center gap-4">
         <div class="h-px w-12 bg-vintage-gold/30"></div>
         <div class="w-2 h-2 rounded-full border border-vintage-gold/30"></div>
         <div class="h-px w-12 bg-vintage-gold/30"></div>
     </div>
 </header>
 
-<section class="mb-24">
-    <div class="flex items-baseline justify-between mb-12 border-b border-black/5 pb-4">
-        <h3 class="text-2xl md:text-3xl font-bold italic text-vintage-accent">Currently Reading</h3>
-        <span class="text-[10px] uppercase tracking-[0.25em] opacity-40 font-bold">{{ reading|length }} volumes</span>
+<section class="mb-16 sm:mb-24">
+    <div class="flex items-baseline justify-between mb-8 sm:mb-12 border-b border-black/5 pb-4 gap-4">
+        <h3 class="text-xl sm:text-2xl md:text-3xl font-bold italic text-vintage-accent">Currently Reading</h3>
+        <span class="text-[10px] uppercase tracking-[0.25em] opacity-40 font-bold flex-shrink-0">{{ reading|length }} volumes</span>
     </div>
 
     {% if reading %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 md:gap-14">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 md:gap-14">
         {% for book in reading %}
-        <div class="group flex flex-col">
+        <div class="group flex flex-col min-w-0">
             <a href="{{ url_for('book_detail', book_id=book.id) }}"
-                class="mb-8 aspect-[3/4] overflow-hidden paper-texture vintage-border relative block transition-soft group-hover:-translate-y-2">
+                class="mb-6 sm:mb-8 aspect-[3/4] overflow-hidden paper-texture vintage-border relative block transition-soft group-hover:-translate-y-2 max-w-full">
                 {% if book.thumbnail %}
-                <img src="{{ book.thumbnail }}" alt="{{ book.title }}"
-                    class="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-soft duration-700">
+                <img src="{{ book.thumbnail }}" alt="{{ book.title }}" loading="lazy" decoding="async"
+                    class="book-cover-img w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-soft duration-700">
                 {% else %}
                 <div class="w-full h-full flex items-center justify-center text-center p-8 italic opacity-20 text-sm">
                     Untitled Manuscript
@@ -37,69 +37,77 @@
                 </div>
             </a>
 
-            <div class="flex-grow space-y-3">
+            <div class="flex-grow space-y-3 min-w-0">
                 <a href="{{ url_for('book_detail', book_id=book.id) }}"
                     class="block hover:text-vintage-accent transition-soft">
-                    <h4 class="text-xl md:text-2xl font-bold leading-tight line-clamp-2">{{ book.title }}</h4>
+                    <h4 class="text-lg sm:text-xl md:text-2xl font-bold leading-tight line-clamp-2">{{ book.title }}</h4>
                 </a>
                 <p class="italic opacity-60 text-sm md:text-base">by {{ book.authors or 'Anonymous' }}</p>
                 {% if book.categories %}
-                <div class="pt-2">
+                <div class="pt-2 flex flex-wrap gap-2">
+                    {% for cat in book.categories|categories_list %}
                     <span
-                        class="text-[9px] uppercase tracking-widest px-2 py-1 bg-vintage-accent/5 text-vintage-accent border border-vintage-accent/10">{{
-                        book.categories }}</span>
+                        class="text-[9px] uppercase tracking-widest px-2 py-1 bg-vintage-accent/5 text-vintage-accent border border-vintage-accent/10">{{ cat }}</span>
+                    {% endfor %}
                 </div>
                 {% endif %}
             </div>
 
             {% if current_user.is_authenticated %}
-            <div class="mt-8 flex items-center gap-4 pt-6 border-t border-black/5">
-                <form action="{{ url_for('finish_book', book_id=book.id) }}" method="POST" class="flex-1">
-                    <button type="submit"
-                        class="w-full py-2.5 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft">
-                        Close Chapter
-                    </button>
-                </form>
-                <form action="{{ url_for('delete_book', book_id=book.id) }}" method="POST">
-                    <button type="submit" class="p-2 opacity-20 hover:opacity-100 hover:text-red-800 transition-soft"
-                        title="Remove Archive">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd"
-                                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </form>
+            <div class="mt-6 sm:mt-8 flex items-stretch sm:items-center gap-3 pt-6 border-t border-black/5">
+                <button type="button"
+                    class="flex-1 min-h-[44px] py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft js-open-finish-modal"
+                    data-finish-url="{{ url_for('finish_book', book_id=book.id) }}"
+                    data-book-title="{{ book.title|e }}">
+                    Close Chapter
+                </button>
+                <button type="button"
+                    class="min-w-[44px] min-h-[44px] inline-flex items-center justify-center opacity-40 hover:opacity-100 hover:text-red-800 transition-soft border border-transparent hover:border-black/10 rounded-sm js-open-delete-modal"
+                    data-delete-url="{{ url_for('delete_book', book_id=book.id) }}"
+                    data-book-title="{{ book.title|e }}"
+                    title="Remove from archives">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd"
+                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </button>
             </div>
             {% endif %}
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <div class="text-center py-20 paper-texture italic opacity-40">
-        The shelves are currently waiting for a new journey...
+    <div class="text-center py-16 sm:py-20 paper-texture space-y-6">
+        <p class="italic opacity-50 text-base sm:text-lg">The shelves are currently waiting for a new journey...</p>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('search') }}"
+            class="inline-flex min-h-[44px] items-center justify-center px-8 py-3 text-[10px] uppercase tracking-[0.25em] font-bold bg-vintage-ink text-vintage-cream hover:bg-vintage-accent transition-soft shadow-lg">
+            Consult the Archives
+        </a>
+        {% endif %}
     </div>
     {% endif %}
 </section>
 
 <section>
-    <div class="flex items-baseline justify-between mb-12 border-b border-black/5 pb-4">
-        <h3 class="text-2xl md:text-3xl font-bold italic text-vintage-accent opacity-80">Completed Voyages</h3>
-        <span class="text-[10px] uppercase tracking-[0.25em] opacity-40 font-bold">{{ finished|length }} volumes</span>
+    <div class="flex items-baseline justify-between mb-8 sm:mb-12 border-b border-black/5 pb-4 gap-4">
+        <h3 class="text-xl sm:text-2xl md:text-3xl font-bold italic text-vintage-accent opacity-80">Completed Voyages</h3>
+        <span class="text-[10px] uppercase tracking-[0.25em] opacity-40 font-bold flex-shrink-0">{{ finished|length }} volumes</span>
     </div>
 
     {% if finished %}
-    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-x-8 gap-y-12">
+    <div class="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-4 sm:gap-x-8 gap-y-10 sm:gap-y-12">
         {% for book in finished %}
-        <div class="group relative flex flex-col">
+        <div class="group relative flex flex-col min-w-0">
             <a href="{{ url_for('book_detail', book_id=book.id) }}"
-                class="aspect-[2/3] overflow-hidden shadow-sm border border-black/5 mb-4 group-hover:-rotate-1 group-hover:shadow-xl transition-soft block relative">
+                class="aspect-[2/3] overflow-hidden shadow-sm border border-black/5 mb-3 sm:mb-4 group-hover:-rotate-1 group-hover:shadow-xl transition-soft block relative max-w-full">
                 {% if book.thumbnail %}
-                <img src="{{ book.thumbnail }}" alt="{{ book.title }}"
-                    class="w-full h-full object-cover sepia-[20%] group-hover:sepia-0 transition-soft">
+                <img src="{{ book.thumbnail }}" alt="{{ book.title }}" loading="lazy" decoding="async"
+                    class="book-cover-img w-full h-full object-cover sepia-[20%] group-hover:sepia-0 transition-soft">
                 {% else %}
                 <div
-                    class="w-full h-full flex items-center justify-center text-[10px] p-2 opacity-30 italic text-center">
+                    class="w-full h-full flex items-center justify-center text-[9px] sm:text-[10px] p-2 opacity-30 italic text-center">
                     Manuscript</div>
                 {% endif %}
                 <div
@@ -107,33 +115,60 @@
                 </div>
             </a>
             <a href="{{ url_for('book_detail', book_id=book.id) }}"
-                class="block hover:text-vintage-accent transition-soft">
-                <h5 class="font-bold text-xs md:text-sm leading-tight line-clamp-1 opacity-80 group-hover:opacity-100">
+                class="block hover:text-vintage-accent transition-soft min-w-0">
+                <h5 class="font-bold text-[11px] sm:text-xs md:text-sm leading-tight line-clamp-2 sm:line-clamp-1 opacity-80 group-hover:opacity-100">
                     {{ book.title }}</h5>
             </a>
-            <p class="text-[9px] uppercase tracking-wider opacity-30 mt-2 font-bold">{{ book.date_finished.strftime('%b
-                %Y') }}</p>
+            <p class="text-[8px] sm:text-[9px] uppercase tracking-wider opacity-30 mt-2 font-bold">{{ book.date_finished.strftime('%b %Y') }}</p>
 
             {% if current_user.is_authenticated %}
-            <form action="{{ url_for('delete_book', book_id=book.id) }}" method="POST"
-                class="absolute -top-2 -right-2 scale-0 group-hover:scale-100 transition-soft z-10">
-                <button type="submit"
-                    class="p-1.5 bg-red-900 text-vintage-cream rounded-full shadow-xl hover:bg-red-700 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+            <button type="button"
+                class="mt-2 min-h-[40px] w-full text-[9px] uppercase tracking-widest font-bold text-red-900/70 hover:text-red-800 border border-red-900/20 hover:bg-red-50/50 py-2 transition-soft sm:opacity-0 sm:group-hover:opacity-100 sm:absolute sm:top-0 sm:right-0 sm:w-auto sm:min-w-[44px] sm:min-h-[44px] sm:rounded-full sm:border-0 sm:bg-red-900 sm:text-vintage-cream sm:hover:bg-red-700 sm:p-2 sm:mt-0 js-open-delete-modal"
+                data-delete-url="{{ url_for('delete_book', book_id=book.id) }}"
+                data-book-title="{{ book.title|e }}"
+                title="Remove from archives">
+                <span class="sm:hidden">Remove</span>
+                <span class="hidden sm:inline-flex">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mx-auto" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path fill-rule="evenodd"
                             d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
                             clip-rule="evenodd" />
                     </svg>
-                </button>
-            </form>
+                </span>
+            </button>
             {% endif %}
         </div>
         {% endfor %}
     </div>
     {% else %}
-    <div class="text-center py-16 opacity-30 italic text-sm">
-        No completed journeys yet recorded.
+    <div class="text-center py-12 sm:py-16 space-y-6 opacity-30">
+        <p class="italic text-sm sm:text-base">No completed journeys yet recorded.</p>
+        {% if current_user.is_authenticated and reading|length == 0 %}
+        <a href="{{ url_for('search') }}"
+            class="inline-flex min-h-[44px] items-center justify-center px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-accent text-vintage-accent hover:bg-vintage-accent hover:text-vintage-cream transition-soft">
+            Add your first volume
+        </a>
+        {% endif %}
     </div>
     {% endif %}
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.querySelectorAll('.js-open-finish-modal').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var url = btn.getAttribute('data-finish-url');
+            var title = btn.getAttribute('data-book-title') || '';
+            if (window.AlexandriaModal && url) window.AlexandriaModal.openFinish(url, title);
+        });
+    });
+    document.querySelectorAll('.js-open-delete-modal').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var url = btn.getAttribute('data-delete-url');
+            var title = btn.getAttribute('data-book-title') || '';
+            if (window.AlexandriaModal && url) window.AlexandriaModal.openDelete(url, title);
+        });
+    });
+</script>
 {% endblock %}

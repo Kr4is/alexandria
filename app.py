@@ -3,7 +3,9 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from models import db, Book, User
 from api import search_books, get_book_details
 from datetime import datetime, UTC
+import html as html_lib
 import os
+import re
 from dotenv import load_dotenv
 from loguru import logger
 
@@ -38,6 +40,61 @@ login_manager.init_app(app)
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
+def _strip_book_description_html(raw):
+    if not raw:
+        return ''
+    t = html_lib.unescape(str(raw))
+    t = re.sub(r'<br\s*/?>', '\n', t, flags=re.I)
+    t = re.sub(r'</p\s*>', '\n\n', t, flags=re.I)
+    t = re.sub(r'<[^>]+>', ' ', t)
+    t = re.sub(r'[ \t]+', ' ', t)
+    t = re.sub(r'\n{3,}', '\n\n', t)
+    return t.strip()
+
+
+_LANGUAGE_NAMES = {
+    'en': 'English', 'es': 'Spanish', 'fr': 'French', 'de': 'German', 'it': 'Italian',
+    'pt': 'Portuguese', 'ca': 'Catalan', 'nl': 'Dutch', 'pl': 'Polish', 'ru': 'Russian',
+    'ja': 'Japanese', 'zh': 'Chinese', 'ko': 'Korean', 'ar': 'Arabic', 'he': 'Hebrew',
+    'sv': 'Swedish', 'no': 'Norwegian', 'da': 'Danish', 'fi': 'Finnish', 'el': 'Greek',
+    'cs': 'Czech', 'hu': 'Hungarian', 'tr': 'Turkish', 'hi': 'Hindi',
+}
+
+
+@app.template_filter('book_plaintext')
+def book_plaintext_filter(value):
+    return _strip_book_description_html(value)
+
+
+@app.template_filter('book_paragraphs')
+def book_paragraphs_filter(value):
+    text = _strip_book_description_html(value)
+    if not text:
+        return []
+    return [p.strip() for p in re.split(r'\n\n+', text) if p.strip()]
+
+
+@app.template_filter('categories_list')
+def categories_list_filter(value):
+    if not value:
+        return []
+    return [c.strip() for c in str(value).split(',') if c.strip()]
+
+
+@app.template_filter('language_display')
+def language_display_filter(code):
+    if not code:
+        return ''
+    c = str(code).lower().split('-')[0]
+    return _LANGUAGE_NAMES.get(c, str(code).upper())
+
+
+@app.context_processor
+def inject_now():
+    return {'now': datetime.now()}
+
 
 with app.app_context():
     # Ensure instance folder exists
@@ -108,7 +165,7 @@ def login():
         if user and user.check_password(password):
             login_user(user)
             return redirect(url_for('index'))
-        flash('Invalid username or password')
+        flash('Invalid username or password', 'error')
     return render_template('login.html')
 
 @app.route('/logout')
@@ -123,30 +180,41 @@ def search():
     results = []
     if query:
         results = search_books(query)
-    return render_template('search.html', results=results, query=query)
+    library_google_ids = {b.google_books_id for b in Book.query.all() if b.google_books_id}
+    return render_template(
+        'search.html',
+        results=results,
+        query=query,
+        library_google_ids=library_google_ids,
+    )
 
 @app.route('/add/<google_books_id>', methods=['POST'])
 @login_required
 def add_book(google_books_id):
-    if not Book.query.filter_by(google_books_id=google_books_id).first():
-        details = get_book_details(google_books_id)
-        if details:
-            new_book = Book(
-                google_books_id=details['google_books_id'],
-                title=details['title'],
-                authors=details['authors'],
-                thumbnail=details['thumbnail'],
-                description=details['description'],
-                page_count=details.get('page_count'),
-                categories=details['categories'],
-                published_year=details.get('published_year'),
-                language=details.get('language'),
-                average_rating=details.get('average_rating'),
-                status='reading'
-            )
-            db.session.add(new_book)
-            db.session.commit()
-    return redirect(url_for('index'))
+    if Book.query.filter_by(google_books_id=google_books_id).first():
+        flash('This volume is already in your collection.', 'info')
+        return redirect(url_for('search', q=request.form.get('q', '') or request.args.get('q', '')))
+    details = get_book_details(google_books_id)
+    if details:
+        new_book = Book(
+            google_books_id=details['google_books_id'],
+            title=details['title'],
+            authors=details['authors'],
+            thumbnail=details['thumbnail'],
+            description=details['description'],
+            page_count=details.get('page_count'),
+            categories=details['categories'],
+            published_year=details.get('published_year'),
+            language=details.get('language'),
+            average_rating=details.get('average_rating'),
+            status='reading'
+        )
+        db.session.add(new_book)
+        db.session.commit()
+        flash('Volume added to your collection.', 'success')
+    else:
+        flash('Could not retrieve volume details from the archives.', 'error')
+    return redirect(url_for('search', q=request.form.get('q', '') or request.args.get('q', '')))
 
 @app.route('/stats')
 def stats():
@@ -377,6 +445,7 @@ def finish_book(book_id):
     book.status = 'finished'
     book.date_finished = datetime.now(UTC)
     db.session.commit()
+    flash('Chapter closed — voyage recorded as complete.', 'success')
     return redirect(url_for('index'))
 
 @app.route('/edit/<int:book_id>', methods=['GET', 'POST'])
@@ -396,7 +465,7 @@ def edit_book(book_id):
             try:
                 book.date_added = datetime.strptime(date_added_str, '%Y-%m-%d')
             except ValueError:
-                flash('Invalid date format for Date Added')
+                flash('Invalid date format for Date Added', 'error')
         
         # Update date_finished
         date_finished_str = request.form.get('date_finished')
@@ -404,12 +473,12 @@ def edit_book(book_id):
             try:
                 book.date_finished = datetime.strptime(date_finished_str, '%Y-%m-%d')
             except ValueError:
-                flash('Invalid date format for Date Finished')
+                flash('Invalid date format for Date Finished', 'error')
         else:
             book.date_finished = None
         
         db.session.commit()
-        flash('Book details updated successfully')
+        flash('Book details updated successfully.', 'success')
         return redirect(url_for('book_detail', book_id=book.id))
     
     return render_template('edit_book.html', book=book)
@@ -420,6 +489,7 @@ def delete_book(book_id):
     book = Book.query.get_or_404(book_id)
     db.session.delete(book)
     db.session.commit()
+    flash('Volume removed from the archives.', 'success')
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
