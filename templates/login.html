@@ -13,7 +13,7 @@
             <p class="italic opacity-60 text-sm">Identify yourself to manage the private archives.</p>
         </header>
 
-        <form action="{{ url_for('login') }}" method="POST" class="flex flex-col gap-8">
+        <form action="{{ url_for('auth.login') }}" method="POST" class="flex flex-col gap-8">
             <div class="text-left space-y-2 group">
                 <label for="username"
                     class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 group-focus-within:opacity-100 group-focus-within:text-vintage-accent transition-soft block">Username</label>

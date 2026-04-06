@@ -8,7 +8,7 @@
 </header>
 
 <div class="max-w-2xl mx-auto mb-16 sm:mb-24 px-1">
-    <form action="{{ url_for('search') }}" method="GET" class="relative group flex flex-col sm:block gap-3">
+    <form action="{{ url_for('books.search') }}" method="GET" class="relative group flex flex-col sm:block gap-3">
         <input type="text" name="q" value="{{ query or '' }}" placeholder="Search by title, author, or ISBN..."
             autocomplete="off"
             class="w-full min-h-[52px] px-4 sm:px-6 py-4 sm:py-6 pr-24 bg-paper-texture border-b-2 border-vintage-gold/20 focus:border-vintage-gold transition-soft text-lg sm:text-xl md:text-2xl outline-none italic placeholder:opacity-30 paper-texture">
@@ -18,6 +18,22 @@
         </button>
     </form>
 </div>
+
+{% if search_api_error %}
+<div
+    class="max-w-2xl mx-auto mb-10 sm:mb-14 px-1 paper-texture vintage-border p-5 sm:p-6 border-l-4 border-l-amber-700/80">
+    <h3 class="text-sm font-bold uppercase tracking-widest text-amber-900/90 mb-2">Archives unreachable</h3>
+    <p class="text-sm sm:text-base text-vintage-ink/90 leading-relaxed mb-3">
+        Google Books did not return search results. This often happens when the shared API quota is exhausted (HTTP 429) or the service is temporarily unavailable.
+    </p>
+    <p class="text-xs sm:text-sm font-mono opacity-70 break-words bg-black/[0.04] p-3 rounded border border-black/10">{{ search_api_error }}</p>
+    <p class="text-xs sm:text-sm mt-4 opacity-60 italic">
+        Fix: create a key in
+        <a href="https://console.cloud.google.com/apis/library/books.googleapis.com" class="underline hover:text-vintage-accent" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>
+        (enable Books API), then set <code class="font-mono text-[11px]">GOOGLE_BOOKS_API_KEY</code> in your environment and restart the app.
+    </p>
+</div>
+{% endif %}
 
 {% if results %}
 <div class="grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-12 lg:gap-16">
@@ -70,7 +86,7 @@
                     {% if in_library %}
                     <span class="text-center sm:text-right text-[10px] uppercase tracking-widest font-bold opacity-40 italic py-2">Already acquired</span>
                     {% else %}
-                <form action="{{ url_for('add_book', google_books_id=book.google_books_id) }}" method="POST"
+                <form action="{{ url_for('books.add_book', google_books_id=book.google_books_id) }}" method="POST"
                     class="w-full sm:w-auto js-submit-loading">
                     <input type="hidden" name="q" value="{{ query or '' }}">
                     <button type="submit"

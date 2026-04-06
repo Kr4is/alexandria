@@ -38,6 +38,7 @@ cp .env.example .env
 | `SECRET_KEY` | Security key for session encryption | `default-key` |
 | `LIBRARIAN_USERNAME` | Admin login username | `admin` |
 | `LIBRARIAN_PASSWORD` | Admin login password | `alexandria` |
+| `GOOGLE_BOOKS_API_KEY` | Optional API key for Google Books (avoids shared anonymous quota / HTTP 429) | _(unset)_ |
 | `DATABASE_URL` | SQLite database URI | `sqlite:///instance/alexandria.db` |
 
 ## 🚀 Getting Started
@@ -62,6 +63,11 @@ Ensure you have [uv](https://github.com/astral-sh/uv) installed.
    ```bash
    uv run python app.py
    ```
+3. **Run tests** (optional):
+   ```bash
+   uv sync --group dev
+   uv run pytest
+   ```
 
 ## 📸 Screenshots
 
@@ -71,12 +77,17 @@ Ensure you have [uv](https://github.com/astral-sh/uv) installed.
 
 ## 📂 Project Structure
 
-- `app.py`: Main application logic.
-- `models.py`: Database models (Books & Users).
-- `api.py`: Google Books API integration.
+- `alexandria/`: Application package (`create_app`, config, extensions, models).
+- `alexandria/blueprints/`: HTTP routes (`main`, `auth`, `books`).
+- `alexandria/services/`: Domain logic (library actions, stats aggregation).
+- `alexandria/integrations/google_books.py`: Google Books API client.
+- `alexandria/bootstrap.py`: Database init, librarian seed, startup metadata refresh.
+- `app.py`: Entry shim (`create_app()`), compatible with Docker and `uv run python app.py`.
+- `models.py` / `api.py`: Backward-compatible re-exports (prefer imports from `alexandria`).
 - `static/`: Favicon, logo, and CSS.
 - `templates/`: Vintage Jinja2 templates.
+- `tests/`: Pytest smoke tests.
 - `instance/`: SQLite database storage (mounted as volume in Docker).
 
 ---
-*Catalogued with care, 2025.*
+*Catalogued with care, 2026.*

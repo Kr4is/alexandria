@@ -22,7 +22,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 md:gap-14">
         {% for book in reading %}
         <div class="group flex flex-col min-w-0">
-            <a href="{{ url_for('book_detail', book_id=book.id) }}"
+            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
                 class="mb-6 sm:mb-8 aspect-[3/4] overflow-hidden paper-texture vintage-border relative block transition-soft group-hover:-translate-y-2 max-w-full">
                 {% if book.thumbnail %}
                 <img src="{{ book.thumbnail }}" alt="{{ book.title }}" loading="lazy" decoding="async"
@@ -38,7 +38,7 @@
             </a>
 
             <div class="flex-grow space-y-3 min-w-0">
-                <a href="{{ url_for('book_detail', book_id=book.id) }}"
+                <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
                     class="block hover:text-vintage-accent transition-soft">
                     <h4 class="text-lg sm:text-xl md:text-2xl font-bold leading-tight line-clamp-2">{{ book.title }}</h4>
                 </a>
@@ -57,13 +57,13 @@
             <div class="mt-6 sm:mt-8 flex items-stretch sm:items-center gap-3 pt-6 border-t border-black/5">
                 <button type="button"
                     class="flex-1 min-h-[44px] py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft js-open-finish-modal"
-                    data-finish-url="{{ url_for('finish_book', book_id=book.id) }}"
+                    data-finish-url="{{ url_for('books.finish_book', book_id=book.id) }}"
                     data-book-title="{{ book.title|e }}">
                     Close Chapter
                 </button>
                 <button type="button"
                     class="min-w-[44px] min-h-[44px] inline-flex items-center justify-center opacity-40 hover:opacity-100 hover:text-red-800 transition-soft border border-transparent hover:border-black/10 rounded-sm js-open-delete-modal"
-                    data-delete-url="{{ url_for('delete_book', book_id=book.id) }}"
+                    data-delete-url="{{ url_for('books.delete_book', book_id=book.id) }}"
                     data-book-title="{{ book.title|e }}"
                     title="Remove from archives">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -81,7 +81,7 @@
     <div class="text-center py-16 sm:py-20 paper-texture space-y-6">
         <p class="italic opacity-50 text-base sm:text-lg">The shelves are currently waiting for a new journey...</p>
         {% if current_user.is_authenticated %}
-        <a href="{{ url_for('search') }}"
+        <a href="{{ url_for('books.search') }}"
             class="inline-flex min-h-[44px] items-center justify-center px-8 py-3 text-[10px] uppercase tracking-[0.25em] font-bold bg-vintage-ink text-vintage-cream hover:bg-vintage-accent transition-soft shadow-lg">
             Consult the Archives
         </a>
@@ -100,7 +100,7 @@
     <div class="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-4 sm:gap-x-8 gap-y-10 sm:gap-y-12">
         {% for book in finished %}
         <div class="group relative flex flex-col min-w-0">
-            <a href="{{ url_for('book_detail', book_id=book.id) }}"
+            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
                 class="aspect-[2/3] overflow-hidden shadow-sm border border-black/5 mb-3 sm:mb-4 group-hover:-rotate-1 group-hover:shadow-xl transition-soft block relative max-w-full">
                 {% if book.thumbnail %}
                 <img src="{{ book.thumbnail }}" alt="{{ book.title }}" loading="lazy" decoding="async"
@@ -114,7 +114,7 @@
                     class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-soft">
                 </div>
             </a>
-            <a href="{{ url_for('book_detail', book_id=book.id) }}"
+            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
                 class="block hover:text-vintage-accent transition-soft min-w-0">
                 <h5 class="font-bold text-[11px] sm:text-xs md:text-sm leading-tight line-clamp-2 sm:line-clamp-1 opacity-80 group-hover:opacity-100">
                     {{ book.title }}</h5>
@@ -124,7 +124,7 @@
             {% if current_user.is_authenticated %}
             <button type="button"
                 class="mt-2 min-h-[40px] w-full text-[9px] uppercase tracking-widest font-bold text-red-900/70 hover:text-red-800 border border-red-900/20 hover:bg-red-50/50 py-2 transition-soft sm:opacity-0 sm:group-hover:opacity-100 sm:absolute sm:top-0 sm:right-0 sm:w-auto sm:min-w-[44px] sm:min-h-[44px] sm:rounded-full sm:border-0 sm:bg-red-900 sm:text-vintage-cream sm:hover:bg-red-700 sm:p-2 sm:mt-0 js-open-delete-modal"
-                data-delete-url="{{ url_for('delete_book', book_id=book.id) }}"
+                data-delete-url="{{ url_for('books.delete_book', book_id=book.id) }}"
                 data-book-title="{{ book.title|e }}"
                 title="Remove from archives">
                 <span class="sm:hidden">Remove</span>
@@ -144,7 +144,7 @@
     <div class="text-center py-12 sm:py-16 space-y-6 opacity-30">
         <p class="italic text-sm sm:text-base">No completed journeys yet recorded.</p>
         {% if current_user.is_authenticated and reading|length == 0 %}
-        <a href="{{ url_for('search') }}"
+        <a href="{{ url_for('books.search') }}"
             class="inline-flex min-h-[44px] items-center justify-center px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-accent text-vintage-accent hover:bg-vintage-accent hover:text-vintage-cream transition-soft">
             Add your first volume
         </a>

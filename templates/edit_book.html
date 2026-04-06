@@ -3,7 +3,7 @@
 {% block content %}
 <div class="max-w-3xl mx-auto">
     <div class="mb-12">
-        <a href="{{ url_for('book_detail', book_id=book.id) }}"
+        <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
             class="inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.25em] font-bold opacity-40 hover:opacity-100 hover:text-vintage-accent transition-soft group">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:-translate-x-1"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -25,7 +25,7 @@
             <p class="text-sm opacity-40">by {{ book.authors or 'Anonymous' }}</p>
         </header>
 
-        <form method="POST" action="{{ url_for('edit_book', book_id=book.id) }}" class="space-y-10 js-submit-loading">
+        <form method="POST" action="{{ url_for('books.edit_book', book_id=book.id) }}" class="space-y-10 js-submit-loading">
             <!-- Status -->
             <div class="space-y-3">
                 <label for="status" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
@@ -76,7 +76,7 @@
                     class="bg-vintage-accent text-vintage-cream px-10 py-4 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-ink transition-soft shadow-xl">
                     Save Amendments
                 </button>
-                <a href="{{ url_for('book_detail', book_id=book.id) }}"
+                <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
                     class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 hover:opacity-100 transition-soft px-4 py-2">
                     Cancel
                 </a>
