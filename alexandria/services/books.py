@@ -33,6 +33,7 @@ def add_book_from_api_details(details: dict) -> Book:
         title=details['title'],
         authors=details['authors'],
         thumbnail=details['thumbnail'],
+        isbn=details.get('isbn'),
         description=details['description'],
         page_count=details.get('page_count'),
         categories=details['categories'],

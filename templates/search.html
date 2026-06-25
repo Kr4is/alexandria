@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from '_macros.html' import book_cover_img %}
 
 {% block content %}
 <header class="mb-12 sm:mb-20 text-center max-w-2xl mx-auto px-1">
@@ -44,9 +45,8 @@
         class="flex flex-col sm:flex-row gap-6 sm:gap-8 group paper-texture p-5 sm:p-6 transition-soft hover:-translate-y-1 hover:shadow-2xl">
         <div class="w-28 sm:w-32 md:w-40 flex-shrink-0 mx-auto sm:mx-0">
             <div class="aspect-[2/3] shadow-lg vintage-border overflow-hidden bg-stone-100">
-                {% if book.thumbnail %}
-                <img src="{{ book.thumbnail }}" alt="{{ book.title }}" loading="lazy" decoding="async"
-                    class="book-cover-img w-full h-full object-cover transition-soft duration-500 group-hover:scale-105">
+                {% if book|cover_for %}
+                {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover transition-soft duration-500 group-hover:scale-105') }}
                 {% else %}
                 <div
                     class="w-full h-full flex items-center justify-center italic opacity-20 text-[10px] p-4 text-center">
@@ -88,7 +88,6 @@
                     {% else %}
                 <form action="{{ url_for('books.add_book', google_books_id=book.google_books_id) }}" method="POST"
                     class="w-full sm:w-auto js-submit-loading">
-                    <input type="hidden" name="q" value="{{ query or '' }}">
                     <button type="submit"
                         class="w-full min-h-[44px] sm:w-auto text-[10px] uppercase tracking-[0.2em] font-bold bg-vintage-ink text-vintage-cream hover:bg-vintage-accent px-6 py-3 transition-soft shadow-lg">
                         Acquire

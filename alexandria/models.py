@@ -4,6 +4,7 @@ from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from alexandria.extensions import db
+from alexandria.utils.covers import resolve_cover_fallback_url, resolve_cover_url
 
 
 class User(UserMixin, db.Model):
@@ -24,6 +25,7 @@ class Book(db.Model):
     title = db.Column(db.String(200), nullable=False)
     authors = db.Column(db.String(200))
     thumbnail = db.Column(db.String(500))
+    isbn = db.Column(db.String(20), nullable=True)
     description = db.Column(db.Text)
     page_count = db.Column(db.Integer)
     categories = db.Column(db.String(200))
@@ -34,12 +36,28 @@ class Book(db.Model):
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
     date_finished = db.Column(db.DateTime, nullable=True)
 
+    @property
+    def cover_url(self):
+        return resolve_cover_url(
+            thumbnail=self.thumbnail,
+            google_books_id=self.google_books_id,
+            isbn=self.isbn,
+        )
+
+    @property
+    def cover_fallback_url(self):
+        return resolve_cover_fallback_url(
+            thumbnail=self.thumbnail,
+            google_books_id=self.google_books_id,
+            isbn=self.isbn,
+        )
+
     def to_dict(self):
         return {
             'id': self.id,
             'title': self.title,
             'authors': self.authors,
-            'thumbnail': self.thumbnail,
+            'thumbnail': self.cover_url,
             'description': self.description,
             'page_count': self.page_count,
             'categories': self.categories,

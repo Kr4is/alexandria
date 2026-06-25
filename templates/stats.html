@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% from '_macros.html' import book_cover_img %}
 
 {% block content %}
 <div class="max-w-6xl mx-auto px-1 sm:px-0">
@@ -81,9 +82,8 @@
                 {% if book %}
                 <div class="flex-grow flex flex-col text-center">
                     <div class="mb-4 mx-auto w-20 h-28 shadow-md rotate-2 group-hover:rotate-0 transition-soft">
-                        {% if book.thumbnail %}
-                        <img src="{{ book.thumbnail }}" alt="" loading="lazy" decoding="async"
-                            class="book-cover-img w-full h-full object-cover grayscale group-hover:grayscale-0 transition-soft">
+                        {% if book|cover_for %}
+                        {{ book_cover_img(book, alt='', class='book-cover-img w-full h-full object-cover grayscale group-hover:grayscale-0 transition-soft') }}
                         {% else %}
                         <div
                             class="w-full h-full bg-vintage-paper border border-black/10 flex items-center justify-center text-[8px]">

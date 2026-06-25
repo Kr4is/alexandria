@@ -1,0 +1,7 @@
+{% macro book_cover_img(book, alt='', class='book-cover-img w-full h-full object-cover', loading='lazy', decoding='async', fetchpriority='') %}
+{% set src = book|cover_for %}
+{% set fallback = book|cover_fallback_for %}
+{% if src %}
+<img src="{{ src }}" alt="{{ alt or book.title }}" class="{{ class }}" loading="{{ loading }}" decoding="{{ decoding }}" referrerpolicy="no-referrer"{% if fetchpriority %} fetchpriority="{{ fetchpriority }}"{% endif %}{% if fallback %} data-fallback="{{ fallback }}" onload="if(this.naturalWidth<=1&&this.dataset.fallback){this.src=this.dataset.fallback;}" onerror="this.onerror=null;this.src=this.dataset.fallback;"{% endif %}>
+{% endif %}
+{% endmacro %}

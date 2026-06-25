@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from flask import Flask
 
 from alexandria.blueprints import auth, books, main
-from alexandria.bootstrap import run_startup_bootstrap
+from alexandria.bootstrap import refresh_library_metadata, run_startup_bootstrap
 from alexandria.config import configure_app
 from alexandria.extensions import db, login_manager
 from alexandria.filters import register_template_filters
@@ -33,6 +33,11 @@ def create_app() -> Flask:
     app.register_blueprint(main.bp)
     app.register_blueprint(auth.bp)
     app.register_blueprint(books.bp)
+
+    @app.cli.command('refresh-metadata')
+    def refresh_metadata_cmd():
+        """Refresh library book metadata from the Google Books API."""
+        refresh_library_metadata()
 
     with app.app_context():
         run_startup_bootstrap(root)

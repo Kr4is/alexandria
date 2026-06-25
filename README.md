@@ -39,6 +39,8 @@ cp .env.example .env
 | `LIBRARIAN_USERNAME` | Admin login username | `admin` |
 | `LIBRARIAN_PASSWORD` | Admin login password | `alexandria` |
 | `GOOGLE_BOOKS_API_KEY` | Optional API key for Google Books (avoids shared anonymous quota / HTTP 429) | _(unset)_ |
+| `GOOGLE_BOOKS_CACHE_TTL_SECONDS` | In-memory cache TTL for search and volume lookups (0 disables caching) | `3600` |
+| `REFRESH_LIBRARY_METADATA_ON_STARTUP` | Refresh all library metadata from Google Books on startup (1 API call per book) | `false` |
 | `DATABASE_URL` | SQLite database URI | `sqlite:///instance/alexandria.db` |
 
 ## 🚀 Getting Started

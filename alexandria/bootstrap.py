@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 from loguru import logger
+from sqlalchemy import inspect, text
 
 from alexandria.extensions import db
 from alexandria.integrations.google_books import get_book_details
@@ -15,6 +16,17 @@ def ensure_instance_folder(root: Path) -> None:
 
 def init_database() -> None:
     db.create_all()
+    ensure_book_schema()
+
+
+def ensure_book_schema() -> None:
+    inspector = inspect(db.engine)
+    if 'book' not in inspector.get_table_names():
+        return
+    columns = {column['name'] for column in inspector.get_columns('book')}
+    if 'isbn' not in columns:
+        with db.engine.begin() as connection:
+            connection.execute(text('ALTER TABLE book ADD COLUMN isbn VARCHAR(20)'))
 
 
 def ensure_librarian_user() -> None:
@@ -39,6 +51,7 @@ def refresh_library_metadata() -> None:
                 if details:
                     book.title = details['title']
                     book.authors = details['authors']
+                    book.isbn = details.get('isbn')
                     book.thumbnail = details['thumbnail']
                     book.description = details['description']
                     book.page_count = details['page_count']
@@ -56,8 +69,17 @@ def refresh_library_metadata() -> None:
         logger.warning(f'Warning: Metadata refresh encountered an error: {e}')
 
 
+def _refresh_on_startup_enabled() -> bool:
+    return os.getenv('REFRESH_LIBRARY_METADATA_ON_STARTUP', '').strip().lower() in (
+        '1',
+        'true',
+        'yes',
+    )
+
+
 def run_startup_bootstrap(root: Path) -> None:
     ensure_instance_folder(root)
     init_database()
     ensure_librarian_user()
-    refresh_library_metadata()
+    if _refresh_on_startup_enabled():
+        refresh_library_metadata()

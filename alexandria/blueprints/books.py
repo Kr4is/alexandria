@@ -7,10 +7,6 @@ from alexandria.services import books as book_service
 bp = Blueprint('books', __name__)
 
 
-def _search_redirect_q():
-    return request.form.get('q', '') or request.args.get('q', '')
-
-
 @bp.route('/search')
 @login_required
 def search():
@@ -30,14 +26,14 @@ def search():
 def add_book(google_books_id):
     if book_service.book_by_google_id(google_books_id):
         flash('This volume is already in your collection.', 'info')
-        return redirect(url_for('books.search', q=_search_redirect_q()))
+        return redirect(url_for('main.index'))
     details = get_book_details(google_books_id)
     if details:
         book_service.add_book_from_api_details(details)
         flash('Volume added to your collection.', 'success')
     else:
         flash('Could not retrieve volume details from the archives.', 'error')
-    return redirect(url_for('books.search', q=_search_redirect_q()))
+    return redirect(url_for('main.index'))
 
 
 @bp.route('/finish/<int:book_id>', methods=['POST'])

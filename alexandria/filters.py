@@ -1,5 +1,6 @@
 import re
 
+from alexandria.utils.covers import resolve_cover_fallback_url, resolve_cover_url
 from alexandria.utils.languages import LANGUAGE_NAMES
 from alexandria.utils.text import strip_book_description_html
 
@@ -28,3 +29,23 @@ def register_template_filters(app):
             return ''
         c = str(code).lower().split('-')[0]
         return LANGUAGE_NAMES.get(c, str(code).upper())
+
+    @app.template_filter('cover_for')
+    def cover_for_filter(book):
+        if hasattr(book, 'cover_url'):
+            return book.cover_url
+        return resolve_cover_url(
+            thumbnail=book.get('thumbnail'),
+            google_books_id=book.get('google_books_id'),
+            isbn=book.get('isbn'),
+        )
+
+    @app.template_filter('cover_fallback_for')
+    def cover_fallback_for_filter(book):
+        if hasattr(book, 'cover_fallback_url'):
+            return book.cover_fallback_url
+        return resolve_cover_fallback_url(
+            thumbnail=book.get('thumbnail'),
+            google_books_id=book.get('google_books_id'),
+            isbn=book.get('isbn'),
+        )
