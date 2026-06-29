@@ -35,4 +35,8 @@ RUN mkdir -p instance
 
 EXPOSE 5000
 
-CMD ["python", "app.py"]
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+# Runs `flask db upgrade` then starts gunicorn (1 worker = no concurrent SQLite writes)
+CMD ["/docker-entrypoint.sh"]

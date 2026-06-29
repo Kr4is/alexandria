@@ -1,7 +1,7 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_user, logout_user
 
-from alexandria.extensions import login_manager
+from alexandria.extensions import db, limiter, login_manager
 from alexandria.models import User
 
 bp = Blueprint('auth', __name__)
@@ -9,10 +9,11 @@ bp = Blueprint('auth', __name__)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 
 @bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit('10 per minute', methods=['POST'])
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
@@ -27,7 +28,7 @@ def login():
     return render_template('login.html')
 
 
-@bp.route('/logout')
+@bp.route('/logout', methods=['POST'])
 def logout():
     logout_user()
     return redirect(url_for('main.index'))

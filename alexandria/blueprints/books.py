@@ -50,9 +50,11 @@ def finish_book(book_id):
 def edit_book(book_id):
     book = book_service.get_book_or_404(book_id)
     if request.method == 'POST':
-        for message, category in book_service.update_book_from_form(book, request.form):
+        errors = book_service.update_book_from_form(book, request.form)
+        for message, category in errors:
             flash(message, category)
-        flash('Book details updated successfully.', 'success')
+        if not errors:
+            flash('Book details updated successfully.', 'success')
         return redirect(url_for('main.book_detail', book_id=book.id))
     return render_template('edit_book.html', book=book)
 

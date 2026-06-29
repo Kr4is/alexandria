@@ -16,6 +16,8 @@ services:
       - ./instance:/app/instance
     restart: unless-stopped
 
+  # WARNING: remove or restrict Adminer before deploying to production —
+  # it exposes direct database access with no additional auth layer.
   adminer:
     image: adminer
     restart: always
@@ -26,6 +28,3 @@ services:
     volumes:
       - ./instance:/db
       - ./adminer-plugins/login-password-less.php:/var/www/html/plugins-enabled/login-password-less.php
-
-volumes:
-  instance:

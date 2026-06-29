@@ -9,6 +9,12 @@ def configure_app(app, root: Path) -> None:
     app.config['SQLALCHEMY_DATABASE_URI'] = _resolve_database_uri(root)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+    app.config['SESSION_COOKIE_HTTPONLY'] = True
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV') == 'production'
+
+    app.config['WTF_CSRF_ENABLED'] = True
+
 
 def _resolve_database_uri(root: Path) -> str:
     db_url = os.getenv('DATABASE_URL')

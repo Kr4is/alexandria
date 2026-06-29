@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center py-24 text-center px-4">
+    <div class="opacity-10 mb-8 select-none" aria-hidden="true">
+        <span style="font-family:'Playfair Display',serif; font-size:10rem; line-height:1; font-weight:700;">404</span>
+    </div>
+    <h2 class="text-3xl md:text-4xl font-bold mb-4 text-vintage-ink">Volume Not Found</h2>
+    <p class="text-base md:text-lg italic opacity-60 max-w-md mb-10">
+        The folio you seek has gone astray — perhaps misfiled in the deep stacks, or simply never catalogued.
+    </p>
+    <a href="{{ url_for('main.index') }}"
+        class="px-10 py-4 bg-vintage-ink text-vintage-cream text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-accent transition-soft shadow-xl">
+        Return to Collection
+    </a>
+    <div class="mt-20 opacity-10 italic text-sm">
+        &mdash; The Archivist regrets the inconvenience &mdash;
+    </div>
+</div>
+{% endblock %}

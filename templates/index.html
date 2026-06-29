@@ -2,7 +2,7 @@
 {% from '_macros.html' import book_cover_img %}
 
 {% block content %}
-<header class="mb-12 sm:mb-20 text-center max-w-2xl mx-auto px-1">
+<header class="mb-8 sm:mb-14 text-center max-w-2xl mx-auto px-1">
     <h2 class="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 text-vintage-ink">The Private Collection</h2>
     <p class="text-base sm:text-lg md:text-xl italic opacity-60 leading-relaxed">A ledger of stories discovered and voyages completed
         through the infinite sea of ink.</p>
@@ -12,6 +12,126 @@
         <div class="h-px w-12 bg-vintage-gold/30"></div>
     </div>
 </header>
+
+<!-- Filter / Search Bar -->
+<details class="mb-10 sm:mb-14 group" {% if filtered %}open{% endif %}>
+    <summary class="cursor-pointer inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] font-bold opacity-40 hover:opacity-100 transition-soft select-none list-none">
+        <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+        Filter & Search
+    </summary>
+    <form method="GET" action="{{ url_for('main.index') }}" class="mt-6 paper-texture p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <div class="lg:col-span-2 space-y-1">
+            <label for="q" class="text-[9px] uppercase tracking-widest opacity-40 font-bold block">Search title or author</label>
+            <input type="text" id="q" name="q" value="{{ q }}" placeholder="e.g. Borges, Dune…"
+                class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink focus:outline-none focus:border-vintage-accent transition-soft italic">
+        </div>
+        <div class="space-y-1">
+            <label for="status" class="text-[9px] uppercase tracking-widest opacity-40 font-bold block">Status</label>
+            <select id="status" name="status"
+                class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink focus:outline-none focus:border-vintage-accent transition-soft appearance-none cursor-pointer"
+                style="background-image:url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%2216%22 height%3D%2216%22 viewBox%3D%220 0 24 24%22 fill%3D%22none%22 stroke%3D%22%231a1614%22 stroke-width%3D%222%22 stroke-linecap%3D%22round%22 stroke-linejoin%3D%22round%22%3E%3Cpolyline points%3D%226 9 12 15 18 9%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E');background-repeat:no-repeat;background-position:right 1rem center;">
+                <option value="">All statuses</option>
+                <option value="reading"  {% if status_filter == 'reading'  %}selected{% endif %}>Reading</option>
+                <option value="finished" {% if status_filter == 'finished' %}selected{% endif %}>Finished</option>
+                <option value="tbr"      {% if status_filter == 'tbr'      %}selected{% endif %}>Wish List (TBR)</option>
+                <option value="paused"   {% if status_filter == 'paused'   %}selected{% endif %}>Paused</option>
+                <option value="dnf"      {% if status_filter == 'dnf'      %}selected{% endif %}>Did Not Finish</option>
+            </select>
+        </div>
+        <div class="space-y-1">
+            <label for="sort" class="text-[9px] uppercase tracking-widest opacity-40 font-bold block">Sort by</label>
+            <select id="sort" name="sort"
+                class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink focus:outline-none focus:border-vintage-accent transition-soft appearance-none cursor-pointer"
+                style="background-image:url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%2216%22 height%3D%2216%22 viewBox%3D%220 0 24 24%22 fill%3D%22none%22 stroke%3D%22%231a1614%22 stroke-width%3D%222%22 stroke-linecap%3D%22round%22 stroke-linejoin%3D%22round%22%3E%3Cpolyline points%3D%226 9 12 15 18 9%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E');background-repeat:no-repeat;background-position:right 1rem center;">
+                <option value="date_added_desc"    {% if sort == 'date_added_desc'    %}selected{% endif %}>Recently Added</option>
+                <option value="title_asc"          {% if sort == 'title_asc'          %}selected{% endif %}>Title A–Z</option>
+                <option value="title_desc"         {% if sort == 'title_desc'         %}selected{% endif %}>Title Z–A</option>
+                <option value="date_finished_desc" {% if sort == 'date_finished_desc' %}selected{% endif %}>Recently Finished</option>
+            </select>
+        </div>
+        <div class="flex gap-3 sm:col-span-2 lg:col-span-4 justify-end">
+            {% if filtered %}
+            <a href="{{ url_for('main.index') }}" class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink/5 inline-flex items-center transition-soft">
+                Clear
+            </a>
+            {% endif %}
+            <button type="submit" class="min-h-[44px] px-8 py-3 bg-vintage-ink text-vintage-cream text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-vintage-accent transition-soft">
+                Search
+            </button>
+        </div>
+    </form>
+</details>
+
+{% if filtered %}
+<!-- ─── FILTERED FLAT VIEW ─────────────────────────────────────────── -->
+<section>
+    <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-4 gap-4">
+        <h3 class="text-xl sm:text-2xl font-bold italic text-vintage-ink opacity-80">
+            Results
+            {% if q %}<span class="opacity-50 font-normal"> for "{{ q }}"</span>{% endif %}
+        </h3>
+        <span class="text-[10px] uppercase tracking-[0.25em] opacity-40 font-bold flex-shrink-0">{{ pagination.total }} volumes</span>
+    </div>
+
+    {% if books %}
+    <div class="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-4 sm:gap-x-8 gap-y-10 sm:gap-y-12">
+        {% for book in books %}
+        <div class="group relative flex flex-col min-w-0">
+            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
+                class="aspect-[2/3] overflow-hidden shadow-sm border border-black/5 mb-3 sm:mb-4 group-hover:-rotate-1 group-hover:shadow-xl transition-soft block relative max-w-full">
+                {% if book|cover_for %}
+                {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover sepia-[20%] group-hover:sepia-0 transition-soft') }}
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center text-[9px] sm:text-[10px] p-2 opacity-30 italic text-center">Manuscript</div>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
+                class="block hover:text-vintage-accent transition-soft min-w-0">
+                <h5 class="font-bold text-[11px] sm:text-xs md:text-sm leading-tight line-clamp-2 sm:line-clamp-1 opacity-80">{{ book.title }}</h5>
+            </a>
+            <span class="text-[8px] uppercase tracking-wider opacity-30 mt-1 font-bold">
+                {% if book.status == 'reading' %}Reading
+                {% elif book.status == 'finished' %}Finished
+                {% elif book.status == 'tbr' %}TBR
+                {% elif book.status == 'paused' %}Paused
+                {% elif book.status == 'dnf' %}DNF
+                {% endif %}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    {% set base_args = {'q': q, 'status': status_filter, 'sort': sort} %}
+    <nav class="mt-12 flex items-center justify-center gap-3" aria-label="Search results pages">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('main.index', page=pagination.prev_num, **base_args) }}"
+            class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft inline-flex items-center gap-2">
+            &larr; Previous
+        </a>
+        {% endif %}
+        <span class="text-sm italic opacity-50">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+        {% if pagination.has_next %}
+        <a href="{{ url_for('main.index', page=pagination.next_num, **base_args) }}"
+            class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft inline-flex items-center gap-2">
+            Next &rarr;
+        </a>
+        {% endif %}
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <div class="text-center py-20 opacity-30 italic">
+        <p class="text-lg">No volumes matched your search.</p>
+    </div>
+    {% endif %}
+</section>
+
+{% else %}
+<!-- ─── NORMAL GROUPED VIEW ────────────────────────────────────────── -->
 
 <section class="mb-16 sm:mb-24">
     <div class="flex items-baseline justify-between mb-8 sm:mb-12 border-b border-black/5 pb-4 gap-4">
@@ -32,22 +152,18 @@
                     Untitled Manuscript
                 </div>
                 {% endif %}
-                <div
-                    class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-soft">
-                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-soft"></div>
             </a>
 
             <div class="flex-grow space-y-3 min-w-0">
-                <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
-                    class="block hover:text-vintage-accent transition-soft">
+                <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="block hover:text-vintage-accent transition-soft">
                     <h4 class="text-lg sm:text-xl md:text-2xl font-bold leading-tight line-clamp-2">{{ book.title }}</h4>
                 </a>
                 <p class="italic opacity-60 text-sm md:text-base">by {{ book.authors or 'Anonymous' }}</p>
                 {% if book.categories %}
                 <div class="pt-2 flex flex-wrap gap-2">
                     {% for cat in book.categories|categories_list %}
-                    <span
-                        class="text-[9px] uppercase tracking-widest px-2 py-1 bg-vintage-accent/5 text-vintage-accent border border-vintage-accent/10">{{ cat }}</span>
+                    <span class="text-[9px] uppercase tracking-widest px-2 py-1 bg-vintage-accent/5 text-vintage-accent border border-vintage-accent/10">{{ cat }}</span>
                     {% endfor %}
                 </div>
                 {% endif %}
@@ -67,9 +183,7 @@
                     data-book-title="{{ book.title|e }}"
                     title="Remove from archives">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd"
-                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                            clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
                     </svg>
                 </button>
             </div>
@@ -90,10 +204,36 @@
     {% endif %}
 </section>
 
+{% if tbr %}
+<section class="mb-16 sm:mb-24">
+    <div class="flex items-baseline justify-between mb-8 sm:mb-12 border-b border-black/5 pb-4 gap-4">
+        <h3 class="text-xl sm:text-2xl md:text-3xl font-bold italic text-vintage-ink opacity-70">Wish List</h3>
+        <span class="text-[10px] uppercase tracking-[0.25em] opacity-40 font-bold flex-shrink-0">{{ tbr|length }} volumes</span>
+    </div>
+    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-x-3 sm:gap-x-5 gap-y-8">
+        {% for book in tbr %}
+        <div class="group relative flex flex-col min-w-0">
+            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
+                class="aspect-[2/3] overflow-hidden shadow-sm border border-black/5 mb-2 group-hover:-rotate-1 group-hover:shadow-xl transition-soft block relative max-w-full opacity-70 group-hover:opacity-100">
+                {% if book|cover_for %}
+                {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover grayscale group-hover:grayscale-0 transition-soft') }}
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center text-[8px] p-1 opacity-20 italic text-center">MS</div>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="block hover:text-vintage-accent transition-soft min-w-0">
+                <h5 class="font-bold text-[10px] sm:text-xs leading-tight line-clamp-2 opacity-60 group-hover:opacity-100">{{ book.title }}</h5>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
 <section>
     <div class="flex items-baseline justify-between mb-8 sm:mb-12 border-b border-black/5 pb-4 gap-4">
         <h3 class="text-xl sm:text-2xl md:text-3xl font-bold italic text-vintage-accent opacity-80">Completed Voyages</h3>
-        <span class="text-[10px] uppercase tracking-[0.25em] opacity-40 font-bold flex-shrink-0">{{ finished|length }} volumes</span>
+        <span class="text-[10px] uppercase tracking-[0.25em] opacity-40 font-bold flex-shrink-0">{{ finished_total }} volumes</span>
     </div>
 
     {% if finished %}
@@ -105,18 +245,12 @@
                 {% if book|cover_for %}
                 {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover sepia-[20%] group-hover:sepia-0 transition-soft') }}
                 {% else %}
-                <div
-                    class="w-full h-full flex items-center justify-center text-[9px] sm:text-[10px] p-2 opacity-30 italic text-center">
-                    Manuscript</div>
+                <div class="w-full h-full flex items-center justify-center text-[9px] sm:text-[10px] p-2 opacity-30 italic text-center">Manuscript</div>
                 {% endif %}
-                <div
-                    class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-soft">
-                </div>
+                <div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-soft"></div>
             </a>
-            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
-                class="block hover:text-vintage-accent transition-soft min-w-0">
-                <h5 class="font-bold text-[11px] sm:text-xs md:text-sm leading-tight line-clamp-2 sm:line-clamp-1 opacity-80 group-hover:opacity-100">
-                    {{ book.title }}</h5>
+            <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="block hover:text-vintage-accent transition-soft min-w-0">
+                <h5 class="font-bold text-[11px] sm:text-xs md:text-sm leading-tight line-clamp-2 sm:line-clamp-1 opacity-80 group-hover:opacity-100">{{ book.title }}</h5>
             </a>
             <p class="text-[8px] sm:text-[9px] uppercase tracking-wider opacity-30 mt-2 font-bold">{{ book.date_finished.strftime('%b %Y') }}</p>
 
@@ -129,9 +263,7 @@
                 <span class="sm:hidden">Remove</span>
                 <span class="hidden sm:inline-flex">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mx-auto" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd"
-                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                            clip-rule="evenodd" />
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
                 </span>
             </button>
@@ -139,6 +271,26 @@
         </div>
         {% endfor %}
     </div>
+
+    <!-- Finished pagination -->
+    {% if finished_pages > 1 %}
+    <nav class="mt-12 flex items-center justify-center gap-3" aria-label="Finished books pages">
+        {% if current_page > 1 %}
+        <a href="{{ url_for('main.index', page=current_page - 1) }}"
+            class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft inline-flex items-center gap-2">
+            &larr; Previous
+        </a>
+        {% endif %}
+        <span class="text-sm italic opacity-50">Page {{ current_page }} of {{ finished_pages }}</span>
+        {% if current_page < finished_pages %}
+        <a href="{{ url_for('main.index', page=current_page + 1) }}"
+            class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft inline-flex items-center gap-2">
+            Next &rarr;
+        </a>
+        {% endif %}
+    </nav>
+    {% endif %}
+
     {% else %}
     <div class="text-center py-12 sm:py-16 space-y-6 opacity-30">
         <p class="italic text-sm sm:text-base">No completed journeys yet recorded.</p>
@@ -151,6 +303,38 @@
     </div>
     {% endif %}
 </section>
+
+{% if paused or dnf %}
+<section class="mt-16 sm:mt-24">
+    <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-4 gap-4">
+        <h3 class="text-xl sm:text-2xl font-bold italic text-vintage-ink opacity-50">Other Entries</h3>
+    </div>
+    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-x-3 sm:gap-x-5 gap-y-8">
+        {% for book in (paused + dnf) %}
+        <div class="group relative flex flex-col min-w-0">
+            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
+                class="aspect-[2/3] overflow-hidden shadow-sm border border-black/5 mb-2 transition-soft block relative max-w-full opacity-50 group-hover:opacity-80">
+                {% if book|cover_for %}
+                {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover grayscale') }}
+                {% else %}
+                <div class="w-full h-full flex items-center justify-center text-[8px] p-1 opacity-20 italic text-center">MS</div>
+                {% endif %}
+                <div class="absolute bottom-0 left-0 right-0 text-center pb-1">
+                    <span class="text-[8px] uppercase tracking-widest font-bold px-1 py-0.5 {% if book.status == 'paused' %}bg-amber-100/90 text-amber-800{% else %}bg-red-100/90 text-red-800{% endif %}">
+                        {{ 'Paused' if book.status == 'paused' else 'DNF' }}
+                    </span>
+                </div>
+            </a>
+            <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="block hover:text-vintage-accent transition-soft min-w-0">
+                <h5 class="font-bold text-[10px] sm:text-xs leading-tight line-clamp-2 opacity-50 group-hover:opacity-80">{{ book.title }}</h5>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% endif %}{# end filtered/normal mode #}
 {% endblock %}
 
 {% block scripts %}

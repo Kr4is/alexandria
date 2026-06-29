@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 
 from loguru import logger
-from sqlalchemy import inspect, text
 
 from alexandria.extensions import db
 from alexandria.integrations.google_books import get_book_details
@@ -16,17 +15,6 @@ def ensure_instance_folder(root: Path) -> None:
 
 def init_database() -> None:
     db.create_all()
-    ensure_book_schema()
-
-
-def ensure_book_schema() -> None:
-    inspector = inspect(db.engine)
-    if 'book' not in inspector.get_table_names():
-        return
-    columns = {column['name'] for column in inspector.get_columns('book')}
-    if 'isbn' not in columns:
-        with db.engine.begin() as connection:
-            connection.execute(text('ALTER TABLE book ADD COLUMN isbn VARCHAR(20)'))
 
 
 def ensure_librarian_user() -> None:
@@ -37,7 +25,9 @@ def ensure_librarian_user() -> None:
         admin = User(username=admin_user)
         admin.set_password(admin_pass)
         db.session.add(admin)
-        db.session.commit()
+    else:
+        existing_user.set_password(admin_pass)
+    db.session.commit()
 
 
 def refresh_library_metadata() -> None:

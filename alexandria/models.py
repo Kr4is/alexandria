@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import UTC, datetime
 
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from alexandria.constants import BookStatus
 from alexandria.extensions import db
 from alexandria.utils.covers import resolve_cover_fallback_url, resolve_cover_url
 
@@ -32,9 +33,11 @@ class Book(db.Model):
     published_year = db.Column(db.String(4))
     language = db.Column(db.String(10))
     average_rating = db.Column(db.Float)
-    status = db.Column(db.String(20), default='reading')
-    date_added = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default=BookStatus.READING)
+    date_added = db.Column(db.DateTime, default=lambda: datetime.now(UTC))
     date_finished = db.Column(db.DateTime, nullable=True)
+    personal_rating = db.Column(db.Float, nullable=True)
+    personal_notes = db.Column(db.Text, nullable=True)
 
     @property
     def cover_url(self):
@@ -67,4 +70,6 @@ class Book(db.Model):
             'status': self.status,
             'date_added': self.date_added.strftime('%Y-%m-%d') if self.date_added else None,
             'date_finished': self.date_finished.strftime('%Y-%m-%d') if self.date_finished else None,
+            'personal_rating': self.personal_rating,
+            'personal_notes': self.personal_notes,
         }

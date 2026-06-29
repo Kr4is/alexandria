@@ -70,16 +70,22 @@ def resolve_cover_url(
     google_books_id: str | None = None,
     isbn: str | None = None,
 ) -> str | None:
-    """Resolve a cover URL for display from stored book fields."""
-    if thumbnail and 'books.google.com' in thumbnail:
-        return sanitize_google_cover_url(thumbnail)
+    """Resolve the primary cover URL for display.
+
+    Priority: stored thumbnail → constructed Google Books URL → OpenLibrary.
+    The stored thumbnail is always preferred because it was already chosen as
+    the best available image when the book was added.
+    """
+    if thumbnail:
+        if 'books.google.com' in thumbnail:
+            return sanitize_google_cover_url(thumbnail)
+        return thumbnail  # OpenLibrary or any other stored URL
+    # No stored thumbnail — construct one
     if google_books_id:
         return google_books_cover_url(google_books_id, zoom=1)
     if isbn:
         return open_library_cover_url(isbn)
-    if thumbnail and 'openlibrary.org' in thumbnail:
-        return thumbnail
-    return sanitize_google_cover_url(thumbnail)
+    return None
 
 
 def resolve_cover_fallback_url(
@@ -87,9 +93,15 @@ def resolve_cover_fallback_url(
     google_books_id: str | None = None,
     isbn: str | None = None,
 ) -> str | None:
-    """Fallback when the primary cover fails to load or is a 1×1 Open Library placeholder."""
-    if thumbnail and 'openlibrary.org' in thumbnail and google_books_id:
-        return google_books_cover_url(google_books_id, zoom=1)
-    if isbn and google_books_id and thumbnail and 'books.google.com' in thumbnail:
-        return google_books_cover_url(google_books_id, zoom=1)
+    """Secondary cover used when the primary fails (404, 1×1 placeholder, etc.).
+
+    Switches provider: if primary came from OpenLibrary, try Google Books next,
+    and vice-versa.
+    """
+    if thumbnail and 'openlibrary.org' in thumbnail:
+        # Primary is OpenLibrary — fall back to Google Books
+        return google_books_cover_url(google_books_id) if google_books_id else None
+    # Primary is Google Books (stored or constructed) — fall back to OpenLibrary
+    if isbn:
+        return open_library_cover_url(isbn)
     return None

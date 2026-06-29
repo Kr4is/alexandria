@@ -45,9 +45,13 @@
             <!-- Chart -->
             <div class="lg:col-span-2 paper-texture vintage-border p-4 sm:p-6 min-w-0 overflow-hidden">
                 <h4 class="text-xs uppercase tracking-widest opacity-40 mb-4 font-bold text-center">Pages per Month</h4>
+                {% if pages_history_data %}
                 <div class="h-[220px] sm:h-[250px] w-full min-w-0 relative">
                     <canvas id="pagesHistoryChart"></canvas>
                 </div>
+                {% else %}
+                <p class="italic opacity-40 text-center text-sm py-8">No reading history recorded yet.</p>
+                {% endif %}
             </div>
             <!-- Stats -->
             <div class="flex flex-col gap-6">
@@ -135,17 +139,25 @@
             <div class="paper-texture vintage-border p-4 sm:p-6 relative min-w-0 overflow-hidden">
                 <h4 class="text-xs uppercase tracking-widest opacity-40 mb-4 font-bold text-center">Seasonal Preference
                 </h4>
+                {% if seasons.values()|list|sum > 0 %}
                 <div class="h-[200px] w-full min-w-0 flex justify-center">
                     <canvas id="seasonsChart"></canvas>
                 </div>
+                {% else %}
+                <p class="italic opacity-40 text-center text-sm py-8">No seasonal data yet.</p>
+                {% endif %}
             </div>
 
             <!-- Categories Chart -->
             <div class="paper-texture vintage-border p-4 sm:p-6 relative min-w-0 overflow-hidden">
                 <h4 class="text-xs uppercase tracking-widest opacity-40 mb-4 font-bold text-center">Top Categories</h4>
+                {% if cat_data %}
                 <div class="h-[200px] w-full min-w-0 flex justify-center">
                     <canvas id="categoriesChart"></canvas>
                 </div>
+                {% else %}
+                <p class="italic opacity-40 text-center text-sm py-8">No category data yet.</p>
+                {% endif %}
             </div>
         </div>
     </section>
@@ -218,6 +230,7 @@
     Chart.defaults.color = 'rgba(26, 22, 20, 0.6)';
 
     // Pages History Chart
+    if (document.getElementById('pagesHistoryChart')) {
     const histCtx = document.getElementById('pagesHistoryChart').getContext('2d');
     new Chart(histCtx, {
         type: 'bar',
@@ -240,10 +253,12 @@
             y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
             x: { grid: { display: false } }
         }
-    }
+        }
     });
+    } // end pagesHistoryChart guard
 
     // Seasons Chart
+    if (document.getElementById('seasonsChart')) {
     const seasonsCtx = document.getElementById('seasonsChart').getContext('2d');
     const seasonData = {{ seasons| tojson }};
     new Chart(seasonsCtx, {
@@ -270,8 +285,10 @@
             scales: { r: { ticks: { display: false } } }
         }
     });
+    } // end seasonsChart guard
 
     // Categories Chart
+    if (document.getElementById('categoriesChart')) {
     const catCtx = document.getElementById('categoriesChart').getContext('2d');
     new Chart(catCtx, {
         type: 'doughnut',
@@ -294,5 +311,6 @@
         cutout: '60%'
     }
     });
+    } // end categoriesChart guard
 </script>
 {% endblock %}

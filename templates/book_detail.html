@@ -39,9 +39,16 @@
                     <div class="sm:flex-1 lg:flex-none">
                         <span class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 block mb-2">Registry
                             Status</span>
+                        {% set status_labels = {
+                            'reading':  'Currently Reading',
+                            'finished': 'Completed Voyage',
+                            'tbr':      'To Be Read',
+                            'paused':   'Paused',
+                            'dnf':      'Did Not Finish'
+                        } %}
                         <span
                             class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 border border-vintage-ink/10 inline-block bg-vintage-ink/5 text-vintage-ink/80">
-                            {{ 'Currently Reading' if book.status == 'reading' else 'Completed Voyage' }}
+                            {{ status_labels.get(book.status, book.status|capitalize) }}
                         </span>
                     </div>
 
@@ -119,6 +126,22 @@
                                 }}<span class="text-xs opacity-40">/5</span></span>
                         </div>
                         {% endif %}
+                        {% if book.personal_rating %}
+                        <div class="flex items-center gap-2 pt-1" title="Your personal rating">
+                            <span class="text-[9px] uppercase tracking-widest opacity-40 font-bold">My Rating</span>
+                            <div class="flex items-center gap-0.5 text-vintage-accent" role="img"
+                                aria-label="{{ book.personal_rating }} out of 5 stars">
+                                {% for n in [1,2,3,4,5] %}
+                                <svg class="w-4 h-4 {{ 'text-vintage-accent' if n <= book.personal_rating else 'text-black/15' }}"
+                                    viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                                {% endfor %}
+                            </div>
+                            <span class="text-sm font-medium text-vintage-ink/80">{{ "%.1f"|format(book.personal_rating) }}<span class="text-xs opacity-40">/5</span></span>
+                        </div>
+                        {% endif %}
+
                         {% if book.google_books_id %}
                         <a href="https://books.google.com/books?id={{ book.google_books_id }}" target="_blank"
                             rel="noopener noreferrer"
@@ -171,6 +194,14 @@
                     {% endif %}
                 </div>
 
+                {% if book.personal_notes %}
+                <div class="pt-8 sm:pt-10 space-y-3">
+                    <div class="h-px w-16 bg-vintage-gold/20 mb-4"></div>
+                    <h4 class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-40">Librarian's Notes</h4>
+                    <p class="italic text-base md:text-lg leading-relaxed text-vintage-ink/70 whitespace-pre-line">{{ book.personal_notes }}</p>
+                </div>
+                {% endif %}
+
                 {% if current_user.is_authenticated %}
                 <div
                     class="pt-10 sm:pt-16 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center border-t border-black/5">
@@ -182,14 +213,9 @@
                         Close Chapter
                     </button>
                     {% endif %}
-                    <button type="button"
-                        class="min-h-[44px] w-full sm:w-auto border border-vintage-accent text-vintage-accent px-8 sm:px-10 py-3.5 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-accent hover:text-vintage-cream transition-soft"
-                        id="open-edit-modal">
-                        Amend Entry
-                    </button>
                     <a href="{{ url_for('books.edit_book', book_id=book.id) }}"
-                        class="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 hover:opacity-100 transition-soft px-4 py-2 border border-transparent hover:border-black/10">
-                        Open full-page form
+                        class="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center border border-vintage-accent text-vintage-accent px-8 sm:px-10 py-3.5 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-accent hover:text-vintage-cream transition-soft">
+                        Amend Entry
                     </a>
                     <button type="button"
                         class="min-h-[44px] w-full sm:w-auto text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 hover:opacity-100 hover:text-red-800 transition-soft px-4 py-2 text-left sm:text-center js-open-delete-modal"
@@ -210,69 +236,6 @@
     </div>
 </div>
 
-{% if current_user.is_authenticated %}
-<div id="modal-edit" class="fixed inset-0 z-[200] hidden" aria-hidden="true">
-    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm cursor-pointer" data-edit-backdrop aria-hidden="true"></div>
-    <div class="relative flex min-h-full items-center justify-center p-4 pointer-events-none overflow-y-auto">
-        <div class="paper-texture vintage-border max-w-lg w-full p-6 sm:p-10 shadow-2xl pointer-events-auto relative my-8"
-            role="dialog" aria-modal="true" aria-labelledby="modal-edit-title" tabindex="-1" data-modal-panel>
-            <button type="button"
-                class="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center opacity-40 hover:opacity-100 text-xl leading-none z-10"
-                id="close-edit-modal" aria-label="Close">&times;</button>
-            <h3 id="modal-edit-title" class="font-serif-display text-2xl text-vintage-ink mb-2 pr-10">Amend Registry
-                Entry</h3>
-            <p class="text-sm italic opacity-60 mb-8">Editing: <span class="text-vintage-accent">{{ book.title }}</span>
-            </p>
-            <form method="POST" action="{{ url_for('books.edit_book', book_id=book.id) }}"
-                class="space-y-8 js-submit-loading">
-                <div class="space-y-3">
-                    <label for="modal-status" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
-                        Registry Status
-                    </label>
-                    <select name="status" id="modal-status"
-                        class="w-full min-h-[44px] px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20 transition-soft appearance-none cursor-pointer"
-                        style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%231a1614%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem center;">
-                        <option value="reading" {% if book.status == 'reading' %}selected{% endif %}>Currently Reading
-                        </option>
-                        <option value="finished" {% if book.status == 'finished' %}selected{% endif %}>Completed Voyage
-                        </option>
-                    </select>
-                </div>
-                <div class="space-y-3">
-                    <label for="modal-date-added"
-                        class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
-                        Date Started Reading
-                    </label>
-                    <input type="date" name="date_added" id="modal-date-added"
-                        value="{{ book.date_added.strftime('%Y-%m-%d') if book.date_added else '' }}"
-                        class="w-full min-h-[44px] px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20 transition-soft">
-                    <p class="text-xs italic opacity-40">When you began reading this volume</p>
-                </div>
-                <div class="space-y-3">
-                    <label for="modal-date-finished"
-                        class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
-                        Date Finished
-                    </label>
-                    <input type="date" name="date_finished" id="modal-date-finished"
-                        value="{{ book.date_finished.strftime('%Y-%m-%d') if book.date_finished else '' }}"
-                        class="w-full min-h-[44px] px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20 transition-soft">
-                    <p class="text-xs italic opacity-40">Leave empty if not yet completed</p>
-                </div>
-                <div class="h-px w-full bg-black/5"></div>
-                <div class="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center pt-2">
-                    <button type="submit"
-                        class="min-h-[44px] bg-vintage-accent text-vintage-cream px-8 py-3.5 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-ink transition-soft shadow-xl">
-                        Save Amendments
-                    </button>
-                    <button type="button"
-                        class="min-h-[44px] text-[9px] uppercase tracking-[0.2em] font-bold opacity-40 hover:opacity-100 px-4"
-                        id="cancel-edit-modal">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-{% endif %}
 {% endblock %}
 
 {% block scripts %}
@@ -346,48 +309,6 @@
             });
         });
 
-        var editModal = document.getElementById('modal-edit');
-        var openEdit = document.getElementById('open-edit-modal');
-        var closeEdit = document.getElementById('close-edit-modal');
-        var cancelEdit = document.getElementById('cancel-edit-modal');
-
-        function trapEditModal(e) {
-            if (e.key === 'Escape' && editModal && !editModal.classList.contains('hidden')) {
-                e.preventDefault();
-                closeEditModal();
-            }
-        }
-
-        function openEditModal() {
-            if (!editModal) return;
-            editModal.classList.remove('hidden');
-            document.body.classList.add('modal-open');
-            editModal.setAttribute('aria-hidden', 'false');
-            var panel = editModal.querySelector('[data-modal-panel]');
-            var first = panel ? panel.querySelector('select, input, button') : null;
-            if (first) first.focus();
-            document.addEventListener('keydown', trapEditModal);
-        }
-
-        function closeEditModal() {
-            if (!editModal) return;
-            editModal.classList.add('hidden');
-            document.body.classList.remove('modal-open');
-            editModal.setAttribute('aria-hidden', 'true');
-            document.removeEventListener('keydown', trapEditModal);
-            if (openEdit) openEdit.focus();
-        }
-
-        if (openEdit) openEdit.addEventListener('click', openEditModal);
-        if (closeEdit) closeEdit.addEventListener('click', closeEditModal);
-        if (cancelEdit) cancelEdit.addEventListener('click', closeEditModal);
-        if (editModal) {
-            editModal.querySelectorAll('[data-edit-backdrop]').forEach(function (el) {
-                el.addEventListener('click', function (e) {
-                    if (e.target === el) closeEditModal();
-                });
-            });
-        }
     })();
 </script>
 {% endblock %}

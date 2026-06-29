@@ -26,6 +26,7 @@
         </header>
 
         <form method="POST" action="{{ url_for('books.edit_book', book_id=book.id) }}" class="space-y-10 js-submit-loading">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <!-- Status -->
             <div class="space-y-3">
                 <label for="status" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
@@ -36,8 +37,11 @@
                            focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20
                            transition-soft appearance-none cursor-pointer"
                     style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%231a1614%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem center;">
-                    <option value="reading" {% if book.status == 'reading' %}selected{% endif %}>Currently Reading</option>
+                    <option value="reading"  {% if book.status == 'reading'  %}selected{% endif %}>Currently Reading</option>
                     <option value="finished" {% if book.status == 'finished' %}selected{% endif %}>Completed Voyage</option>
+                    <option value="tbr"     {% if book.status == 'tbr'     %}selected{% endif %}>To Be Read (Wish List)</option>
+                    <option value="paused"  {% if book.status == 'paused'  %}selected{% endif %}>Paused</option>
+                    <option value="dnf"     {% if book.status == 'dnf'     %}selected{% endif %}>Did Not Finish (DNF)</option>
                 </select>
             </div>
 
@@ -65,6 +69,37 @@
                            focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20
                            transition-soft">
                 <p class="text-xs italic opacity-40">When the voyage through this volume was completed</p>
+            </div>
+
+            <!-- Personal Rating -->
+            <div class="space-y-3">
+                <label for="personal_rating" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
+                    Personal Rating (1–5)
+                </label>
+                <div class="flex items-center gap-4">
+                    <input type="range" name="personal_rating" id="personal_rating"
+                        min="1" max="5" step="0.5"
+                        value="{{ book.personal_rating or 3 }}"
+                        class="flex-1 accent-vintage-accent"
+                        oninput="document.getElementById('rating-display').textContent = this.value">
+                    <span id="rating-display" class="text-xl font-bold text-vintage-accent w-8 text-center">{{ book.personal_rating or '—' }}</span>
+                </div>
+                <p class="text-xs italic opacity-40">Leave at default to clear (saves only when you move the slider)</p>
+                <label class="flex items-center gap-2 text-xs italic opacity-60 cursor-pointer">
+                    <input type="checkbox" id="clear-rating" class="accent-vintage-accent"
+                        onchange="document.getElementById('personal_rating').disabled = this.checked; if(this.checked){ document.getElementById('personal_rating').value = ''; document.getElementById('rating-display').textContent = '—'; }">
+                    Clear rating
+                </label>
+            </div>
+
+            <!-- Personal Notes -->
+            <div class="space-y-3">
+                <label for="personal_notes" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
+                    Personal Notes
+                </label>
+                <textarea name="personal_notes" id="personal_notes" rows="4"
+                    placeholder="Your private thoughts on this volume…"
+                    class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20 transition-soft resize-y italic">{{ book.personal_notes or '' }}</textarea>
             </div>
 
             <!-- Divider -->

@@ -88,6 +88,7 @@
                     {% else %}
                 <form action="{{ url_for('books.add_book', google_books_id=book.google_books_id) }}" method="POST"
                     class="w-full sm:w-auto js-submit-loading">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit"
                         class="w-full min-h-[44px] sm:w-auto text-[10px] uppercase tracking-[0.2em] font-bold bg-vintage-ink text-vintage-cream hover:bg-vintage-accent px-6 py-3 transition-soft shadow-lg">
                         Acquire

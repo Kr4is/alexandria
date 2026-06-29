@@ -8,15 +8,12 @@ WEEKDAY_HEADERS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 
 def _event_for(book: Book, kind: str) -> dict:
-    return {
-        'book': book,
-        'kind': kind,
-    }
+    return {'book': book, 'kind': kind}
 
 
 def get_active_months() -> list[tuple[int, int]]:
     """Return all (year, month) tuples that have at least one book event, newest first."""
-    active = set()
+    active: set[tuple[int, int]] = set()
     for book in Book.query.all():
         if book.date_added:
             d = book.date_added.date()
@@ -28,23 +25,34 @@ def get_active_months() -> list[tuple[int, int]]:
 
 
 def build_calendar_context(year: int, month: int) -> dict:
-    """Build context for a single month calendar page with prev/next navigation."""
+    """Single DB query — builds grid + full navigation context for one month."""
     cal = calendar.Calendar(firstweekday=6)
     events_by_date = defaultdict(list)
+    active_set: set[tuple[int, int]] = set()
 
     for book in Book.query.all():
         if book.date_added:
-            started_on = book.date_added.date()
-            events_by_date[started_on].append(_event_for(book, 'started'))
+            d = book.date_added.date()
+            events_by_date[d].append(_event_for(book, 'started'))
+            active_set.add((d.year, d.month))
         if book.date_finished:
-            finished_on = book.date_finished.date()
-            events_by_date[finished_on].append(_event_for(book, 'finished'))
+            d = book.date_finished.date()
+            events_by_date[d].append(_event_for(book, 'finished'))
+            active_set.add((d.year, d.month))
 
-    active_months = get_active_months()
+    active_months = sorted(active_set, reverse=True)
     current_idx = active_months.index((year, month)) if (year, month) in active_months else None
 
-    prev_month = active_months[current_idx + 1] if current_idx is not None and current_idx + 1 < len(active_months) else None
-    next_month = active_months[current_idx - 1] if current_idx is not None and current_idx > 0 else None
+    prev_month = (
+        active_months[current_idx + 1]
+        if current_idx is not None and current_idx + 1 < len(active_months)
+        else None
+    )
+    next_month = (
+        active_months[current_idx - 1]
+        if current_idx is not None and current_idx > 0
+        else None
+    )
 
     weeks = []
     for week in cal.monthdatescalendar(year, month):
