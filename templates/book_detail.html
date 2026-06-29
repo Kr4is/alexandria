@@ -205,6 +205,20 @@
                 {% if current_user.is_authenticated %}
                 <div
                     class="pt-10 sm:pt-16 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center border-t border-black/5">
+
+                    {# ── TBR ── #}
+                    {% if book.status == 'tbr' %}
+                    <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="status" value="reading">
+                        <button type="submit"
+                            class="min-h-[44px] w-full sm:w-auto bg-vintage-accent text-vintage-cream px-8 sm:px-10 py-3.5 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-ink transition-soft shadow-xl">
+                            Start Reading
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {# ── READING ── #}
                     {% if book.status == 'reading' %}
                     <button type="button"
                         class="min-h-[44px] w-full sm:w-auto bg-vintage-accent text-vintage-cream px-8 sm:px-10 py-3.5 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-ink transition-soft shadow-xl js-open-finish-modal"
@@ -212,7 +226,65 @@
                         data-book-title="{{ book.title|e }}">
                         Close Chapter
                     </button>
+                    <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="status" value="paused">
+                        <button type="submit"
+                            class="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center border border-vintage-ink/20 px-6 py-3.5 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-vintage-ink/5 transition-soft">
+                            Pause
+                        </button>
+                    </form>
+                    <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="status" value="dnf">
+                        <button type="submit"
+                            class="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center border border-vintage-ink/20 px-6 py-3.5 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-vintage-ink/5 transition-soft">
+                            Did Not Finish
+                        </button>
+                    </form>
                     {% endif %}
+
+                    {# ── PAUSED ── #}
+                    {% if book.status == 'paused' %}
+                    <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="status" value="reading">
+                        <button type="submit"
+                            class="min-h-[44px] w-full sm:w-auto bg-vintage-accent text-vintage-cream px-8 sm:px-10 py-3.5 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-ink transition-soft shadow-xl">
+                            Resume Reading
+                        </button>
+                    </form>
+                    <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="status" value="finished">
+                        <button type="submit"
+                            class="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center border border-vintage-accent text-vintage-accent px-6 py-3.5 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-vintage-accent hover:text-vintage-cream transition-soft">
+                            Mark as Finished
+                        </button>
+                    </form>
+                    <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="status" value="dnf">
+                        <button type="submit"
+                            class="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center border border-vintage-ink/20 px-6 py-3.5 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-vintage-ink/5 transition-soft">
+                            Did Not Finish
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {# ── DNF ── #}
+                    {% if book.status == 'dnf' %}
+                    <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="status" value="reading">
+                        <button type="submit"
+                            class="min-h-[44px] w-full sm:w-auto bg-vintage-accent text-vintage-cream px-8 sm:px-10 py-3.5 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-ink transition-soft shadow-xl">
+                            Resume Reading
+                        </button>
+                    </form>
+                    {% endif %}
+
+                    {# ── Always present ── #}
                     <a href="{{ url_for('books.edit_book', book_id=book.id) }}"
                         class="min-h-[44px] w-full sm:w-auto inline-flex items-center justify-center border border-vintage-accent text-vintage-accent px-8 sm:px-10 py-3.5 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-accent hover:text-vintage-cream transition-soft">
                         Amend Entry

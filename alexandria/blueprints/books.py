@@ -1,6 +1,7 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required
 
+from alexandria.constants import BookStatus
 from alexandria.integrations.google_books import SearchOutcome, get_book_details, search_books
 from alexandria.services import books as book_service
 
@@ -24,16 +25,36 @@ def search():
 @bp.route('/add/<google_books_id>', methods=['POST'])
 @login_required
 def add_book(google_books_id):
-    if book_service.book_by_google_id(google_books_id):
+    existing = book_service.book_by_google_id(google_books_id)
+    if existing:
         flash('This volume is already in your collection.', 'info')
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.book_detail', book_id=existing.id))
+    status = request.form.get('status', BookStatus.READING)
     details = get_book_details(google_books_id)
     if details:
-        book_service.add_book_from_api_details(details)
+        book = book_service.add_book_from_api_details(details, status=status)
         flash('Volume added to your collection.', 'success')
-    else:
-        flash('Could not retrieve volume details from the archives.', 'error')
+        return redirect(url_for('main.book_detail', book_id=book.id))
+    flash('Could not retrieve volume details from the archives.', 'error')
     return redirect(url_for('main.index'))
+
+
+@bp.route('/status/<int:book_id>', methods=['POST'])
+@login_required
+def set_status(book_id):
+    book = book_service.get_book_or_404(book_id)
+    new_status = request.form.get('status', '')
+    changed = book_service.quick_set_status(book, new_status)
+    if changed:
+        labels = {
+            BookStatus.READING: 'Now reading — enjoy the voyage.',
+            BookStatus.FINISHED: 'Chapter closed — voyage recorded as complete.',
+            BookStatus.TBR: 'Added to your wish list.',
+            BookStatus.PAUSED: 'Reading paused.',
+            BookStatus.DNF: 'Volume set aside.',
+        }
+        flash(labels.get(new_status, 'Status updated.'), 'success')
+    return redirect(request.referrer or url_for('main.index'))
 
 
 @bp.route('/finish/<int:book_id>', methods=['POST'])

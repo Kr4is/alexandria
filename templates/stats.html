@@ -222,6 +222,28 @@
         <p class="text-center italic opacity-40 py-12">No records found in the ledger.</p>
         {% endif %}
     </section>
+
+    <!-- Export -->
+    <section class="mt-16 sm:mt-24 pt-10 border-t border-black/5 text-center space-y-4">
+        <h3 class="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30">Export Collection</h3>
+        <p class="text-sm italic opacity-40">Download a full copy of your library for safekeeping or analysis.</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-3">
+            <a href="{{ url_for('main.export', fmt='csv') }}"
+                class="inline-flex min-h-[44px] items-center justify-center gap-2 px-8 py-3 border border-vintage-ink/20 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-vintage-ink hover:text-vintage-cream transition-soft">
+                <svg class="w-4 h-4 opacity-60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download CSV
+            </a>
+            <a href="{{ url_for('main.export', fmt='json') }}"
+                class="inline-flex min-h-[44px] items-center justify-center gap-2 px-8 py-3 border border-vintage-ink/20 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-vintage-ink hover:text-vintage-cream transition-soft">
+                <svg class="w-4 h-4 opacity-60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download JSON
+            </a>
+        </div>
+    </section>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

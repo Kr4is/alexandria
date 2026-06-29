@@ -77,7 +77,9 @@ def book_by_google_id(google_books_id: str):
     return Book.query.filter_by(google_books_id=google_books_id).first()
 
 
-def add_book_from_api_details(details: dict) -> Book:
+def add_book_from_api_details(details: dict, status: str = BookStatus.READING) -> Book:
+    if status not in BookStatus.ALL:
+        status = BookStatus.READING
     new_book = Book(
         google_books_id=details['google_books_id'],
         title=details['title'],
@@ -90,11 +92,25 @@ def add_book_from_api_details(details: dict) -> Book:
         published_year=details.get('published_year'),
         language=details.get('language'),
         average_rating=details.get('average_rating'),
-        status=BookStatus.READING,
+        status=status,
     )
     db.session.add(new_book)
     db.session.commit()
     return new_book
+
+
+def quick_set_status(book: Book, new_status: str) -> bool:
+    """Set book status without touching the full edit form. Returns True if changed."""
+    if new_status not in BookStatus.ALL:
+        return False
+    book.status = new_status
+    if new_status == BookStatus.FINISHED:
+        if not book.date_finished:
+            book.date_finished = datetime.now(UTC)
+    else:
+        book.date_finished = None
+    db.session.commit()
+    return True
 
 
 def mark_book_finished(book: Book) -> None:

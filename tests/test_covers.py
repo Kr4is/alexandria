@@ -43,12 +43,15 @@ def test_resolve_cover_url_uses_stored_google_thumbnail():
     assert resolve_cover_url(thumbnail=stored, google_books_id='abc', isbn='9788497353373') == stored
 
 
-def test_resolve_cover_url_ignores_open_library_when_google_id_exists():
+def test_resolve_cover_url_uses_stored_open_library_thumbnail_over_constructed_google_url():
+    # The stored OpenLibrary thumbnail must be used as-is; constructing a Google Books
+    # URL from google_books_id would often return a 1×1 placeholder image.
+    ol_url = 'https://covers.openlibrary.org/b/isbn/9788497353373-L.jpg'
     assert resolve_cover_url(
-        thumbnail='https://covers.openlibrary.org/b/isbn/9788497353373-L.jpg',
+        thumbnail=ol_url,
         google_books_id='abc',
         isbn='9788497353373',
-    ) == google_books_cover_url('abc')
+    ) == ol_url
 
 
 def test_resolve_cover_fallback_url_for_open_library_primary():
