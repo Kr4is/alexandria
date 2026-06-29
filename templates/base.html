@@ -164,6 +164,8 @@
                         class="nav-link hover:text-vintage-accent transition-soft py-2">Collection</a>
                     <a href="{{ url_for('main.stats') }}"
                         class="nav-link hover:text-vintage-accent transition-soft py-2">Stats</a>
+                    <a href="{{ url_for('main.calendar') }}"
+                        class="nav-link hover:text-vintage-accent transition-soft py-2">Calendar</a>
                     {% if current_user.is_authenticated %}
                     <a href="{{ url_for('books.search') }}"
                         class="nav-link hover:text-vintage-accent transition-soft py-2">Search</a>
@@ -191,6 +193,8 @@
                     class="py-3 px-2 text-sm uppercase tracking-[0.15em] font-medium hover:text-vintage-accent border-b border-black/5">Collection</a>
                 <a href="{{ url_for('main.stats') }}"
                     class="py-3 px-2 text-sm uppercase tracking-[0.15em] font-medium hover:text-vintage-accent border-b border-black/5">Stats</a>
+                <a href="{{ url_for('main.calendar') }}"
+                    class="py-3 px-2 text-sm uppercase tracking-[0.15em] font-medium hover:text-vintage-accent border-b border-black/5">Calendar</a>
                 {% if current_user.is_authenticated %}
                 <a href="{{ url_for('books.search') }}"
                     class="py-3 px-2 text-sm uppercase tracking-[0.15em] font-medium hover:text-vintage-accent border-b border-black/5">Search</a>

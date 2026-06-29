@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import book_cover_img %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-1 sm:px-0">
+    <header class="mb-8 sm:mb-12 text-center">
+        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-vintage-ink">Reading Calendar</h2>
+        <div class="flex justify-center items-center gap-4 mb-6">
+            <div class="h-px w-12 bg-vintage-gold/30"></div>
+            <div class="w-2 h-2 rounded-full border border-vintage-gold/30"></div>
+            <div class="h-px w-12 bg-vintage-gold/30"></div>
+        </div>
+        <p class="text-lg italic opacity-60">A day-by-day map of journeys begun and chapters closed.</p>
+    </header>
+
+    {% if active_months %}
+
+    <div class="mb-6 sm:mb-10 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-1 sm:gap-2">
+            {% if prev_month %}
+            <a href="{{ url_for('main.calendar', year=prev_month[0], month=prev_month[1]) }}"
+                class="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 border border-black/10 hover:border-vintage-ink/30 hover:bg-vintage-ink hover:text-vintage-cream transition-soft text-vintage-ink"
+                title="Previous month">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            {% else %}
+            <span class="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 border border-black/5 opacity-20 cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </span>
+            {% endif %}
+
+            <h3 class="text-xl sm:text-2xl md:text-3xl font-serif-display font-bold text-vintage-ink px-2 sm:px-4 min-w-[10rem] sm:min-w-[14rem] text-center">
+                {{ current_label }}
+            </h3>
+
+            {% if next_month %}
+            <a href="{{ url_for('main.calendar', year=next_month[0], month=next_month[1]) }}"
+                class="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 border border-black/10 hover:border-vintage-ink/30 hover:bg-vintage-ink hover:text-vintage-cream transition-soft text-vintage-ink"
+                title="Next month">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+            {% else %}
+            <span class="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 border border-black/5 opacity-20 cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </span>
+            {% endif %}
+        </div>
+
+        <form method="GET" action="{{ url_for('main.calendar') }}" class="flex items-center gap-2">
+            <label for="month-select" class="text-[10px] uppercase tracking-widest opacity-40 font-bold hidden sm:inline">Jump to</label>
+            <select id="month-select" name="month_key"
+                class="min-h-[44px] px-3 py-2 border border-black/10 bg-vintage-paper text-sm font-medium text-vintage-ink focus:outline-none focus:border-vintage-gold hover:border-vintage-ink/30 transition-soft"
+                onchange="
+                    var parts = this.value.split('-');
+                    this.form.elements['year'].value = parts[0];
+                    this.form.elements['month'].value = parts[1];
+                    this.form.submit();
+                ">
+                {% for m in active_months %}
+                <option value="{{ m.key }}" {% if m.selected %}selected{% endif %}>{{ m.label }}</option>
+                {% endfor %}
+            </select>
+            <input type="hidden" name="year" value="{{ current_year }}">
+            <input type="hidden" name="month" value="{{ current_month }}">
+        </form>
+
+        <div class="flex flex-wrap items-center gap-4 text-[10px] uppercase tracking-[0.18em] font-bold opacity-70">
+            <div class="inline-flex items-center gap-2">
+                <span class="inline-block w-4 h-5 border-2 border-vintage-accent bg-vintage-paper"></span>
+                <span>Started</span>
+            </div>
+            <div class="inline-flex items-center gap-2">
+                <span class="inline-block w-4 h-5 border-2 border-vintage-gold bg-vintage-paper"></span>
+                <span>Finished</span>
+            </div>
+        </div>
+    </div>
+
+    <section class="paper-texture vintage-border p-3 sm:p-6">
+        <div class="grid grid-cols-7 gap-px bg-black/10 border border-black/10 overflow-hidden">
+            {% for weekday in weekday_headers %}
+            <div class="bg-vintage-ink/5 px-1 sm:px-2 py-2 text-center text-[8px] sm:text-[10px] uppercase tracking-widest font-bold opacity-50">
+                {{ weekday }}
+            </div>
+            {% endfor %}
+
+            {% for week in weeks %}
+            {% for cell in week %}
+            <div class="min-h-[4.5rem] sm:min-h-[6.25rem] bg-vintage-paper p-1 sm:p-2 {% if not cell.in_month %}opacity-25 bg-vintage-cream{% endif %}">
+                {% if cell.in_month %}
+                <div class="mb-1 text-[10px] sm:text-xs font-bold opacity-40">{{ cell.day }}</div>
+                {% if cell.events %}
+                <div class="flex flex-col gap-1">
+                    {% for event in cell.events %}
+                    {% set book = event.book %}
+                    {% set border_class = 'border-vintage-accent' if event.kind == 'started' else 'border-vintage-gold' %}
+                    {% set label = 'Started' if event.kind == 'started' else 'Finished' %}
+                    <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
+                        title="{{ label }}: {{ book.title }}"
+                        class="group block w-8 sm:w-10 aspect-[2/3] overflow-hidden border-2 {{ border_class }} bg-vintage-cream shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-soft">
+                        {% if book|cover_for %}
+                        {{ book_cover_img(book, alt=label ~ ': ' ~ book.title, class='book-cover-img w-full h-full object-cover sepia-[15%] group-hover:sepia-0 transition-soft') }}
+                        {% else %}
+                        <span class="w-full h-full flex items-center justify-center text-[6px] sm:text-[7px] p-1 opacity-40 italic text-center leading-tight">
+                            No Cover
+                        </span>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% endfor %}
+        </div>
+    </section>
+
+    {% else %}
+    <div class="text-center py-16 sm:py-20 paper-texture space-y-6">
+        <p class="italic opacity-50 text-base sm:text-lg">No dated reading journeys have been recorded yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
