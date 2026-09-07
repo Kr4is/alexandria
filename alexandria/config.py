@@ -15,6 +15,11 @@ def configure_app(app, root: Path) -> None:
 
     app.config['WTF_CSRF_ENABLED'] = True
 
+    # Optional shared-secret bearer token for the public reading-activity API.
+    # Left unset (the default), the endpoint stays fully open, matching the
+    # existing /export.<fmt> route's no-auth posture.
+    app.config['READING_API_TOKEN'] = os.getenv('READING_API_TOKEN') or None
+
 
 def _resolve_database_uri(root: Path) -> str:
     db_url = os.getenv('DATABASE_URL')

@@ -10,11 +10,16 @@ def safe_div(n: float, d: float) -> float:
     return n / d if d > 0 else 0
 
 
-def _as_utc(dt: datetime) -> datetime:
+def as_utc(dt: datetime) -> datetime:
     """Normalize a naive or aware datetime to UTC-aware."""
     if dt.tzinfo is None:
         return dt.replace(tzinfo=UTC)
     return dt.astimezone(UTC)
+
+
+# Backward-compatible alias for the previous private name, kept for any
+# in-module call sites below.
+_as_utc = as_utc
 
 
 def get_season(date) -> str:
@@ -156,9 +161,22 @@ def _compute_curiosities(finished_books: list, total_pages: int, total_books: in
     }
 
 
-def build_stats_context() -> StatsContext:
+def build_stats_context(since: datetime | None = None, until: datetime | None = None) -> StatsContext:
+    """Compute the stats context, optionally scoped to a ``date_finished`` window.
+
+    ``since``/``until`` are both optional and, when provided, are treated as a
+    half-open interval ``[since, until)`` on ``Book.date_finished``. Leaving
+    both unset (the default) reproduces the original, unfiltered, all-time
+    behavior used by the ``/stats`` page.
+    """
     all_books = Book.query.all()
     finished_books = [b for b in all_books if b.status == BookStatus.FINISHED and b.date_finished]
+    if since is not None:
+        since = as_utc(since)
+        finished_books = [b for b in finished_books if as_utc(b.date_finished) >= since]
+    if until is not None:
+        until = as_utc(until)
+        finished_books = [b for b in finished_books if as_utc(b.date_finished) < until]
 
     total_books_read = len(finished_books)
     total_pages_read = sum(b.page_count for b in finished_books if b.page_count)
