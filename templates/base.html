@@ -1,44 +1,89 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full scroll-smooth" style="scroll-padding-top: 5rem;">
+<html lang="en" class="h-full scroll-smooth" style="scroll-padding-top: 6rem;">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config['APP_NAME'] }} - Personal Library</title>
+    <meta name="theme-color" content="#3b2415">
+    <meta name="color-scheme" content="light">
+    <title>{% block title %}{{ config['APP_NAME'] }} - Personal Library{% endblock %}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'vintage-cream': '#f4ece1',
-                        'vintage-paper': '#f9f4ef',
-                        'vintage-ink': '#1a1614',
-                        'vintage-gold': '#b58d4a',
-                        'vintage-accent': '#2d4a3e',
+        /* Colours read the CSS variables below (as "r g b" channels) so palette
+           changes flow everywhere and opacity utilities such as bg-vintage-ink/10 keep working. */
+        (function () {
+            var c = function (n) { return 'rgb(var(--' + n + '-rgb) / <alpha-value>)'; };
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            'vintage-cream': c('vintage-cream'),
+                            'vintage-paper': c('vintage-paper'),
+                            'vintage-ink': c('vintage-ink'),
+                            'vintage-gold': c('vintage-gold'),
+                            'vintage-accent': c('vintage-accent'),
+                            'moss': c('moss'),
+                            'wood': c('wood'),
+                            'wood-dark': c('wood-dark'),
+                            'leather': c('leather'),
+                            'rust': c('rust')
+                        },
+                        fontFamily: {
+                            display: ['Fraunces', 'Georgia', 'serif'],
+                            serif: ['"EB Garamond"', 'Georgia', 'serif']
+                        }
                     }
                 }
-            }
-        }
+            };
+        })();
     </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..800&family=EB+Garamond:ital,wght@0,400..700;1,400..600&display=swap"
         rel="stylesheet">
     <style>
         :root {
-            --vintage-cream: #f4ece1;
-            --vintage-paper: #f9f4ef;
-            --vintage-ink: #1a1614;
-            --vintage-gold: #b58d4a;
-            --vintage-accent: #2d4a3e;
+            --vintage-cream: #efe3cf;
+            --vintage-paper: #f8f0e2;
+            --vintage-ink: #2a1d16;
+            --vintage-gold: #b8832f;
+            --vintage-accent: #6f2a24;
+            --moss: #4a5d3a;
+            --wood: #5a3a22;
+            --wood-dark: #3b2415;
+            --leather: #8a5a36;
+            --rust: #b4532a;
+
+            /* "r g b" channels of the tokens above, for Tailwind opacity utilities */
+            --vintage-cream-rgb: 239 227 207;
+            --vintage-paper-rgb: 248 240 226;
+            --vintage-ink-rgb: 42 29 22;
+            --vintage-gold-rgb: 184 131 47;
+            --vintage-accent-rgb: 111 42 36;
+            --moss-rgb: 74 93 58;
+            --wood-rgb: 90 58 34;
+            --wood-dark-rgb: 59 36 21;
+            --leather-rgb: 138 90 54;
+            --rust-rgb: 180 83 42;
+
+            /* brass tuned for text/rules on dark wood (AA on --wood-dark) */
+            --brass-light: #dcae65;
             --transition-speed: 0.3s;
+
+            /* paper grain, drawn inline instead of fetched from a third party */
+            --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .36 0 0 0 0 .22 0 0 0 0 .1 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
         }
 
         body {
-            font-family: 'EB Garamond', serif;
+            font-family: 'EB Garamond', Georgia, serif;
+            font-size: 1.125rem;
             background-color: var(--vintage-cream);
+            background-image:
+                radial-gradient(ellipse at 50% -10%, rgba(255, 248, 232, 0.65), transparent 60%),
+                var(--grain);
             color: var(--vintage-ink);
             line-height: 1.6;
         }
@@ -48,16 +93,49 @@
         h3,
         h4,
         .font-serif-display {
-            font-family: 'Playfair Display', serif;
-            font-weight: 700;
-            letter-spacing: -0.01em;
+            font-family: 'Fraunces', Georgia, serif;
+            font-weight: 650;
+            letter-spacing: -0.015em;
+            font-optical-sizing: auto;
         }
 
+        ::selection {
+            background: var(--vintage-gold);
+            color: var(--wood-dark);
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--vintage-accent);
+            outline-offset: 3px;
+        }
+
+        .alx-dark :focus-visible {
+            outline-color: var(--brass-light);
+        }
+
+        .alx-skip {
+            position: absolute;
+            left: 1rem;
+            top: -4rem;
+            z-index: 300;
+            padding: 0.75rem 1.25rem;
+            min-height: 44px;
+            background: var(--vintage-accent);
+            color: var(--vintage-paper);
+            font-size: 1rem;
+            transition: top 0.15s ease;
+        }
+
+        .alx-skip:focus {
+            top: 0.75rem;
+        }
+
+        /* ---------- shared surfaces ---------- */
         .paper-texture {
             background-color: var(--vintage-paper);
-            background-image: url("https://www.transparenttextures.com/patterns/notebook.png");
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(0, 0, 0, 0.03);
+            background-image: var(--grain);
+            box-shadow: 0 10px 30px -12px rgba(59, 36, 21, 0.28);
+            border: 1px solid rgba(90, 58, 34, 0.12);
         }
 
         .vintage-border {
@@ -71,26 +149,6 @@
             transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .nav-link {
-            position: relative;
-            padding-bottom: 2px;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 1px;
-            bottom: 0;
-            left: 0;
-            background-color: var(--vintage-accent);
-            transition: width var(--transition-speed) ease;
-        }
-
-        .nav-link:hover::after {
-            width: 100%;
-        }
-
         .book-cover-img {
             image-rendering: auto;
         }
@@ -99,20 +157,193 @@
             overflow: hidden;
         }
 
+        /* ---------- nav: the bookcase top ---------- */
+        .alx-nav {
+            background-color: var(--wood-dark);
+            background-image: var(--grain);
+            color: var(--vintage-cream);
+            border-bottom: 1px solid var(--vintage-gold);
+            box-shadow: 0 3px 0 var(--wood-dark), 0 4px 0 rgba(184, 131, 47, 0.55), 0 10px 24px -10px rgba(59, 36, 21, 0.55);
+        }
+
+        .alx-wordmark {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-height: 44px;
+            color: var(--vintage-cream);
+            text-decoration: none;
+        }
+
+        .alx-wordmark svg {
+            width: 2rem;
+            height: 2rem;
+            flex: none;
+            color: var(--brass-light);
+            transition: transform 0.5s ease;
+        }
+
+        .alx-wordmark:hover svg {
+            transform: rotate(-8deg);
+        }
+
+        .alx-wordmark .eyebrow {
+            display: block;
+            font-style: italic;
+            font-size: 0.8125rem;
+            line-height: 1;
+            letter-spacing: 0.14em;
+            color: var(--brass-light);
+        }
+
+        .alx-wordmark .name {
+            display: block;
+            font-family: 'Fraunces', Georgia, serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+            line-height: 1.1;
+            letter-spacing: -0.01em;
+        }
+
+        .nav-link {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            min-height: 44px;
+            padding: 0 0.125rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: inherit;
+            text-decoration: none;
+            transition: color var(--transition-speed) ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 1px;
+            bottom: 8px;
+            left: 0;
+            background-color: currentColor;
+            transition: width var(--transition-speed) ease;
+        }
+
+        .nav-link:hover::after,
+        .nav-link[aria-current="page"]::after {
+            width: 100%;
+        }
+
+        .alx-nav .nav-link:hover,
+        .alx-nav .nav-link[aria-current="page"] {
+            color: var(--brass-light);
+        }
+
+        .alx-logout {
+            min-height: 44px;
+            padding: 0 0.25rem;
+            display: inline-flex;
+            align-items: center;
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+            font: inherit;
+            font-size: 0.8125rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: rgba(239, 227, 207, 0.75);
+            transition: color var(--transition-speed) ease;
+        }
+
+        .alx-logout:hover {
+            color: #fff;
+        }
+
+        .alx-menu-toggle {
+            min-width: 44px;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(220, 174, 101, 0.5);
+            border-radius: 2px;
+            background: transparent;
+            color: var(--vintage-cream);
+            cursor: pointer;
+        }
+
+        .alx-menu-toggle:hover {
+            background: rgba(239, 227, 207, 0.1);
+        }
+
+        .alx-mobile-link {
+            display: flex;
+            align-items: center;
+            min-height: 48px;
+            padding: 0 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            font-size: 0.875rem;
+            color: var(--vintage-cream);
+            border-bottom: 1px solid rgba(220, 174, 101, 0.2);
+            text-decoration: none;
+        }
+
+        .alx-mobile-link:hover,
+        .alx-mobile-link[aria-current="page"] {
+            color: var(--brass-light);
+        }
+
+        /* ---------- flash messages: a slip of paper tucked in the book ---------- */
         .flash-dismiss {
+            --flash: var(--vintage-gold);
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.9rem 3rem 0.9rem 1.1rem;
+            background: var(--vintage-paper);
+            background-image: var(--grain);
+            border: 1px solid rgba(90, 58, 34, 0.15);
+            border-left: 4px solid var(--flash);
+            border-radius: 2px;
+            box-shadow: 0 6px 18px -10px rgba(59, 36, 21, 0.35);
+            color: var(--vintage-ink);
+            font-size: 1.0625rem;
             animation: flash-in 0.35s ease-out;
         }
 
-        @keyframes flash-in {
-            from {
-                opacity: 0;
-                transform: translateY(-0.5rem);
-            }
+        .flash-dismiss[data-category="success"] { --flash: var(--moss); }
+        .flash-dismiss[data-category="error"] { --flash: var(--vintage-accent); background-color: #fbeee6; }
+        .flash-dismiss[data-category="warning"] { --flash: var(--rust); }
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .flash-close {
+            position: absolute;
+            top: 0.25rem;
+            right: 0.25rem;
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+            color: var(--vintage-ink);
+            opacity: 0.6;
+        }
+
+        .flash-close:hover {
+            opacity: 1;
+        }
+
+        @keyframes flash-in {
+            from { opacity: 0; transform: translateY(-0.5rem); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .flash-leave {
@@ -120,10 +351,100 @@
         }
 
         @keyframes flash-out {
-            to {
-                opacity: 0;
-                transform: translateY(-0.25rem);
-            }
+            to { opacity: 0; transform: translateY(-0.25rem); }
+        }
+
+        /* ---------- buttons (modals) ---------- */
+        .alx-btn {
+            min-height: 44px;
+            padding: 0.6rem 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font: inherit;
+            font-size: 0.8125rem;
+            font-weight: 700;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            border: 1px solid transparent;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+        }
+
+        .alx-btn-ghost {
+            background: transparent;
+            color: var(--vintage-ink);
+            border-color: rgba(42, 29, 22, 0.35);
+        }
+
+        .alx-btn-ghost:hover {
+            background: rgba(42, 29, 22, 0.07);
+        }
+
+        .alx-btn-primary {
+            background: var(--vintage-accent);
+            color: var(--vintage-paper);
+        }
+
+        .alx-btn-primary:hover {
+            background: var(--wood-dark);
+        }
+
+        .alx-btn-danger {
+            background: #9a3f1e;
+            color: #fff8ee;
+        }
+
+        .alx-btn-danger:hover {
+            background: var(--wood-dark);
+        }
+
+        /* ---------- modals ---------- */
+        .alx-modal-backdrop {
+            background: rgba(42, 25, 14, 0.55);
+            backdrop-filter: blur(3px);
+        }
+
+        .alx-modal-panel {
+            animation: modal-in 0.22s ease-out;
+        }
+
+        @keyframes modal-in {
+            from { opacity: 0; transform: translateY(0.5rem) scale(0.985); }
+            to { opacity: 1; transform: none; }
+        }
+
+        .alx-modal-close {
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: 0;
+            cursor: pointer;
+            font-size: 1.5rem;
+            line-height: 1;
+            color: var(--vintage-ink);
+            opacity: 0.6;
+        }
+
+        .alx-modal-close:hover {
+            opacity: 1;
+        }
+
+        /* ---------- footer: the bookcase base ---------- */
+        .alx-footer {
+            background-color: var(--wood-dark);
+            background-image: var(--grain);
+            color: rgba(239, 227, 207, 0.85);
+            border-top: 1px solid var(--vintage-gold);
+            box-shadow: inset 0 4px 0 var(--wood-dark), inset 0 5px 0 rgba(184, 131, 47, 0.45);
+        }
+
+        .alx-footer a {
+            color: var(--brass-light);
         }
 
         @media (max-width: 639px) {
@@ -133,7 +454,7 @@
         }
 
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 8px;
         }
 
         ::-webkit-scrollbar-track {
@@ -141,51 +462,67 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--vintage-gold);
+            background: var(--leather);
             border-radius: 10px;
         }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto !important;
+            }
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        }
     </style>
+    {% block head %}{% endblock %}
 </head>
 
 <body class="h-full flex flex-col min-h-screen antialiased">
-    <nav class="sticky top-0 z-50 bg-vintage-cream/80 backdrop-blur-md border-b border-black/5 py-3 sm:py-4">
+    <a href="#main" class="alx-skip">Skip to content</a>
+    {% set ep = request.endpoint or '' %}
+    <nav class="alx-nav alx-dark sticky top-0 z-50 py-2" aria-label="Main">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 flex justify-between items-center gap-3">
-            <a href="{{ url_for('main.index') }}" class="flex items-center gap-2 md:gap-3 group flex-shrink-0 min-h-[44px] min-w-0">
-                <img src="{{ url_for('static', filename='logo.svg') }}" alt="Logo"
-                    class="w-7 h-7 md:w-8 md:h-8 object-contain transition-soft group-hover:rotate-12 flex-shrink-0">
-                <h1
-                    class="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-vintage-ink/90 group-hover:text-vintage-accent transition-soft truncate">
-                    {{ config['APP_NAME'] }}
-                </h1>
+            <a href="{{ url_for('main.index') }}" class="alx-wordmark min-w-0">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
+                    <circle cx="16" cy="16" r="14.5" />
+                    <circle cx="16" cy="16" r="12" stroke-width=".6" />
+                    <path d="M16 11.5c-2-1.5-4.5-2-7-1.6v10c2.5-.4 5 .1 7 1.6 2-1.5 4.5-2 7-1.6v-10c-2.5-.4-5 .1-7 1.6z" />
+                    <path d="M16 11.5v10" />
+                </svg>
+                <span class="min-w-0">
+                    <span class="eyebrow">Ex libris</span>
+                    <span class="name font-serif-display truncate">{{ config['APP_NAME'] }}</span>
+                </span>
             </a>
 
-            <div class="hidden sm:flex items-center gap-4 md:gap-10">
-                <div class="flex gap-4 md:gap-8 text-sm uppercase tracking-[0.15em] font-medium">
-                    <a href="{{ url_for('main.index') }}"
-                        class="nav-link hover:text-vintage-accent transition-soft py-2">Collection</a>
-                    <a href="{{ url_for('main.stats') }}"
-                        class="nav-link hover:text-vintage-accent transition-soft py-2">Stats</a>
-                    <a href="{{ url_for('main.calendar') }}"
-                        class="nav-link hover:text-vintage-accent transition-soft py-2">Calendar</a>
+            <div class="hidden sm:flex items-center gap-4 md:gap-8">
+                <div class="flex gap-4 md:gap-8">
+                    <a href="{{ url_for('main.index') }}" class="nav-link" {% if ep == 'main.index' %}aria-current="page"{% endif %}>Collection</a>
+                    <a href="{{ url_for('main.stats') }}" class="nav-link" {% if ep == 'main.stats' %}aria-current="page"{% endif %}>Stats</a>
+                    <a href="{{ url_for('main.calendar') }}" class="nav-link" {% if ep == 'main.calendar' %}aria-current="page"{% endif %}>Calendar</a>
                     {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('books.search') }}"
-                        class="nav-link hover:text-vintage-accent transition-soft py-2">Search</a>
+                    <a href="{{ url_for('books.search') }}" class="nav-link" {% if ep == 'books.search' %}aria-current="page"{% endif %}>Search</a>
                     {% else %}
-                    <a href="{{ url_for('auth.login') }}"
-                        class="nav-link hover:text-vintage-accent transition-soft py-2">Login</a>
+                    <a href="{{ url_for('auth.login') }}" class="nav-link" {% if ep == 'auth.login' %}aria-current="page"{% endif %}>Login</a>
                     {% endif %}
                 </div>
                 {% if current_user.is_authenticated %}
-                <div class="h-4 w-px bg-black/10"></div>
+                <div class="h-4 w-px" style="background: rgba(220, 174, 101, 0.4)"></div>
                 <form method="POST" action="{{ url_for('auth.logout') }}" class="inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="text-[10px] uppercase tracking-widest opacity-40 hover:opacity-100 hover:text-red-800 transition-soft py-2 min-h-[44px] inline-flex items-center bg-transparent border-none cursor-pointer">Logout</button>
+                    <button type="submit" class="alx-logout">Logout</button>
                 </form>
                 {% endif %}
             </div>
 
-            <button type="button" id="mobile-nav-toggle"
-                class="sm:hidden min-w-[44px] min-h-[44px] inline-flex items-center justify-center rounded border border-black/10 text-vintage-ink hover:bg-black/5 transition-soft"
+            <button type="button" id="mobile-nav-toggle" class="alx-menu-toggle sm:hidden"
                 aria-expanded="false" aria-controls="mobile-nav-panel" aria-label="Open menu">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
@@ -193,45 +530,32 @@
             </button>
         </div>
 
-        <div id="mobile-nav-panel" class="hidden sm:hidden border-t border-black/5 bg-vintage-cream/95 backdrop-blur-md">
-            <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-1">
-                <a href="{{ url_for('main.index') }}"
-                    class="py-3 px-2 text-sm uppercase tracking-[0.15em] font-medium hover:text-vintage-accent border-b border-black/5">Collection</a>
-                <a href="{{ url_for('main.stats') }}"
-                    class="py-3 px-2 text-sm uppercase tracking-[0.15em] font-medium hover:text-vintage-accent border-b border-black/5">Stats</a>
-                <a href="{{ url_for('main.calendar') }}"
-                    class="py-3 px-2 text-sm uppercase tracking-[0.15em] font-medium hover:text-vintage-accent border-b border-black/5">Calendar</a>
+        <div id="mobile-nav-panel" class="hidden sm:hidden" style="border-top: 1px solid rgba(220, 174, 101, 0.3)">
+            <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col">
+                <a href="{{ url_for('main.index') }}" class="alx-mobile-link" {% if ep == 'main.index' %}aria-current="page"{% endif %}>Collection</a>
+                <a href="{{ url_for('main.stats') }}" class="alx-mobile-link" {% if ep == 'main.stats' %}aria-current="page"{% endif %}>Stats</a>
+                <a href="{{ url_for('main.calendar') }}" class="alx-mobile-link" {% if ep == 'main.calendar' %}aria-current="page"{% endif %}>Calendar</a>
                 {% if current_user.is_authenticated %}
-                <a href="{{ url_for('books.search') }}"
-                    class="py-3 px-2 text-sm uppercase tracking-[0.15em] font-medium hover:text-vintage-accent border-b border-black/5">Search</a>
+                <a href="{{ url_for('books.search') }}" class="alx-mobile-link" {% if ep == 'books.search' %}aria-current="page"{% endif %}>Search</a>
                 <form method="POST" action="{{ url_for('auth.logout') }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="w-full text-left py-3 px-2 text-xs uppercase tracking-widest opacity-60 hover:opacity-100 hover:text-red-800 bg-transparent border-none cursor-pointer">Logout</button>
+                    <button type="submit" class="alx-mobile-link w-full text-left cursor-pointer" style="font: inherit; font-size: 0.875rem; letter-spacing: 0.16em; text-transform: uppercase; background: transparent; border-width: 0 0 1px;">Logout</button>
                 </form>
                 {% else %}
-                <a href="{{ url_for('auth.login') }}"
-                    class="py-3 px-2 text-sm uppercase tracking-[0.15em] font-medium hover:text-vintage-accent border-b border-black/5">Login</a>
+                <a href="{{ url_for('auth.login') }}" class="alx-mobile-link" {% if ep == 'auth.login' %}aria-current="page"{% endif %}>Login</a>
                 {% endif %}
             </div>
         </div>
     </nav>
 
-    <main class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-16 w-full">
+    <main id="main" class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-12 w-full">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
         <div class="max-w-4xl mx-auto space-y-3 mb-6" id="flash-container" role="status" aria-live="polite">
             {% for category, message in messages %}
-            {% set cls = {
-                'success': 'bg-emerald-50/80 border-l-2 border-emerald-600 text-emerald-900',
-                'error': 'bg-red-50/50 border-l-2 border-red-400 text-red-800',
-                'warning': 'bg-amber-50/80 border-l-2 border-amber-500 text-amber-900',
-                'info': 'bg-stone-50/80 border-l-2 border-vintage-gold text-vintage-ink'
-            }.get(category, 'bg-stone-50/80 border-l-2 border-vintage-gold text-vintage-ink') %}
-            <div
-                class="flash-dismiss flex items-start gap-3 p-4 pr-10 {{ cls }} text-sm italic relative shadow-sm rounded-sm">
+            <div class="flash-dismiss" data-category="{{ category }}">
                 <span class="flex-1">{{ message }}</span>
-                <button type="button" class="flash-close absolute top-3 right-3 min-w-[36px] min-h-[36px] flex items-center justify-center rounded opacity-50 hover:opacity-100 not-italic text-lg leading-none"
-                    aria-label="Dismiss notification">&times;</button>
+                <button type="button" class="flash-close" aria-label="Dismiss notification">&times;</button>
             </div>
             {% endfor %}
         </div>
@@ -241,38 +565,34 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="py-12 border-t border-black/5 text-center">
-        <div class="max-w-6xl mx-auto px-6 space-y-6">
-            <div class="flex justify-center gap-4 opacity-20">
-                <div class="h-px w-8 bg-black"></div>
-                <div class="h-1 w-1 rounded-full bg-black"></div>
-                <div class="h-px w-8 bg-black"></div>
-            </div>
-
-            <p class="text-[10px] md:text-xs uppercase tracking-[0.3em] opacity-30 italic">
-                Catalogued in the year {{ now.year }}
+    <footer class="alx-footer alx-dark mt-8 py-10 text-center">
+        <div class="max-w-6xl mx-auto px-6 space-y-4">
+            <svg class="mx-auto" width="64" height="12" viewBox="0 0 64 12" fill="none" stroke="#dcae65" stroke-width="1" aria-hidden="true">
+                <path d="M0 6h24M40 6h24" />
+                <path d="M32 1l5 5-5 5-5-5z" fill="#dcae65" stroke="none" />
+            </svg>
+            <p class="font-serif-display text-xl" style="color: var(--vintage-cream)">{{ config['APP_NAME'] }}</p>
+            <p class="text-sm italic tracking-wide">
+                A personal library, catalogued by hand in {{ now.year }}.
             </p>
         </div>
     </footer>
 
     <!-- Finish book confirmation -->
     <div id="modal-finish" class="fixed inset-0 z-[200] hidden" aria-hidden="true">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm modal-backdrop-close" data-modal-backdrop></div>
+        <div class="alx-modal-backdrop absolute inset-0 modal-backdrop-close" data-modal-backdrop></div>
         <div class="relative flex min-h-full items-center justify-center p-4 pointer-events-none">
-            <div class="paper-texture vintage-border max-w-md w-full p-8 shadow-2xl pointer-events-auto relative"
+            <div class="alx-modal-panel paper-texture vintage-border max-w-md w-full p-8 shadow-2xl pointer-events-auto relative"
                 role="dialog" aria-modal="true" aria-labelledby="modal-finish-title" tabindex="-1" data-modal-panel>
-                <button type="button"
-                    class="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center opacity-40 hover:opacity-100 text-xl leading-none modal-close-btn"
+                <button type="button" class="alx-modal-close modal-close-btn absolute top-3 right-3"
                     aria-label="Close">&times;</button>
-                <h3 id="modal-finish-title" class="font-serif-display text-2xl text-vintage-ink mb-2 pr-8">Close this
+                <h3 id="modal-finish-title" class="font-serif-display text-2xl text-vintage-ink mb-2 pr-10">Close this
                     chapter?</h3>
-                <p class="text-sm italic opacity-70 mb-6" id="modal-finish-body">Mark this volume as completed.</p>
+                <p class="text-base italic mb-6" style="color: rgba(42, 29, 22, 0.8)" id="modal-finish-body">Mark this volume as completed.</p>
                 <form id="modal-finish-form" method="POST" action="" class="js-submit-loading">
                     <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
-                        <button type="button"
-                            class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink/5 modal-close-btn">Cancel</button>
-                        <button type="submit"
-                            class="min-h-[44px] px-6 py-3 bg-vintage-accent text-vintage-cream text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-vintage-ink transition-soft">Confirm</button>
+                        <button type="button" class="alx-btn alx-btn-ghost modal-close-btn">Cancel</button>
+                        <button type="submit" class="alx-btn alx-btn-primary">Confirm</button>
                     </div>
                 </form>
             </div>
@@ -281,22 +601,19 @@
 
     <!-- Delete book confirmation -->
     <div id="modal-delete" class="fixed inset-0 z-[200] hidden" aria-hidden="true">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm modal-backdrop-close" data-modal-backdrop></div>
+        <div class="alx-modal-backdrop absolute inset-0 modal-backdrop-close" data-modal-backdrop></div>
         <div class="relative flex min-h-full items-center justify-center p-4 pointer-events-none">
-            <div class="paper-texture vintage-border max-w-md w-full p-8 shadow-2xl pointer-events-auto relative"
+            <div class="alx-modal-panel paper-texture vintage-border max-w-md w-full p-8 shadow-2xl pointer-events-auto relative"
                 role="dialog" aria-modal="true" aria-labelledby="modal-delete-title" tabindex="-1" data-modal-panel>
-                <button type="button"
-                    class="absolute top-4 right-4 min-w-[44px] min-h-[44px] flex items-center justify-center opacity-40 hover:opacity-100 text-xl leading-none modal-close-btn"
+                <button type="button" class="alx-modal-close modal-close-btn absolute top-3 right-3"
                     aria-label="Close">&times;</button>
-                <h3 id="modal-delete-title" class="font-serif-display text-2xl text-vintage-ink mb-2 pr-8">Remove from
+                <h3 id="modal-delete-title" class="font-serif-display text-2xl text-vintage-ink mb-2 pr-10">Remove from
                     archives?</h3>
-                <p class="text-sm italic opacity-70 mb-6" id="modal-delete-body">This cannot be undone.</p>
+                <p class="text-base italic mb-6" style="color: rgba(42, 29, 22, 0.8)" id="modal-delete-body">This cannot be undone.</p>
                 <form id="modal-delete-form" method="POST" action="" class="js-submit-loading">
                     <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
-                        <button type="button"
-                            class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink/5 modal-close-btn">Cancel</button>
-                        <button type="submit"
-                            class="min-h-[44px] px-6 py-3 bg-red-900 text-vintage-cream text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-red-800 transition-soft">Remove</button>
+                        <button type="button" class="alx-btn alx-btn-ghost modal-close-btn">Cancel</button>
+                        <button type="submit" class="alx-btn alx-btn-danger">Remove</button>
                     </div>
                 </form>
             </div>
@@ -329,7 +646,7 @@
             });
 
             document.querySelectorAll('.flash-dismiss').forEach(function (row) {
-                var delay = row.classList.contains('border-red-400') ? 9000 : 4500;
+                var delay = row.getAttribute('data-category') === 'error' ? 9000 : 4500;
                 setTimeout(function () { if (row.parentNode) dismissFlash(row); }, delay);
             });
 
