@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import book_cover_img %}
+
+{% block content %}
+<style>
+    .sh-ink { color: var(--vintage-ink, #2a1d16); }
+    .sh-wood { color: var(--wood, #5a3a22); }
+    .sh-back { color: var(--wood, #5a3a22); }
+    .sh-back:hover { color: var(--vintage-accent, #6f2a24); }
+    .sh-case { background: linear-gradient(180deg, rgba(59, 36, 21, .07), rgba(59, 36, 21, .02)); border: 1px solid rgba(90, 58, 34, .2);
+               border-top: 8px solid var(--wood-dark, #3b2415); padding: 1.5rem .5rem .5rem; }
+    .sh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); row-gap: 1rem; }
+    .sh-item { position: relative; padding: 0 .75rem 0; display: block; text-decoration: none; }
+    .sh-cover { aspect-ratio: 2 / 3; overflow: hidden; background: #e7d8bd; border-radius: 2px 4px 4px 2px;
+                box-shadow: 0 10px 18px -8px rgba(59, 36, 21, .6), inset 3px 0 0 rgba(0, 0, 0, .12); transition: transform .25s ease; }
+    .sh-item:hover .sh-cover, .sh-item:focus-visible .sh-cover { transform: translateY(-6px); }
+    .sh-item:focus-visible { outline: 3px solid var(--vintage-gold, #b8832f); outline-offset: 2px; }
+    .sh-plank { height: 14px; margin-top: 0; background: linear-gradient(180deg, var(--leather, #8a5a36), var(--wood, #5a3a22) 60%, var(--wood-dark, #3b2415));
+                box-shadow: 0 6px 8px -4px rgba(0, 0, 0, .35); }
+    .sh-caption { padding: .6rem 0 1.25rem; min-height: 4.5rem; }
+    .sh-title { font-family: 'Fraunces', 'Playfair Display', serif; font-weight: 700; font-size: .9375rem; line-height: 1.25; color: var(--vintage-ink, #2a1d16);
+                display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .sh-author { font-size: .875rem; font-style: italic; color: var(--wood, #5a3a22); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .sh-bar { height: 4px; background: rgba(90, 58, 34, .2); margin-top: .4rem; }
+    .sh-bar > span { display: block; height: 100%; background: var(--moss, #4a5d3a); }
+    .sh-fallback { display: flex; align-items: center; justify-content: center; text-align: center; padding: .75rem; height: 100%;
+                   font-family: 'Fraunces', 'Playfair Display', serif; font-size: .9375rem; color: var(--wood-dark, #3b2415); }
+    @media (prefers-reduced-motion: reduce) { .sh-cover { transition: none; } .sh-item:hover .sh-cover { transform: none; } }
+</style>
+
+<div class="max-w-6xl mx-auto">
+    <a href="{{ url_for('main.index') }}"
+        class="sh-back inline-flex items-center gap-3 min-h-[44px] text-xs uppercase tracking-[0.2em] font-bold transition-soft group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:-translate-x-1 flex-shrink-0"
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to the library
+    </a>
+
+    <header class="text-center my-8 sm:my-12">
+        <p class="text-xs uppercase tracking-[0.3em] font-bold sh-wood">A shelf of the library</p>
+        <h1 class="text-4xl sm:text-5xl font-bold sh-ink mt-2 break-words">{{ name }}</h1>
+        <p class="italic text-lg sh-wood mt-3">{{ books|length }} {{ 'volume' if books|length == 1 else 'volumes' }}</p>
+    </header>
+
+    {% if books %}
+    <div class="sh-case">
+        <ul class="sh-grid list-none p-0 m-0">
+            {% for book in books %}
+            <li>
+                <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="sh-item" aria-label="{{ book.title }}{% if book.authors %}, {{ book.authors }}{% endif %}">
+                    <div class="sh-cover">
+                        {% if book|cover_for %}
+                        {{ book_cover_img(book, alt='') }}
+                        {% else %}
+                        <div class="sh-fallback">{{ book.title }}</div>
+                        {% endif %}
+                    </div>
+                </a>
+                <div class="sh-plank" aria-hidden="true"></div>
+                <div class="sh-caption px-3">
+                    <p class="sh-title">{{ book.title }}</p>
+                    {% if book.authors %}<p class="sh-author">{{ book.authors }}</p>{% endif %}
+                    {% if book.status == 'reading' and book.page_count and book.current_page %}
+                    <div class="sh-bar" role="progressbar" aria-label="Reading progress" aria-valuemin="0" aria-valuemax="100"
+                        aria-valuenow="{{ (book.current_page * 100 / book.page_count)|round|int }}">
+                        <span style="width: {{ [book.current_page * 100 / book.page_count, 100]|min|round(1) }}%"></span>
+                    </div>
+                    {% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <div class="text-center py-16 px-6 max-w-lg mx-auto" style="border: 1px dashed rgba(90, 58, 34, .4);">
+        <h2 class="text-2xl font-bold sh-ink">This shelf is empty</h2>
+        <p class="italic text-lg sh-wood mt-3">No volumes are filed under &ldquo;{{ name }}&rdquo; yet. Add a shelf name when editing a book and it will appear here.</p>
+        <a href="{{ url_for('main.index') }}" class="inline-flex items-center justify-center min-h-[44px] mt-6 px-6 text-xs uppercase tracking-[0.2em] font-bold"
+            style="background: var(--vintage-accent, #6f2a24); color: var(--vintage-paper, #f8f0e2);">Browse the library</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

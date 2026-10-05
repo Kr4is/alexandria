@@ -57,6 +57,22 @@ def set_status(book_id):
     return redirect(request.referrer or url_for('main.index'))
 
 
+@bp.route('/progress/<int:book_id>', methods=['POST'])
+@login_required
+def set_progress(book_id):
+    book = book_service.get_book_or_404(book_id)
+    if book_service.set_progress(book, request.form.get('current_page', '')):
+        flash(f'Bookmark moved to page {book.current_page}.', 'success')
+    else:
+        flash('That page number does not look right.', 'error')
+    return redirect(request.referrer or url_for('main.book_detail', book_id=book.id))
+
+
+@bp.route('/shelf/<path:name>')
+def shelf(name):
+    return render_template('shelf.html', name=name.strip(), books=book_service.books_on_shelf(name))
+
+
 @bp.route('/finish/<int:book_id>', methods=['POST'])
 @login_required
 def finish_book(book_id):
@@ -77,7 +93,7 @@ def edit_book(book_id):
         if not errors:
             flash('Book details updated successfully.', 'success')
         return redirect(url_for('main.book_detail', book_id=book.id))
-    return render_template('edit_book.html', book=book)
+    return render_template('edit_book.html', book=book, formats=book_service.BOOK_FORMATS)
 
 
 @bp.route('/delete/<int:book_id>', methods=['POST'])
