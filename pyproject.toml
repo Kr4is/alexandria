@@ -21,8 +21,30 @@ dependencies = [
 dev = [
     "pytest>=8.3.0",
     "pytest-cov>=7.1.0",
+    "ruff>=0.16.10",
 ]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+extend-exclude = ["migrations", "instance"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+# Import ordering is not enforced yet; sorting would touch files other branches are editing.
+ignore = ["I001"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["F401"]
+"alexandria/blueprints/main.py" = ["F401"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.coverage.run]
+source = ["alexandria"]
+omit = ["*/migrations/*"]
