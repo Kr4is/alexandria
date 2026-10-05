@@ -1,128 +1,205 @@
 {% extends 'base.html' %}
+{% from '_macros.html' import book_cover_img %}
 
 {% block content %}
+<style>
+    .ef-sheet { background: var(--vintage-paper, #f8f0e2); border: 1px solid rgba(90, 58, 34, .18); box-shadow: 0 18px 40px -22px rgba(59, 36, 21, .45); }
+    .ef-spine { background: linear-gradient(90deg, var(--wood-dark, #3b2415), var(--wood, #5a3a22)); }
+    .ef-section { border-top: 1px solid rgba(90, 58, 34, .18); padding-top: 1.75rem; }
+    .ef-legend { font-family: 'Fraunces', 'Playfair Display', serif; font-weight: 700; font-size: 1.25rem; color: var(--wood, #5a3a22); }
+    .ef-label { display: block; font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--wood, #5a3a22); margin-bottom: .4rem; }
+    .ef-hint { font-size: .875rem; font-style: italic; color: var(--leather, #8a5a36); margin-top: .35rem; }
+    .ef-input { width: 100%; min-height: 44px; padding: .6rem .9rem; font-size: 1rem; color: var(--vintage-ink, #2a1d16);
+                background: #fffaf0; border: 1px solid rgba(90, 58, 34, .35); border-radius: 2px; transition: border-color .2s, box-shadow .2s; }
+    .ef-input:focus { outline: none; border-color: var(--vintage-accent, #6f2a24); box-shadow: 0 0 0 3px rgba(111, 42, 36, .15); }
+    select.ef-input { appearance: none; padding-right: 2.5rem; cursor: pointer;
+        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235a3a22' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: right .9rem center; }
+    .ef-progress { height: 8px; background: rgba(90, 58, 34, .15); border-radius: 999px; overflow: hidden; }
+    .ef-progress > span { display: block; height: 100%; width: 0; background: var(--moss, #4a5d3a); transition: width .3s ease; }
+    .ef-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; padding: .6rem 2rem; font-size: .75rem; letter-spacing: .2em; text-transform: uppercase; font-weight: 700; }
+    .ef-btn-primary { background: var(--vintage-accent, #6f2a24); color: var(--vintage-paper, #f8f0e2); }
+    .ef-btn-primary:hover { background: var(--wood-dark, #3b2415); }
+    .ef-btn-ghost { color: var(--wood, #5a3a22); border: 1px solid rgba(90, 58, 34, .35); }
+    .ef-btn-ghost:hover { background: rgba(90, 58, 34, .08); }
+    .ef-link { color: var(--wood, #5a3a22); }
+    .ef-link:hover { color: var(--vintage-accent, #6f2a24); }
+    .ef-range { accent-color: var(--vintage-accent, #6f2a24); }
+</style>
+
 <div class="max-w-3xl mx-auto">
-    <div class="mb-12">
+    <div class="mb-6 sm:mb-8">
         <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
-            class="inline-flex items-center gap-3 text-[10px] uppercase tracking-[0.25em] font-bold opacity-40 hover:opacity-100 hover:text-vintage-accent transition-soft group">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:-translate-x-1"
-                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            class="ef-link inline-flex items-center gap-3 min-h-[44px] text-xs uppercase tracking-[0.2em] font-bold transition-soft group">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:-translate-x-1 flex-shrink-0"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Return to Volume
+            Back to the book
         </a>
     </div>
 
-    <div class="paper-texture p-8 md:p-12 lg:p-16 shadow-2xl relative overflow-hidden">
-        <!-- Decorative subtle element -->
-        <div class="absolute -top-12 -right-12 w-48 h-48 opacity-[0.03] pointer-events-none rotate-12">
-            <img src="{{ url_for('static', filename='logo.svg') }}" class="w-full h-full object-contain">
-        </div>
-
-        <header class="mb-12 space-y-4">
-            <h2 class="text-3xl md:text-4xl font-bold leading-[1.1] text-vintage-ink">Amend Registry Entry</h2>
-            <p class="text-lg italic opacity-60">Editing: <span class="text-vintage-accent opacity-100">{{ book.title }}</span></p>
-            <p class="text-sm opacity-40">by {{ book.authors or 'Anonymous' }}</p>
-        </header>
-
-        <form method="POST" action="{{ url_for('books.edit_book', book_id=book.id) }}" class="space-y-10 js-submit-loading">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <!-- Status -->
-            <div class="space-y-3">
-                <label for="status" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
-                    Registry Status
-                </label>
-                <select name="status" id="status"
-                    class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base
-                           focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20
-                           transition-soft appearance-none cursor-pointer"
-                    style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%231a1614%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 1rem center;">
-                    <option value="reading"  {% if book.status == 'reading'  %}selected{% endif %}>Currently Reading</option>
-                    <option value="finished" {% if book.status == 'finished' %}selected{% endif %}>Completed Voyage</option>
-                    <option value="tbr"     {% if book.status == 'tbr'     %}selected{% endif %}>To Be Read (Wish List)</option>
-                    <option value="paused"  {% if book.status == 'paused'  %}selected{% endif %}>Paused</option>
-                    <option value="dnf"     {% if book.status == 'dnf'     %}selected{% endif %}>Did Not Finish (DNF)</option>
-                </select>
-            </div>
-
-            <!-- Date Started (uses date_added) -->
-            <div class="space-y-3">
-                <label for="date_added" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
-                    Date Started Reading
-                </label>
-                <input type="date" name="date_added" id="date_added"
-                    value="{{ book.date_added.strftime('%Y-%m-%d') if book.date_added else '' }}"
-                    class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base
-                           focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20
-                           transition-soft">
-                <p class="text-xs italic opacity-40">When you began reading this volume</p>
-            </div>
-
-            <!-- Date Finished -->
-            <div class="space-y-3">
-                <label for="date_finished" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
-                    Date Finished
-                </label>
-                <input type="date" name="date_finished" id="date_finished"
-                    value="{{ book.date_finished.strftime('%Y-%m-%d') if book.date_finished else '' }}"
-                    class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base
-                           focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20
-                           transition-soft">
-                <p class="text-xs italic opacity-40">When the voyage through this volume was completed</p>
-            </div>
-
-            <!-- Personal Rating -->
-            <div class="space-y-3">
-                <label for="personal_rating" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
-                    Personal Rating (1–5)
-                </label>
-                <div class="flex items-center gap-4">
-                    <input type="range" name="personal_rating" id="personal_rating"
-                        min="1" max="5" step="0.5"
-                        value="{{ book.personal_rating or 3 }}"
-                        class="flex-1 accent-vintage-accent"
-                        oninput="document.getElementById('rating-display').textContent = this.value">
-                    <span id="rating-display" class="text-xl font-bold text-vintage-accent w-8 text-center">{{ book.personal_rating or '—' }}</span>
+    <div class="ef-sheet flex relative">
+        <div class="ef-spine w-3 sm:w-5 flex-shrink-0" aria-hidden="true"></div>
+        <div class="flex-1 min-w-0 p-5 sm:p-10">
+            <header class="flex gap-5 sm:gap-8 items-start mb-8 sm:mb-10">
+                <div class="w-20 sm:w-28 flex-shrink-0 aspect-[2/3] overflow-hidden bg-stone-200 shadow-lg" style="border-radius: 2px 4px 4px 2px;">
+                    {% if book|cover_for %}
+                    {{ book_cover_img(book, alt='', loading='eager') }}
+                    {% endif %}
                 </div>
-                <p class="text-xs italic opacity-40">Leave at default to clear (saves only when you move the slider)</p>
-                <label class="flex items-center gap-2 text-xs italic opacity-60 cursor-pointer">
-                    <input type="checkbox" id="clear-rating" class="accent-vintage-accent"
-                        onchange="document.getElementById('personal_rating').disabled = this.checked; if(this.checked){ document.getElementById('personal_rating').value = ''; document.getElementById('rating-display').textContent = '—'; }">
-                    Clear rating
-                </label>
-            </div>
+                <div class="min-w-0">
+                    <p class="text-xs uppercase tracking-[0.2em] font-bold" style="color: var(--leather, #8a5a36);">Library entry &middot; No. {{ book.id }}</p>
+                    <h1 class="text-2xl sm:text-3xl font-bold leading-tight mt-1 break-words" style="color: var(--vintage-ink, #2a1d16);">{{ book.title }}</h1>
+                    <p class="italic text-base sm:text-lg mt-1" style="color: var(--wood, #5a3a22);">by {{ book.authors or 'Anonymous' }}</p>
+                    {% if book.page_count %}<p class="text-sm mt-1" style="color: var(--leather, #8a5a36);">{{ book.page_count }} pages</p>{% endif %}
+                </div>
+            </header>
 
-            <!-- Personal Notes -->
-            <div class="space-y-3">
-                <label for="personal_notes" class="text-[10px] uppercase tracking-[0.2em] font-bold opacity-50 block">
-                    Personal Notes
-                </label>
-                <textarea name="personal_notes" id="personal_notes" rows="4"
-                    placeholder="Your private thoughts on this volume…"
-                    class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink text-base focus:outline-none focus:border-vintage-accent focus:ring-1 focus:ring-vintage-accent/20 transition-soft resize-y italic">{{ book.personal_notes or '' }}</textarea>
-            </div>
+            <form method="POST" action="{{ url_for('books.edit_book', book_id=book.id) }}" class="space-y-8 js-submit-loading">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-            <!-- Divider -->
-            <div class="h-px w-full bg-black/5"></div>
+                <!-- Reading -->
+                <fieldset class="space-y-5 border-0 p-0 m-0">
+                    <legend class="ef-legend mb-4">On the reading desk</legend>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label for="status" class="ef-label">Status</label>
+                            <select name="status" id="status" class="ef-input">
+                                <option value="reading"  {% if book.status == 'reading'  %}selected{% endif %}>Currently Reading</option>
+                                <option value="finished" {% if book.status == 'finished' %}selected{% endif %}>Completed Voyage</option>
+                                <option value="tbr"      {% if book.status == 'tbr'      %}selected{% endif %}>To Be Read (Wish List)</option>
+                                <option value="paused"   {% if book.status == 'paused'   %}selected{% endif %}>Paused</option>
+                                <option value="dnf"      {% if book.status == 'dnf'      %}selected{% endif %}>Did Not Finish (DNF)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="format" class="ef-label">Format</label>
+                            <select name="format" id="format" class="ef-input">
+                                <option value="">Not specified</option>
+                                {% for f in formats %}
+                                <option value="{{ f }}" {% if book.format == f %}selected{% endif %}>{{ {'paper': 'Paper', 'ebook': 'E-book', 'audiobook': 'Audiobook'}[f] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="date_started" class="ef-label">Date started</label>
+                            <input type="date" name="date_started" id="date_started" class="ef-input"
+                                value="{{ book.date_started.strftime('%Y-%m-%d') if book.date_started else '' }}">
+                            <p class="ef-hint">Filled in when you start reading.</p>
+                        </div>
+                        <div>
+                            <label for="date_finished" class="ef-label">Date finished</label>
+                            <input type="date" name="date_finished" id="date_finished" class="ef-input"
+                                value="{{ book.date_finished.strftime('%Y-%m-%d') if book.date_finished else '' }}">
+                            <p class="ef-hint">When the last page was turned.</p>
+                        </div>
+                    </div>
 
-            <!-- Actions -->
-            <div class="flex flex-wrap gap-4 items-center justify-between pt-4">
-                <button type="submit"
-                    class="bg-vintage-accent text-vintage-cream px-10 py-4 text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-ink transition-soft shadow-xl">
-                    Save Amendments
-                </button>
-                <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
-                    class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 hover:opacity-100 transition-soft px-4 py-2">
-                    Cancel
-                </a>
-            </div>
-        </form>
+                    <div>
+                        <label for="current_page" class="ef-label">Bookmark (current page)</label>
+                        <div class="flex items-center gap-3">
+                            <input type="number" inputmode="numeric" name="current_page" id="current_page" class="ef-input"
+                                style="max-width: 9rem;" min="0" {% if book.page_count %}max="{{ book.page_count }}"{% endif %}
+                                value="{{ book.current_page if book.current_page is not none else '' }}">
+                            {% if book.page_count %}<span class="text-base" style="color: var(--wood, #5a3a22);">of {{ book.page_count }}</span>{% endif %}
+                        </div>
+                        {% if book.page_count %}
+                        <div class="ef-progress mt-3" role="progressbar" aria-label="Reading progress" aria-valuemin="0" aria-valuemax="100"
+                            aria-valuenow="{{ ((book.current_page or 0) * 100 / book.page_count)|round|int }}">
+                            <span id="progress-bar"></span>
+                        </div>
+                        {% endif %}
+                        <p class="ef-hint">Finished books are always saved at the last page.</p>
+                    </div>
+                </fieldset>
 
-        <!-- Footnote signature -->
-        <div class="mt-16 pt-8 border-t border-black/5 flex justify-between items-end opacity-20 italic text-sm">
-            <span>&mdash; Registry Amendment Form &mdash;</span>
-            <span class="text-xs uppercase tracking-widest font-serif not-italic">MS-{{ book.id }}</span>
+                <!-- Verdict -->
+                <fieldset class="ef-section space-y-5 border-x-0 border-b-0 m-0 px-0 pb-0">
+                    <legend class="ef-legend pr-4">Your verdict</legend>
+                    <div>
+                        <label for="rating_slider" class="ef-label">Personal rating (1&ndash;5)</label>
+                        <div class="flex items-center gap-4">
+                            <input type="range" id="rating_slider" min="1" max="5" step="0.5"
+                                value="{{ book.personal_rating or 3 }}" class="ef-range flex-1 min-h-[44px]"
+                                aria-describedby="rating-display">
+                            <span id="rating-display" class="text-2xl font-bold w-10 text-center" style="color: var(--vintage-accent, #6f2a24);">{{ book.personal_rating or '&mdash;'|safe }}</span>
+                        </div>
+                        <input type="hidden" name="personal_rating" id="personal_rating" value="{{ book.personal_rating if book.personal_rating is not none else '' }}">
+                        <div class="flex flex-wrap items-center gap-3 mt-1">
+                            <button type="button" id="clear-rating" class="ef-btn ef-btn-ghost" style="padding: .4rem 1rem;">Clear rating</button>
+                            <p class="ef-hint" style="margin-top: 0;">Move the slider to rate; clear to leave unrated.</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="personal_notes" class="ef-label">Personal notes</label>
+                        <textarea name="personal_notes" id="personal_notes" rows="5" class="ef-input italic" style="resize: vertical;"
+                            placeholder="Your private thoughts on this volume…">{{ book.personal_notes or '' }}</textarea>
+                    </div>
+                </fieldset>
+
+                <!-- Filing -->
+                <fieldset class="ef-section space-y-5 border-x-0 border-b-0 m-0 px-0 pb-0">
+                    <legend class="ef-legend pr-4">Filing</legend>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                        <div>
+                            <label for="shelves" class="ef-label">Shelves</label>
+                            <input type="text" name="shelves" id="shelves" class="ef-input" maxlength="200"
+                                placeholder="e.g. Favourites, Lent to Ana" value="{{ book.shelves or '' }}">
+                            <p class="ef-hint">Comma-separated. Each one becomes a shelf you can share.</p>
+                        </div>
+                        <div>
+                            <label for="date_added" class="ef-label">Date added to the library</label>
+                            <input type="date" name="date_added" id="date_added" class="ef-input"
+                                value="{{ book.date_added.strftime('%Y-%m-%d') if book.date_added else '' }}">
+                        </div>
+                    </div>
+                    {% if book.shelves %}
+                    <p class="text-sm" style="color: var(--wood, #5a3a22);">
+                        Currently on:
+                        {% for s in book.shelves.split(',') if s.strip() %}
+                        <a href="{{ url_for('books.shelf', name=s.strip()) }}" class="underline underline-offset-2 hover:no-underline ef-link">{{ s.strip() }}</a>{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    </p>
+                    {% endif %}
+                </fieldset>
+
+                <div class="flex flex-col-reverse sm:flex-row gap-3 sm:items-center sm:justify-between pt-6" style="border-top: 1px solid rgba(90, 58, 34, .18);">
+                    <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="ef-btn ef-btn-ghost">Cancel</a>
+                    <button type="submit" class="ef-btn ef-btn-primary transition-soft">Save entry</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    var slider = document.getElementById('rating_slider');
+    var hidden = document.getElementById('personal_rating');
+    var shown = document.getElementById('rating-display');
+    slider.addEventListener('input', function () {
+        hidden.value = slider.value;
+        shown.textContent = slider.value;
+    });
+    document.getElementById('clear-rating').addEventListener('click', function () {
+        hidden.value = '';
+        shown.textContent = '—';
+    });
+
+    var bar = document.getElementById('progress-bar');
+    var page = document.getElementById('current_page');
+    var total = {{ book.page_count or 0 }};
+    function paint() {
+        if (!bar || !total) return;
+        var pct = Math.max(0, Math.min(100, (parseInt(page.value, 10) || 0) * 100 / total));
+        bar.style.width = pct + '%';
+        bar.parentNode.setAttribute('aria-valuenow', Math.round(pct));
+    }
+    page.addEventListener('input', paint);
+    paint();
+})();
+</script>
 {% endblock %}

@@ -3,6 +3,7 @@ import io
 import json
 
 from flask import Blueprint, Response, redirect, render_template, request, url_for
+from flask_login import current_user
 
 from alexandria.models import Book
 from alexandria.services.books import (
@@ -16,31 +17,65 @@ from alexandria.services.stats import build_stats_context
 
 bp = Blueprint('main', __name__)
 
+# Personal fields only the librarian sees in exports.
+PRIVATE_EXPORT_FIELDS = ('personal_notes', 'shelves', 'current_page')
+
 
 @bp.route('/')
 def index():
+    import math
+
+    from alexandria.constants import BookStatus
+    from alexandria.services.books import SORT_OPTIONS, get_filter_options, get_status_counts
+
+    default_sort = 'date_added_desc'
     q = request.args.get('q', '').strip()
     status_filter = request.args.get('status', '').strip()
-    sort = request.args.get('sort', 'date_added_desc')
-    page = request.args.get('page', 1, type=int)
+    if status_filter not in BookStatus.ALL:
+        status_filter = ''
+    category = request.args.get('category', '').strip()
+    author = request.args.get('author', '').strip()
+    year = request.args.get('year', type=int)
+    if year is not None and not 1 <= year <= 9999:
+        year = None
+    rating = request.args.get('rating', type=float)
+    if rating is not None and not (math.isfinite(rating) and 0 < rating <= 5):
+        rating = None
+    sort = request.args.get('sort', default_sort)
+    if sort not in SORT_OPTIONS:
+        sort = default_sort
+    page = min(max(1, request.args.get('page', 1, type=int)), 100_000)
     per_page = 24
 
-    if q or status_filter:
+    # Active filters (empty ones dropped), reused to build pagination links.
+    qargs = {
+        k: v for k, v in {
+            'q': q, 'status': status_filter, 'category': category, 'author': author,
+            'year': year, 'rating': rating,
+            'sort': sort if sort != default_sort else '',
+        }.items() if v not in (None, '')
+    }
+    common = {
+        'q': q, 'status_filter': status_filter, 'category': category, 'author': author,
+        'year': year, 'rating': rating, 'sort': sort, 'qargs': qargs,
+        'sort_options': SORT_OPTIONS, 'options': get_filter_options(), 'page': page,
+    }
+
+    if qargs:
         pagination = filter_books(
             q=q or None,
             status=status_filter or None,
             sort=sort,
             page=page,
             per_page=per_page,
+            category=category or None,
+            author=author or None,
+            year=year,
+            min_rating=rating,
         )
         return render_template(
-            'index.html',
-            filtered=True,
-            books=pagination.items,
-            pagination=pagination,
-            q=q,
-            status_filter=status_filter,
-            sort=sort,
+            'index.html', filtered=True, books=pagination.items, pagination=pagination,
+            counts=get_status_counts(), **common,
         )
 
     groups = get_collection_lists(page=page, per_page=per_page)
@@ -49,15 +84,15 @@ def index():
         filtered=False,
         reading=groups['reading'],
         finished=groups['finished'],
+        finished_by_year=groups['finished_by_year'],
         tbr=groups['tbr'],
         paused=groups['paused'],
         dnf=groups['dnf'],
         finished_total=groups['_finished_total'],
         finished_pages=groups['_finished_pages'],
-        current_page=page,
-        q='',
-        status_filter='',
-        sort=sort,
+        this_year=groups['this_year'],
+        counts=groups['counts'],
+        **common,
     )
 
 
@@ -98,6 +133,10 @@ def export(fmt: str):
     """Export the full book collection as CSV or JSON."""
     books = Book.query.order_by(Book.date_added.desc()).all()
     data = [b.to_dict() for b in books]
+    if not current_user.is_authenticated:
+        for row in data:
+            for key in PRIVATE_EXPORT_FIELDS:
+                row[key] = None
 
     if fmt == 'json':
         payload = json.dumps(data, ensure_ascii=False, indent=2)

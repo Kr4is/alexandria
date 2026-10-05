@@ -1,20 +1,60 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="flex flex-col items-center justify-center py-24 text-center px-4">
-    <div class="opacity-10 mb-8 select-none" aria-hidden="true">
-        <span style="font-family:'Playfair Display',serif; font-size:10rem; line-height:1; font-weight:700;">404</span>
-    </div>
-    <h2 class="text-3xl md:text-4xl font-bold mb-4 text-vintage-ink">Volume Not Found</h2>
-    <p class="text-base md:text-lg italic opacity-60 max-w-md mb-10">
-        The folio you seek has gone astray — perhaps misfiled in the deep stacks, or simply never catalogued.
+<style>
+    .nf-wrap { --nf-wood: var(--wood, #5a3a22); --nf-wood-dark: var(--wood-dark, #3b2415); --nf-gold: var(--vintage-gold, #b8832f); --nf-accent: var(--vintage-accent, #6f2a24); --nf-ink: var(--vintage-ink, #2a1d16); }
+    .nf-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-height: 48px; padding: 0.75rem 2rem;
+        background: var(--nf-ink); color: var(--vintage-cream, #efe3cf);
+        font-size: 0.875rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 700;
+        text-decoration: none;
+    }
+    .nf-btn:hover { background: var(--nf-accent); }
+    .nf-btn:focus-visible { outline: 3px solid var(--nf-gold); outline-offset: 3px; }
+    @media (prefers-reduced-motion: no-preference) {
+        .nf-btn { transition: background-color 0.2s ease; }
+        .nf-lean { transform-origin: 170px 152px; animation: nf-sway 5s ease-in-out infinite; }
+        @keyframes nf-sway { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(1.5deg); } }
+    }
+</style>
+<div class="nf-wrap flex flex-col items-center justify-center py-10 sm:py-16 text-center px-4">
+    <svg viewBox="0 0 320 190" class="w-full max-w-sm mb-8" role="img" aria-label="A bookshelf with a gap where one book should be">
+        <!-- back panel -->
+        <rect x="20" y="20" width="280" height="136" fill="#e5d3b6" stroke="var(--wood, #5a3a22)" stroke-width="4"/>
+        <!-- books left of the gap -->
+        <rect x="34" y="52" width="22" height="100" fill="#6f2a24"/>
+        <rect x="58" y="40" width="18" height="112" fill="#4a5d3a"/>
+        <rect x="78" y="60" width="26" height="92" fill="#8a5a36"/>
+        <rect x="106" y="46" width="16" height="106" fill="#b8832f"/>
+        <g stroke="#f8f0e2" stroke-width="1.5" opacity=".6">
+            <path d="M34 70h22M34 134h22M58 58h18M58 134h18M78 76h26M78 134h26M106 62h16M106 134h16"/>
+        </g>
+        <!-- the gap, dotted outline of the missing volume -->
+        <rect x="128" y="50" width="30" height="102" fill="none" stroke="#3b2415" stroke-width="2" stroke-dasharray="5 5" opacity=".55"/>
+        <text x="143" y="108" text-anchor="middle" font-family="Fraunces, Georgia, serif" font-size="30" font-weight="700" fill="#6f2a24">?</text>
+        <!-- leaning book at the gap -->
+        <g class="nf-lean">
+            <rect x="160" y="56" width="20" height="96" fill="#6f2a24" transform="rotate(8 170 152)"/>
+            <rect x="163" y="76" width="14" height="3" fill="#e3c585" transform="rotate(8 170 152)"/>
+        </g>
+        <!-- books right -->
+        <rect x="190" y="58" width="24" height="94" fill="#3b2415"/>
+        <rect x="216" y="44" width="18" height="108" fill="#8a5a36"/>
+        <rect x="236" y="64" width="28" height="88" fill="#4a5d3a"/>
+        <rect x="266" y="50" width="20" height="102" fill="#b8832f"/>
+        <!-- shelf board -->
+        <rect x="10" y="152" width="300" height="14" fill="#5a3a22"/>
+        <rect x="10" y="166" width="300" height="6" fill="#3b2415"/>
+        <!-- ex-libris label under the gap -->
+        <rect x="124" y="172" width="38" height="12" rx="1" fill="#f8f0e2" stroke="#b8832f"/>
+    </svg>
+
+    <p class="text-sm uppercase tracking-[0.3em] font-bold mb-3" style="color: var(--nf-accent)">Error 404</p>
+    <h2 class="text-3xl md:text-4xl font-bold mb-4 text-vintage-ink">This volume isn't on the shelf</h2>
+    <p class="text-lg italic max-w-md mb-10" style="color: var(--nf-wood)">
+        That page was never catalogued, or it has moved. Head back to the library and find the book from there.
     </p>
-    <a href="{{ url_for('main.index') }}"
-        class="px-10 py-4 bg-vintage-ink text-vintage-cream text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-accent transition-soft shadow-xl">
-        Return to Collection
-    </a>
-    <div class="mt-20 opacity-10 italic text-sm">
-        &mdash; The Archivist regrets the inconvenience &mdash;
-    </div>
+    <a href="{{ url_for('main.index') }}" class="nf-btn">Back to the library</a>
 </div>
 {% endblock %}

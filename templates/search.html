@@ -1,129 +1,268 @@
 {% extends 'base.html' %}
 {% from '_macros.html' import book_cover_img %}
 
+{% set add_statuses = [
+    ('reading', 'Reading now'),
+    ('tbr', 'Want to read'),
+    ('paused', 'Paused'),
+] %}
+{# 'finished' is deliberately not offered: add_book_from_api_details does not set date_finished. #}
+
 {% block content %}
-<header class="mb-12 sm:mb-20 text-center max-w-2xl mx-auto px-1">
-    <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 text-vintage-ink">Consult the Archives</h2>
-    <p class="text-base sm:text-lg italic opacity-60 px-2">Seek out new volumes to add to your personal shelves from the infinite digital
-        repository.</p>
+<style>
+    .sx-display { font-family: 'Fraunces', 'Playfair Display', Georgia, serif; }
+
+    /* Search desk */
+    .sx-desk {
+        background: var(--vintage-paper, #f8f0e2);
+        border: 1px solid color-mix(in srgb, var(--wood, #5a3a22) 30%, transparent);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, .6) inset, 0 10px 30px -18px var(--wood-dark, #3b2415);
+        border-radius: 4px;
+    }
+    .sx-input {
+        width: 100%;
+        min-height: 52px;
+        background: transparent;
+        border: 0;
+        border-bottom: 2px solid color-mix(in srgb, var(--vintage-gold, #b8832f) 50%, transparent);
+        padding: .75rem .25rem;
+        font-size: 1.35rem;
+        font-style: italic;
+        color: var(--vintage-ink, #2a1d16);
+        outline: none;
+    }
+    .sx-input:focus { border-bottom-color: var(--vintage-accent, #6f2a24); }
+    .sx-input::placeholder { color: var(--leather, #8a5a36); opacity: .7; }
+    .sx-btn {
+        min-height: 48px;
+        padding: .6rem 1.6rem;
+        background: var(--wood-dark, #3b2415);
+        color: var(--vintage-paper, #f8f0e2);
+        font-size: .8rem;
+        letter-spacing: .2em;
+        text-transform: uppercase;
+        font-weight: 700;
+        border-radius: 2px;
+        transition: background-color .2s ease;
+    }
+    .sx-btn:hover { background: var(--vintage-accent, #6f2a24); }
+    .sx-btn:focus-visible, .sx-input:focus-visible, .sx-chip:focus-visible, .sx-link:focus-visible {
+        outline: 2px solid var(--vintage-gold, #b8832f);
+        outline-offset: 3px;
+    }
+    .sx-chip {
+        display: inline-flex; align-items: center; min-height: 44px; padding: 0 .9rem;
+        border: 1px dashed color-mix(in srgb, var(--wood, #5a3a22) 55%, transparent);
+        font-size: .95rem; font-style: italic; color: var(--wood, #5a3a22);
+        border-radius: 999px; transition: background-color .2s ease;
+    }
+    .sx-chip:hover { background: color-mix(in srgb, var(--vintage-gold, #b8832f) 18%, transparent); }
+
+    /* Catalog card */
+    .sx-card {
+        position: relative;
+        display: flex; flex-direction: column;
+        background:
+            repeating-linear-gradient(to bottom, transparent 0 31px, color-mix(in srgb, var(--leather, #8a5a36) 14%, transparent) 31px 32px),
+            var(--vintage-paper, #f8f0e2);
+        border: 1px solid color-mix(in srgb, var(--wood, #5a3a22) 28%, transparent);
+        border-top: 4px solid var(--wood, #5a3a22);
+        border-radius: 3px;
+        box-shadow: 0 14px 26px -22px var(--wood-dark, #3b2415);
+        transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .sx-card:hover { transform: translateY(-3px); box-shadow: 0 22px 34px -22px var(--wood-dark, #3b2415); }
+    .sx-card.is-owned { border-top-color: var(--moss, #4a5d3a); }
+    .sx-cover {
+        aspect-ratio: 2 / 3; width: 7rem; flex-shrink: 0; overflow: hidden;
+        background: linear-gradient(145deg, var(--leather, #8a5a36), var(--wood-dark, #3b2415));
+        border-radius: 2px 5px 5px 2px;
+        box-shadow: -3px 0 0 rgba(0, 0, 0, .25) inset, 4px 6px 14px -4px rgba(59, 36, 21, .55);
+    }
+    .sx-cover-empty {
+        height: 100%; display: flex; align-items: center; justify-content: center; text-align: center;
+        padding: .75rem; color: var(--vintage-cream, #efe3cf); font-size: .85rem; line-height: 1.25;
+    }
+    .sx-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(5.5rem, 1fr)); gap: .5rem 1rem; }
+    .sx-meta dt { font-size: .75rem; letter-spacing: .14em; text-transform: uppercase; color: var(--leather, #8a5a36); font-weight: 700; }
+    .sx-meta dd { font-size: 1rem; color: var(--vintage-ink, #2a1d16); margin: 0; }
+    .sx-tag {
+        font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 700;
+        padding: .15rem .55rem; color: var(--wood, #5a3a22);
+        background: color-mix(in srgb, var(--vintage-gold, #b8832f) 16%, transparent);
+        border: 1px solid color-mix(in srgb, var(--vintage-gold, #b8832f) 45%, transparent);
+    }
+    .sx-badge {
+        font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 700;
+        padding: .2rem .6rem; color: #fff; background: var(--moss, #4a5d3a); border-radius: 2px;
+        white-space: nowrap;
+    }
+
+    /* Status selector (segmented radios) */
+    .sx-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem; }
+    .sx-seg label { position: relative; display: block; }
+    .sx-seg input { position: absolute; inset: 0; opacity: 0; cursor: pointer; margin: 0; width: 100%; height: 100%; }
+    .sx-seg span {
+        display: flex; align-items: center; justify-content: center; text-align: center;
+        min-height: 44px; padding: .25rem .4rem; font-size: .9rem; line-height: 1.15;
+        border: 1px solid color-mix(in srgb, var(--wood, #5a3a22) 40%, transparent);
+        color: var(--wood, #5a3a22); background: rgba(255, 255, 255, .35);
+        border-radius: 2px; transition: background-color .15s ease, color .15s ease;
+    }
+    .sx-seg input:hover + span { background: color-mix(in srgb, var(--vintage-gold, #b8832f) 18%, transparent); }
+    .sx-seg input:checked + span {
+        background: var(--wood, #5a3a22); color: var(--vintage-paper, #f8f0e2);
+        border-color: var(--wood-dark, #3b2415); font-weight: 700;
+    }
+    .sx-seg input:focus-visible + span { outline: 2px solid var(--vintage-gold, #b8832f); outline-offset: 2px; }
+    .sx-add {
+        min-height: 46px; width: 100%; font-size: .8rem; letter-spacing: .18em; text-transform: uppercase; font-weight: 700;
+        background: var(--vintage-accent, #6f2a24); color: var(--vintage-paper, #f8f0e2); border-radius: 2px;
+        transition: background-color .2s ease;
+    }
+    .sx-add:hover { background: var(--wood-dark, #3b2415); }
+    .sx-add:focus-visible { outline: 2px solid var(--vintage-gold, #b8832f); outline-offset: 2px; }
+    .sx-link {
+        display: inline-flex; align-items: center; min-height: 44px; padding: 0 1rem;
+        border: 1px solid var(--moss, #4a5d3a); color: var(--moss, #4a5d3a);
+        font-size: .8rem; letter-spacing: .15em; text-transform: uppercase; font-weight: 700; border-radius: 2px;
+        background: transparent; cursor: pointer; transition: background-color .2s ease, color .2s ease;
+    }
+    .sx-link:hover { background: var(--moss, #4a5d3a); color: #fff; }
+
+    .sx-alert {
+        background: var(--vintage-paper, #f8f0e2);
+        border: 1px solid color-mix(in srgb, var(--rust, #b4532a) 45%, transparent);
+        border-left: 5px solid var(--rust, #b4532a);
+        border-radius: 3px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .sx-card, .sx-btn, .sx-chip, .sx-add, .sx-link, .sx-seg span { transition: none; }
+        .sx-card:hover { transform: none; }
+    }
+</style>
+
+<header class="mb-8 sm:mb-12 text-center max-w-2xl mx-auto px-1">
+    <p class="text-xs sm:text-sm uppercase tracking-[0.3em] font-bold mb-3" style="color: var(--leather, #8a5a36);">Acquisitions desk</p>
+    <h2 class="sx-display text-3xl sm:text-4xl md:text-5xl font-bold mb-4" style="color: var(--vintage-ink, #2a1d16);">Find a book for your shelves</h2>
+    <p class="text-base sm:text-lg italic px-2" style="color: var(--wood, #5a3a22);">Search the world's catalogue, pick where it starts in your library, and file it away.</p>
 </header>
 
-<div class="max-w-2xl mx-auto mb-16 sm:mb-24 px-1">
-    <form action="{{ url_for('books.search') }}" method="GET" class="relative group flex flex-col sm:block gap-3">
-        <input type="text" name="q" value="{{ query or '' }}" placeholder="Search by title, author, or ISBN..."
-            autocomplete="off"
-            class="w-full min-h-[52px] px-4 sm:px-6 py-4 sm:py-6 pr-24 bg-paper-texture border-b-2 border-vintage-gold/20 focus:border-vintage-gold transition-soft text-lg sm:text-xl md:text-2xl outline-none italic placeholder:opacity-30 paper-texture">
-        <button type="submit"
-            class="sm:absolute sm:right-2 sm:top-1/2 sm:-translate-y-1/2 min-h-[44px] w-full sm:w-auto text-[10px] uppercase tracking-[0.2em] font-bold hover:text-vintage-accent transition-soft px-6 py-3 border border-vintage-ink/10 sm:border-0">
-            Seek
-        </button>
+<div class="max-w-2xl mx-auto mb-10 sm:mb-14 px-1">
+    <form action="{{ url_for('books.search') }}" method="GET" role="search" class="sx-desk p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:items-end">
+        <div class="flex-1 min-w-0">
+            <label for="sx-q" class="block text-xs uppercase tracking-[0.2em] font-bold mb-1" style="color: var(--leather, #8a5a36);">Title, author or ISBN</label>
+            <input id="sx-q" type="search" name="q" value="{{ query or '' }}" placeholder="e.g. Dune, Ursula K. Le Guin, 9780441013593"
+                autocomplete="off" class="sx-input">
+        </div>
+        <button type="submit" class="sx-btn w-full sm:w-auto">Search</button>
     </form>
 </div>
 
 {% if search_api_error %}
-<div
-    class="max-w-2xl mx-auto mb-10 sm:mb-14 px-1 paper-texture vintage-border p-5 sm:p-6 border-l-4 border-l-amber-700/80">
-    <h3 class="text-sm font-bold uppercase tracking-widest text-amber-900/90 mb-2">Archives unreachable</h3>
-    <p class="text-sm sm:text-base text-vintage-ink/90 leading-relaxed mb-3">
+<div class="sx-alert max-w-2xl mx-auto mb-10 sm:mb-14 p-5 sm:p-6" role="alert">
+    <h3 class="sx-display text-lg font-bold mb-2" style="color: var(--rust, #b4532a);">Archives unreachable</h3>
+    <p class="text-base leading-relaxed mb-3">
         Google Books did not return search results. This often happens when the shared API quota is exhausted (HTTP 429) or the service is temporarily unavailable.
     </p>
-    <p class="text-xs sm:text-sm font-mono opacity-70 break-words bg-black/[0.04] p-3 rounded border border-black/10">{{ search_api_error }}</p>
-    <p class="text-xs sm:text-sm mt-4 opacity-60 italic">
+    <p class="text-sm font-mono break-words p-3 rounded" style="background: rgba(59,36,21,.06); border: 1px solid rgba(59,36,21,.18);">{{ search_api_error }}</p>
+    <p class="text-sm sm:text-base mt-4 italic">
         Fix: create a key in
         <a href="https://console.cloud.google.com/apis/library/books.googleapis.com" class="underline hover:text-vintage-accent" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>
-        (enable Books API), then set <code class="font-mono text-[11px]">GOOGLE_BOOKS_API_KEY</code> in your environment and restart the app.
+        (enable Books API), then set <code class="font-mono text-xs">GOOGLE_BOOKS_API_KEY</code> in your environment and restart the app.
     </p>
 </div>
 {% endif %}
 
 {% if results %}
-<div class="grid grid-cols-1 md:grid-cols-2 gap-10 sm:gap-12 lg:gap-16">
+<p class="max-w-6xl mx-auto mb-6 px-1 text-sm uppercase tracking-[0.18em] font-bold" style="color: var(--leather, #8a5a36);">
+    {{ results|length }} result{{ '' if results|length == 1 else 's' }} for “{{ query }}”
+</p>
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 sm:gap-8">
     {% for book in results %}
     {% set in_library = book.google_books_id and book.google_books_id in library_google_ids %}
     {% set snippet = book.description|book_plaintext %}
-    <div
-        class="flex flex-col sm:flex-row gap-6 sm:gap-8 group paper-texture p-5 sm:p-6 transition-soft hover:-translate-y-1 hover:shadow-2xl">
-        <div class="w-28 sm:w-32 md:w-40 flex-shrink-0 mx-auto sm:mx-0">
-            <div class="aspect-[2/3] shadow-lg vintage-border overflow-hidden bg-stone-100">
+    {% set lang = book.language|language_display if book.language else '' %}
+    <article class="sx-card p-4 sm:p-6 {{ 'is-owned' if in_library }}">
+        <div class="flex gap-4 sm:gap-6">
+            <div class="sx-cover w-24 sm:w-28">
                 {% if book|cover_for %}
-                {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover transition-soft duration-500 group-hover:scale-105') }}
+                {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover') }}
                 {% else %}
-                <div
-                    class="w-full h-full flex items-center justify-center italic opacity-20 text-[10px] p-4 text-center">
-                    No Cover Found</div>
+                <div class="sx-cover-empty sx-display italic">{{ book.title }}</div>
+                {% endif %}
+            </div>
+            <div class="min-w-0 flex-1">
+                {% if in_library %}<span class="sx-badge inline-block mb-2">In your library</span>{% endif %}
+                <h3 class="sx-display text-xl sm:text-2xl font-bold leading-tight break-words" style="color: var(--vintage-ink, #2a1d16);">{{ book.title }}</h3>
+                <p class="italic text-base sm:text-lg mt-1 mb-3" style="color: var(--vintage-accent, #6f2a24);">by {{ book.authors or 'Author unknown' }}</p>
+                <dl class="sx-meta">
+                    {% if book.published_year %}<div><dt>Year</dt><dd>{{ book.published_year }}</dd></div>{% endif %}
+                    {% if book.page_count %}<div><dt>Pages</dt><dd>{{ book.page_count }}</dd></div>{% endif %}
+                    {% if lang %}<div><dt>Language</dt><dd>{{ lang }}</dd></div>{% endif %}
+                    {% if book.average_rating %}<div><dt>Rating</dt><dd>{{ '%.1f'|format(book.average_rating) }} / 5</dd></div>{% endif %}
+                </dl>
+                {% if book.categories %}
+                <div class="flex flex-wrap gap-2 mt-3">
+                    {% for cat in book.categories|categories_list %}<span class="sx-tag">{{ cat }}</span>{% endfor %}
+                </div>
                 {% endif %}
             </div>
         </div>
-        <div class="flex flex-col flex-1 py-1 text-center sm:text-left min-w-0">
-            <div class="flex-grow space-y-3">
-                <div class="flex flex-wrap items-start justify-center sm:justify-start gap-2">
-                    <h3 class="text-lg sm:text-xl md:text-2xl font-bold leading-tight text-vintage-ink text-left flex-1 min-w-0">{{ book.title }}
-                    </h3>
-                    {% if in_library %}
-                    <span
-                        class="flex-shrink-0 text-[8px] sm:text-[9px] uppercase tracking-widest px-2 py-1 bg-vintage-accent/10 text-vintage-accent border border-vintage-accent/20 font-bold">In your library</span>
-                    {% endif %}
-                </div>
-                <p class="text-vintage-accent italic font-medium text-sm">by {{ book.authors or 'Author Unknown' }}</p>
-                {% if snippet %}
-                <p class="text-[13px] opacity-60 line-clamp-3 leading-relaxed italic text-left">
-                    “{{ snippet[:220] }}{% if snippet|length > 220 %}…{% endif %}”
-                </p>
-                {% endif %}
-            </div>
-            <div class="mt-6 flex flex-col gap-3 border-t border-black/5 pt-4">
-                <div class="flex flex-wrap gap-2 justify-center sm:justify-start">
-                    {% if book.categories %}
-                    {% for cat in book.categories|categories_list %}
-                    <span
-                        class="text-[8px] sm:text-[9px] opacity-70 uppercase tracking-widest font-bold px-2 py-1 bg-black/[0.04] border border-black/10">{{ cat }}</span>
-                    {% endfor %}
-                    {% else %}
-                    <span class="text-[9px] opacity-40 uppercase tracking-widest font-bold">Miscellaneous</span>
-                    {% endif %}
-                </div>
-                {% if current_user.is_authenticated %}
-                    {% if in_library %}
-                    <span class="text-[10px] uppercase tracking-widest font-bold opacity-40 italic">Already acquired</span>
-                    {% else %}
-                <div class="flex flex-row gap-2">
-                    <form action="{{ url_for('books.add_book', google_books_id=book.google_books_id) }}" method="POST"
-                        class="js-submit-loading flex-1 sm:flex-none">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="status" value="reading">
-                        <button type="submit"
-                            class="w-full min-h-[44px] text-[10px] uppercase tracking-[0.2em] font-bold bg-vintage-ink text-vintage-cream hover:bg-vintage-accent px-6 py-3 transition-soft shadow-lg whitespace-nowrap">
-                            Acquire
-                        </button>
-                    </form>
-                    <form action="{{ url_for('books.add_book', google_books_id=book.google_books_id) }}" method="POST"
-                        class="js-submit-loading flex-1 sm:flex-none">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <input type="hidden" name="status" value="tbr">
-                        <button type="submit"
-                            class="w-full min-h-[44px] text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/30 hover:bg-vintage-ink/5 px-6 py-3 transition-soft whitespace-nowrap">
-                            + Wish List
-                        </button>
-                    </form>
-                </div>
-                    {% endif %}
-                {% else %}
-                <span class="text-[9px] italic opacity-30 uppercase tracking-widest">Librarian access required</span>
-                {% endif %}
-            </div>
+
+        {% if snippet %}
+        <p class="mt-4 text-base leading-relaxed italic line-clamp-3" style="color: var(--wood, #5a3a22);">“{{ snippet[:260] }}{% if snippet|length > 260 %}…{% endif %}”</p>
+        {% endif %}
+
+        <div class="mt-5 pt-4 border-t" style="border-color: color-mix(in srgb, var(--wood, #5a3a22) 25%, transparent);">
+            {% if not current_user.is_authenticated %}
+            <p class="text-sm italic" style="color: var(--leather, #8a5a36);">Librarian access required to add books.</p>
+            {% elif in_library %}
+            {# No lookup-by-google-id route exists; add_book redirects an existing volume to its detail page. #}
+            <form action="{{ url_for('books.add_book', google_books_id=book.google_books_id) }}" method="POST" class="flex flex-wrap items-center gap-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="sx-link">Open in your library &rarr;</button>
+                <span class="text-sm italic" style="color: var(--leather, #8a5a36);">Already catalogued, no need to add it again.</span>
+            </form>
+            {% else %}
+            <form action="{{ url_for('books.add_book', google_books_id=book.google_books_id) }}" method="POST" class="js-submit-loading space-y-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <fieldset class="border-0 p-0 m-0">
+                    <legend class="text-xs uppercase tracking-[0.2em] font-bold mb-2" style="color: var(--leather, #8a5a36);">Shelve it as</legend>
+                    <div class="sx-seg">
+                        {% for value, label in add_statuses %}
+                        <label>
+                            <input type="radio" name="status" value="{{ value }}"{% if loop.first %} checked{% endif %}>
+                            <span>{{ label }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </fieldset>
+                <button type="submit" class="sx-add">Add to my library</button>
+            </form>
+            {% endif %}
         </div>
-    </div>
+    </article>
     {% endfor %}
 </div>
-{% elif query %}
-<div class="text-center py-20 sm:py-32 opacity-30 italic px-4">
-    <div class="mb-6 flex justify-center opacity-40">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
+{% elif query and not search_api_error %}
+<div class="max-w-xl mx-auto text-center py-12 sm:py-16 px-4">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-14 w-14 mx-auto mb-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color: var(--leather, #8a5a36);" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+    </svg>
+    <h3 class="sx-display text-2xl sm:text-3xl font-bold mb-3" style="color: var(--vintage-ink, #2a1d16);">Nothing on the shelves for “{{ query }}”</h3>
+    <p class="text-base sm:text-lg italic" style="color: var(--wood, #5a3a22);">Try fewer words, check the spelling, or search by ISBN or author name instead.</p>
+</div>
+{% elif not query %}
+<div class="max-w-2xl mx-auto text-center px-4">
+    <p class="text-base sm:text-lg italic mb-5" style="color: var(--wood, #5a3a22);">Not sure where to start? Try one of these, or use a prefix to narrow things down.</p>
+    <div class="flex flex-wrap justify-center gap-3 mb-8">
+        <a class="sx-chip" href="{{ url_for('books.search', q='intitle:the name of the rose') }}">intitle:the name of the rose</a>
+        <a class="sx-chip" href="{{ url_for('books.search', q='inauthor:ursula le guin') }}">inauthor:ursula le guin</a>
+        <a class="sx-chip" href="{{ url_for('books.search', q='isbn:9780441013593') }}">isbn:9780441013593</a>
     </div>
-    <p class="text-lg sm:text-xl md:text-2xl">Alas, the archives remain silent on “{{ query }}”.</p>
+    <p class="text-sm" style="color: var(--leather, #8a5a36);">Every result can be filed as reading now, want to read or paused.</p>
 </div>
 {% endif %}
 {% endblock %}

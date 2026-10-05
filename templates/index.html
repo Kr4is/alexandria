@@ -1,409 +1,562 @@
 {% extends 'base.html' %}
 {% from '_macros.html' import book_cover_img %}
 
-{% block content %}
-<header class="mb-8 sm:mb-14 text-center max-w-2xl mx-auto px-1">
-    <h2 class="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 text-vintage-ink">The Private Collection</h2>
-    <p class="text-base sm:text-lg md:text-xl italic opacity-60 leading-relaxed">A ledger of stories discovered and voyages completed
-        through the infinite sea of ink.</p>
-    <div class="mt-6 sm:mt-8 flex justify-center items-center gap-4">
-        <div class="h-px w-12 bg-vintage-gold/30"></div>
-        <div class="w-2 h-2 rounded-full border border-vintage-gold/30"></div>
-        <div class="h-px w-12 bg-vintage-gold/30"></div>
-    </div>
-</header>
+{# ── Macros ──────────────────────────────────────────────────────────── #}
 
-<!-- Filter / Search Bar -->
-<details class="mb-10 sm:mb-14 group" {% if filtered %}open{% endif %}>
-    <summary class="cursor-pointer inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] font-bold opacity-40 hover:opacity-100 transition-soft select-none list-none">
-        <svg class="w-4 h-4 transition-transform group-open:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-        </svg>
-        Filter & Search
-    </summary>
-    <form method="GET" action="{{ url_for('main.index') }}" class="mt-6 paper-texture p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-        <div class="lg:col-span-2 space-y-1">
-            <label for="q" class="text-[9px] uppercase tracking-widest opacity-40 font-bold block">Search title or author</label>
-            <input type="text" id="q" name="q" value="{{ q }}" placeholder="e.g. Borges, Dune…"
-                class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink focus:outline-none focus:border-vintage-accent transition-soft italic">
-        </div>
-        <div class="space-y-1">
-            <label for="status" class="text-[9px] uppercase tracking-widest opacity-40 font-bold block">Status</label>
-            <select id="status" name="status"
-                class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink focus:outline-none focus:border-vintage-accent transition-soft appearance-none cursor-pointer"
-                style="background-image:url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%2216%22 height%3D%2216%22 viewBox%3D%220 0 24 24%22 fill%3D%22none%22 stroke%3D%22%231a1614%22 stroke-width%3D%222%22 stroke-linecap%3D%22round%22 stroke-linejoin%3D%22round%22%3E%3Cpolyline points%3D%226 9 12 15 18 9%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E');background-repeat:no-repeat;background-position:right 1rem center;">
-                <option value="">All statuses</option>
-                <option value="reading"  {% if status_filter == 'reading'  %}selected{% endif %}>Reading</option>
-                <option value="finished" {% if status_filter == 'finished' %}selected{% endif %}>Finished</option>
-                <option value="tbr"      {% if status_filter == 'tbr'      %}selected{% endif %}>Wish List (TBR)</option>
-                <option value="paused"   {% if status_filter == 'paused'   %}selected{% endif %}>Paused</option>
-                <option value="dnf"      {% if status_filter == 'dnf'      %}selected{% endif %}>Did Not Finish</option>
-            </select>
-        </div>
-        <div class="space-y-1">
-            <label for="sort" class="text-[9px] uppercase tracking-widest opacity-40 font-bold block">Sort by</label>
-            <select id="sort" name="sort"
-                class="w-full px-4 py-3 bg-white/50 border border-black/10 text-vintage-ink focus:outline-none focus:border-vintage-accent transition-soft appearance-none cursor-pointer"
-                style="background-image:url('data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%2216%22 height%3D%2216%22 viewBox%3D%220 0 24 24%22 fill%3D%22none%22 stroke%3D%22%231a1614%22 stroke-width%3D%222%22 stroke-linecap%3D%22round%22 stroke-linejoin%3D%22round%22%3E%3Cpolyline points%3D%226 9 12 15 18 9%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E');background-repeat:no-repeat;background-position:right 1rem center;">
-                <option value="date_added_desc"    {% if sort == 'date_added_desc'    %}selected{% endif %}>Recently Added</option>
-                <option value="title_asc"          {% if sort == 'title_asc'          %}selected{% endif %}>Title A–Z</option>
-                <option value="title_desc"         {% if sort == 'title_desc'         %}selected{% endif %}>Title Z–A</option>
-                <option value="date_finished_desc" {% if sort == 'date_finished_desc' %}selected{% endif %}>Recently Finished</option>
-            </select>
-        </div>
-        <div class="flex gap-3 sm:col-span-2 lg:col-span-4 justify-end">
-            {% if filtered %}
-            <a href="{{ url_for('main.index') }}" class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink/5 inline-flex items-center transition-soft">
-                Clear
-            </a>
-            {% endif %}
-            <button type="submit" class="min-h-[44px] px-8 py-3 bg-vintage-ink text-vintage-cream text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-vintage-accent transition-soft">
-                Search
-            </button>
-        </div>
-    </form>
-</details>
+{% macro trash_icon(size='h-5 w-5') %}
+<svg xmlns="http://www.w3.org/2000/svg" class="{{ size }}" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+</svg>
+{% endmacro %}
 
-{% if filtered %}
-<!-- ─── FILTERED FLAT VIEW ─────────────────────────────────────────── -->
-<section>
-    <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-4 gap-4">
-        <h3 class="text-xl sm:text-2xl font-bold italic text-vintage-ink opacity-80">
-            Results
-            {% if q %}<span class="opacity-50 font-normal"> for "{{ q }}"</span>{% endif %}
-        </h3>
-        <span class="text-[10px] uppercase tracking-[0.25em] opacity-40 font-bold flex-shrink-0">{{ pagination.total }} volumes</span>
-    </div>
+{% macro status_form(book, status, label, title, variant='') %}
+<form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="status" value="{{ status }}">
+    <button type="submit" title="{{ title }}" class="lib-act {{ variant }}">{{ label }}</button>
+</form>
+{% endmacro %}
 
-    {% if books %}
-    <div class="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-4 sm:gap-x-8 gap-y-10 sm:gap-y-12">
-        {% for book in books %}
-        <div class="group relative flex flex-col min-w-0">
-            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
-                class="aspect-[2/3] overflow-hidden shadow-sm border border-black/5 mb-3 sm:mb-4 group-hover:-rotate-1 group-hover:shadow-xl transition-soft block relative max-w-full">
-                {% if book|cover_for %}
-                {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover sepia-[20%] group-hover:sepia-0 transition-soft') }}
-                {% else %}
-                <div class="w-full h-full flex items-center justify-center text-[9px] sm:text-[10px] p-2 opacity-30 italic text-center">Manuscript</div>
-                {% endif %}
-            </a>
-            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
-                class="block hover:text-vintage-accent transition-soft min-w-0">
-                <h5 class="font-bold text-[11px] sm:text-xs md:text-sm leading-tight line-clamp-2 sm:line-clamp-1 opacity-80">{{ book.title }}</h5>
-            </a>
-            <span class="text-[8px] uppercase tracking-wider opacity-30 mt-1 font-bold">
-                {% if book.status == 'reading' %}Reading
-                {% elif book.status == 'finished' %}Finished
-                {% elif book.status == 'tbr' %}TBR
-                {% elif book.status == 'paused' %}Paused
-                {% elif book.status == 'dnf' %}DNF
-                {% endif %}
+{# One book on a shelf: cover and spine are both rendered, CSS shows the active view. #}
+{% macro book_item(book, auth, show_status=false) %}
+{% set colors = ['#6f2a24', '#4a5d3a', '#8a5a36', '#2f3e4e', '#4e2f43', '#3b2415', '#9c4622', '#5d4a1f'] %}
+{% set color = colors[book.id % colors|length] %}
+{% set pc = book.page_count or 400 %}
+{% set pc = pc if pc < 800 else 800 %}
+{% set tip = book.title ~ (' — ' ~ book.authors if book.authors else '') ~ (' · ★ ' ~ book.personal_rating if book.personal_rating else '') %}
+<div class="bk bk-{{ book.status }}" style="--c: {{ color }}; --sw: {{ 46 + pc * 16 // 800 }}px; --sh: {{ '%.2f'|format(0.88 + pc / 800 * 0.12) }}">
+    <div class="bk-body">
+        <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="bk-link" data-tip="{{ tip }}" aria-label="{{ tip }}">
+            <span class="bk-cover">
+                <span class="bk-ph" aria-hidden="true">{{ book.title }}</span>
+                {% if book|cover_for %}{{ book_cover_img(book, class='bk-img') }}{% endif %}
+                {% set flag = {'reading': 'Reading', 'finished': 'Finished', 'tbr': 'Wish list', 'paused': 'Paused', 'dnf': 'DNF'}.get(book.status) %}
+                {% if show_status and flag %}<span class="bk-flag">{{ flag }}</span>{% endif %}
             </span>
-        </div>
-        {% endfor %}
-    </div>
-
-    <!-- Pagination -->
-    {% if pagination.pages > 1 %}
-    {% set base_args = {'q': q, 'status': status_filter, 'sort': sort} %}
-    <nav class="mt-12 flex items-center justify-center gap-3" aria-label="Search results pages">
-        {% if pagination.has_prev %}
-        <a href="{{ url_for('main.index', page=pagination.prev_num, **base_args) }}"
-            class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft inline-flex items-center gap-2">
-            &larr; Previous
+            <span class="bk-spine" aria-hidden="true"><span>{{ book.title }}</span></span>
         </a>
-        {% endif %}
-        <span class="text-sm italic opacity-50">Page {{ pagination.page }} of {{ pagination.pages }}</span>
-        {% if pagination.has_next %}
-        <a href="{{ url_for('main.index', page=pagination.next_num, **base_args) }}"
-            class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft inline-flex items-center gap-2">
-            Next &rarr;
-        </a>
-        {% endif %}
-    </nav>
-    {% endif %}
-
-    {% else %}
-    <div class="text-center py-20 opacity-30 italic">
-        <p class="text-lg">No volumes matched your search.</p>
-    </div>
-    {% endif %}
-</section>
-
-{% else %}
-<!-- ─── NORMAL GROUPED VIEW ────────────────────────────────────────── -->
-
-<section class="mb-16 sm:mb-24">
-    <div class="flex items-baseline justify-between mb-8 sm:mb-12 border-b border-black/5 pb-4 gap-4">
-        <h3 class="text-xl sm:text-2xl md:text-3xl font-bold italic text-vintage-accent">Currently Reading</h3>
-        <span class="text-[10px] uppercase tracking-[0.25em] opacity-40 font-bold flex-shrink-0">{{ reading|length }} volumes</span>
-    </div>
-
-    {% if reading %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 md:gap-14">
-        {% for book in reading %}
-        <div class="group flex flex-col min-w-0">
-            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
-                class="mb-6 sm:mb-8 aspect-[3/4] overflow-hidden paper-texture vintage-border relative block transition-soft group-hover:-translate-y-2 max-w-full">
-                {% if book|cover_for %}
-                {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-soft duration-700') }}
-                {% else %}
-                <div class="w-full h-full flex items-center justify-center text-center p-8 italic opacity-20 text-sm">
-                    Untitled Manuscript
-                </div>
-                {% endif %}
-                <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-soft"></div>
-            </a>
-
-            <div class="flex-grow space-y-3 min-w-0">
-                <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="block hover:text-vintage-accent transition-soft">
-                    <h4 class="text-lg sm:text-xl md:text-2xl font-bold leading-tight line-clamp-2">{{ book.title }}</h4>
-                </a>
-                <p class="italic opacity-60 text-sm md:text-base">by {{ book.authors or 'Anonymous' }}</p>
-                {% if book.categories %}
-                <div class="pt-2 flex flex-wrap gap-2">
-                    {% for cat in book.categories|categories_list %}
-                    <span class="text-[9px] uppercase tracking-widest px-2 py-1 bg-vintage-accent/5 text-vintage-accent border border-vintage-accent/10">{{ cat }}</span>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-
-            {% if current_user.is_authenticated %}
-            <div class="mt-6 sm:mt-8 flex items-stretch sm:items-center gap-3 pt-6 border-t border-black/5">
-                <button type="button"
-                    class="flex-1 min-h-[44px] py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft js-open-finish-modal"
-                    data-finish-url="{{ url_for('books.finish_book', book_id=book.id) }}"
-                    data-book-title="{{ book.title|e }}">
-                    Close Chapter
-                </button>
-                <button type="button"
-                    class="min-w-[44px] min-h-[44px] inline-flex items-center justify-center opacity-40 hover:opacity-100 hover:text-red-800 transition-soft border border-transparent hover:border-black/10 rounded-sm js-open-delete-modal"
-                    data-delete-url="{{ url_for('books.delete_book', book_id=book.id) }}"
-                    data-book-title="{{ book.title|e }}"
-                    title="Remove from archives">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
-                </button>
-            </div>
+        {% if auth %}
+        <button type="button" class="bk-menu-btn" aria-label="Actions for {{ book.title }}" aria-expanded="false">&#8942;</button>
+        <div class="bk-actions">
+            {% if book.status == 'reading' %}
+            <button type="button" class="lib-act js-open-finish-modal"
+                data-finish-url="{{ url_for('books.finish_book', book_id=book.id) }}"
+                data-book-title="{{ book.title|e }}">Finish</button>
+            {% elif book.status == 'tbr' %}
+            {{ status_form(book, 'reading', 'Start', 'Start reading') }}
+            {% elif book.status in ('paused', 'dnf') %}
+            {{ status_form(book, 'reading', 'Resume', 'Resume reading') }}
+            {% if book.status == 'paused' %}{{ status_form(book, 'dnf', 'DNF', 'Mark as did not finish') }}{% endif %}
             {% endif %}
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="text-center py-16 sm:py-20 paper-texture space-y-6">
-        <p class="italic opacity-50 text-base sm:text-lg">The shelves are currently waiting for a new journey...</p>
-        {% if current_user.is_authenticated %}
-        <a href="{{ url_for('books.search') }}"
-            class="inline-flex min-h-[44px] items-center justify-center px-8 py-3 text-[10px] uppercase tracking-[0.25em] font-bold bg-vintage-ink text-vintage-cream hover:bg-vintage-accent transition-soft shadow-lg">
-            Consult the Archives
-        </a>
-        {% endif %}
-    </div>
-    {% endif %}
-</section>
-
-{% if tbr %}
-<section class="mb-16 sm:mb-24">
-    <div class="flex items-baseline justify-between mb-8 sm:mb-12 border-b border-black/5 pb-4 gap-4">
-        <h3 class="text-xl sm:text-2xl md:text-3xl font-bold italic text-vintage-ink opacity-70">Wish List</h3>
-        <span class="text-[10px] uppercase tracking-[0.25em] opacity-40 font-bold flex-shrink-0">{{ tbr|length }} volumes</span>
-    </div>
-    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-x-3 sm:gap-x-5 gap-y-8">
-        {% for book in tbr %}
-        <div class="group relative flex flex-col min-w-0">
-            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
-                class="aspect-[2/3] overflow-hidden shadow-sm border border-black/5 mb-2 group-hover:-rotate-1 group-hover:shadow-xl transition-soft block relative max-w-full opacity-70 group-hover:opacity-100">
-                {% if book|cover_for %}
-                {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover grayscale group-hover:grayscale-0 transition-soft') }}
-                {% else %}
-                <div class="w-full h-full flex items-center justify-center text-[8px] p-1 opacity-20 italic text-center">MS</div>
-                {% endif %}
-            </a>
-            <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="block hover:text-vintage-accent transition-soft min-w-0">
-                <h5 class="font-bold text-[10px] sm:text-xs leading-tight line-clamp-2 opacity-60 group-hover:opacity-100">{{ book.title }}</h5>
-            </a>
-            {% if current_user.is_authenticated %}
-            <div class="mt-2 flex gap-1">
-                <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="flex-1">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="status" value="reading">
-                    <button type="submit" title="Start reading"
-                        class="w-full min-h-[32px] text-[8px] uppercase tracking-widest font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft py-1 px-1 leading-tight">
-                        Start
-                    </button>
-                </form>
-                <button type="button"
-                    class="min-w-[32px] min-h-[32px] inline-flex items-center justify-center opacity-30 hover:opacity-100 hover:text-red-800 transition-soft js-open-delete-modal"
-                    data-delete-url="{{ url_for('books.delete_book', book_id=book.id) }}"
-                    data-book-title="{{ book.title|e }}"
-                    title="Remove from wish list">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
-                </button>
-            </div>
-            {% endif %}
-        </div>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
-
-<section>
-    <div class="flex items-baseline justify-between mb-8 sm:mb-12 border-b border-black/5 pb-4 gap-4">
-        <h3 class="text-xl sm:text-2xl md:text-3xl font-bold italic text-vintage-accent opacity-80">Completed Voyages</h3>
-        <span class="text-[10px] uppercase tracking-[0.25em] opacity-40 font-bold flex-shrink-0">{{ finished_total }} volumes</span>
-    </div>
-
-    {% if finished %}
-    <div class="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-4 sm:gap-x-8 gap-y-10 sm:gap-y-12">
-        {% for book in finished %}
-        <div class="group relative flex flex-col min-w-0">
-            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
-                class="aspect-[2/3] overflow-hidden shadow-sm border border-black/5 mb-3 sm:mb-4 group-hover:-rotate-1 group-hover:shadow-xl transition-soft block relative max-w-full">
-                {% if book|cover_for %}
-                {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover sepia-[20%] group-hover:sepia-0 transition-soft') }}
-                {% else %}
-                <div class="w-full h-full flex items-center justify-center text-[9px] sm:text-[10px] p-2 opacity-30 italic text-center">Manuscript</div>
-                {% endif %}
-                <div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-soft"></div>
-            </a>
-            <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="block hover:text-vintage-accent transition-soft min-w-0">
-                <h5 class="font-bold text-[11px] sm:text-xs md:text-sm leading-tight line-clamp-2 sm:line-clamp-1 opacity-80 group-hover:opacity-100">{{ book.title }}</h5>
-            </a>
-            <p class="text-[8px] sm:text-[9px] uppercase tracking-wider opacity-30 mt-2 font-bold">{{ book.date_finished.strftime('%b %Y') }}</p>
-
-            {% if current_user.is_authenticated %}
-            <button type="button"
-                class="mt-2 min-h-[40px] w-full text-[9px] uppercase tracking-widest font-bold text-red-900/70 hover:text-red-800 border border-red-900/20 hover:bg-red-50/50 py-2 transition-soft sm:opacity-0 sm:group-hover:opacity-100 sm:absolute sm:top-0 sm:right-0 sm:w-auto sm:min-w-[44px] sm:min-h-[44px] sm:rounded-full sm:border-0 sm:bg-red-900 sm:text-vintage-cream sm:hover:bg-red-700 sm:p-2 sm:mt-0 js-open-delete-modal"
+            <button type="button" class="lib-act lib-act-danger js-open-delete-modal"
                 data-delete-url="{{ url_for('books.delete_book', book_id=book.id) }}"
                 data-book-title="{{ book.title|e }}"
-                title="Remove from archives">
-                <span class="sm:hidden">Remove</span>
-                <span class="hidden sm:inline-flex">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mx-auto" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
-                </span>
-            </button>
+                title="Remove from library" aria-label="Remove {{ book.title }} from library">{{ trash_icon('h-4 w-4 mx-auto') }}</button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+{# A wooden shelf with a brass nameplate. #}
+{% macro shelf(title, books, auth, sub='', show_status=false, tone='') %}
+<section class="lib-shelf-wrap" aria-label="{{ title }}">
+    <header class="lib-plate-row">
+        <h3 class="lib-plate font-serif-display {{ tone }}">{{ title }}</h3>
+        <span class="lib-plate-sub">{{ sub or (books|length ~ (' book' if books|length == 1 else ' books')) }}</span>
+    </header>
+    <div class="lib-shelf">
+        {% for book in books %}{{ book_item(book, auth, show_status) }}{% endfor %}
+    </div>
+</section>
+{% endmacro %}
+
+{% macro pager(page, pages, args, label) %}
+{% if pages > 1 %}
+{% set ns = namespace(last=0) %}
+<nav class="lib-pager" aria-label="{{ label }}">
+    {% if page > 1 %}<a href="{{ url_for('main.index', page=page - 1, **args) }}" rel="prev">&larr; Previous</a>{% endif %}
+    {% for p in range(1, pages + 1) %}
+    {% if p == 1 or p == pages or (p - page)|abs <= 2 %}
+    {% if p - ns.last > 1 %}<span class="lib-pager-gap" aria-hidden="true">&hellip;</span>{% endif %}
+    {% if p == page %}<span class="is-current" aria-current="page">{{ p }}</span>
+    {% else %}<a href="{{ url_for('main.index', page=p, **args) }}" aria-label="Page {{ p }}">{{ p }}</a>{% endif %}
+    {% set ns.last = p %}
+    {% endif %}
+    {% endfor %}
+    {% if page < pages %}<a href="{{ url_for('main.index', page=page + 1, **args) }}" rel="next">Next &rarr;</a>{% endif %}
+</nav>
+{% endif %}
+{% endmacro %}
+
+{% block content %}
+<style>
+    .lib {
+        --l-ink: var(--vintage-ink, #2a1d16);
+        --l-paper: var(--vintage-paper, #f8f0e2);
+        --l-cream: var(--vintage-cream, #efe3cf);
+        --l-gold: var(--vintage-gold, #b8832f);
+        --l-ox: var(--vintage-accent, #6f2a24);
+        --l-moss: var(--moss, #4a5d3a);
+        --l-wood: var(--wood, #5a3a22);
+        --l-wood-dark: var(--wood-dark, #3b2415);
+        --l-leather: var(--leather, #8a5a36);
+        --l-rust: var(--rust, #b4532a);
+        --l-muted: #5e4a3d;
+        --bk-h: 138px;
+        --plank: 16px;
+        --row-h: calc(var(--bk-h) + var(--plank) + 14px);
+    }
+    @media (min-width: 640px) { .lib { --bk-h: 176px; } }
+
+    .lib-eyebrow { font-size: .75rem; letter-spacing: .2em; text-transform: uppercase; font-weight: 600; color: var(--l-muted); }
+
+    /* Hero: what is on the nightstand */
+    .lib-hero {
+        display: grid; gap: 1rem 1.75rem; padding: 1.25rem;
+        grid-template-columns: auto 1fr; grid-template-areas: "cover head" "body body";
+        background: linear-gradient(140deg, var(--l-wood-dark), var(--l-wood));
+        color: #f6ead4; border-radius: 4px;
+        box-shadow: 0 18px 40px -18px rgba(59,36,21,.7), inset 0 0 0 1px rgba(184,131,47,.35);
+    }
+    @media (min-width: 768px) {
+        .lib-hero { padding: 2rem 2.25rem; gap: 0 2.5rem; grid-template-areas: "cover head" "cover body"; grid-template-rows: auto 1fr; }
+    }
+    .lib-hero-cover {
+        grid-area: cover; align-self: start; display: block; position: relative;
+        width: clamp(104px, 22vw, 210px); aspect-ratio: 2/3; background: var(--l-leather);
+        box-shadow: 10px 14px 26px rgba(0,0,0,.5); transform: rotate(-2deg); transition: transform .3s ease;
+    }
+    .lib-hero-cover:hover { transform: rotate(0) translateY(-4px); }
+    .lib-hero-head { grid-area: head; min-width: 0; }
+    .lib-hero-body { grid-area: body; min-width: 0; align-self: end; }
+    .lib-hero .lib-eyebrow { color: #e6c98c; }
+    .lib-hero h2 { font-size: clamp(1.4rem, 3.4vw, 2.6rem); line-height: 1.1; margin: .35rem 0 .35rem; color: #fff7e6; overflow-wrap: anywhere; }
+    .lib-hero h2 a:hover { color: #e6c98c; }
+    .lib-hero-author { font-style: italic; font-size: 1.125rem; color: #f0dfc0; }
+    .lib-chip {
+        display: inline-flex; align-items: center; min-height: 28px; padding: 0 .65rem; font-size: .75rem;
+        letter-spacing: .08em; text-transform: uppercase; border: 1px solid rgba(246,234,212,.4); color: #f6ead4;
+    }
+    .lib-chip:hover { background: rgba(246,234,212,.14); }
+    .lib-progress { height: 12px; background: rgba(246,234,212,.2); border-radius: 99px; overflow: hidden; }
+    .lib-progress > span { display: block; height: 100%; background: linear-gradient(90deg, var(--l-gold), #e6b95c); border-radius: 99px; }
+    .lib-progress-text { margin-top: .5rem; font-size: 1rem; color: #f0dfc0; }
+    .lib-progress-text strong { color: #fff7e6; font-family: 'Fraunces', 'Playfair Display', serif; }
+    .lib-hero-form { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-top: 1rem; }
+    .lib-hero-form label { font-size: .875rem; color: #f0dfc0; }
+    .lib-hero-form input {
+        width: 6rem; min-height: 44px; padding: 0 .75rem; background: rgba(255,255,255,.1); color: #fff7e6;
+        border: 1px solid rgba(246,234,212,.45); font-size: 1rem;
+    }
+    .lib-btn {
+        display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 1.25rem;
+        font-size: .75rem; letter-spacing: .18em; text-transform: uppercase; font-weight: 700; cursor: pointer;
+        border: 1px solid currentColor; transition: background-color .2s, color .2s;
+    }
+    .lib-hero .lib-btn { color: #f6ead4; background: transparent; }
+    .lib-hero .lib-btn:hover { background: #f6ead4; color: var(--l-wood-dark); }
+    .lib-hero .lib-btn-solid { background: var(--l-gold); border-color: var(--l-gold); color: #1d120b; }
+    .lib-hero .lib-btn-solid:hover { background: #e6b95c; border-color: #e6b95c; color: #1d120b; }
+    .lib-hero .lib-btn-quiet { border-color: transparent; padding: 0 .85rem; }
+    .lib-hero-empty { text-align: center; padding: 2.5rem 1rem; background: var(--l-paper); border: 1px dashed var(--l-leather); }
+
+    /* This-year strip */
+    .lib-strip {
+        display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem 2rem;
+        padding: 1rem 0; border-block: 2px double var(--l-leather);
+    }
+    .lib-strip p { font-size: 1.125rem; color: var(--l-ink); }
+    .lib-strip b { font-family: 'Fraunces', 'Playfair Display', serif; font-size: 1.5rem; color: var(--l-ox); font-weight: 700; }
+
+    /* Toolbar */
+    .lib-tabs { display: flex; flex-wrap: wrap; gap: .25rem; }
+    .lib-tab {
+        display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; padding: 0 .9rem; font-size: .875rem;
+        color: var(--l-ink); border-bottom: 3px solid transparent; transition: border-color .2s, color .2s;
+    }
+    .lib-tab small { font-size: .75rem; color: var(--l-muted); }
+    .lib-tab:hover { border-color: var(--l-gold); }
+    .lib-tab[aria-current="page"] { border-color: var(--l-ox); color: var(--l-ox); font-weight: 600; }
+    .lib-toggle { display: inline-flex; border: 1px solid var(--l-wood); }
+    .lib-toggle button {
+        min-height: 44px; min-width: 44px; padding: 0 .9rem; font-size: .875rem; color: var(--l-wood); background: transparent; cursor: pointer;
+    }
+    .lib-toggle button[aria-pressed="true"] { background: var(--l-wood); color: #f6ead4; }
+    .lib-filter { background: var(--l-paper); border: 1px solid rgba(90,58,34,.25); padding: 1.25rem; display: grid; gap: 1rem; grid-template-columns: 1fr; }
+    @media (min-width: 640px) { .lib-filter { grid-template-columns: repeat(2, 1fr); } }
+    @media (min-width: 1024px) { .lib-filter { grid-template-columns: repeat(4, 1fr); } }
+    .lib-filter label { display: block; font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; color: var(--l-muted); margin-bottom: .25rem; }
+    .lib-filter input, .lib-filter select {
+        width: 100%; min-height: 44px; padding: 0 .75rem; font-size: 1rem; background: #fffaf0; color: var(--l-ink); border: 1px solid rgba(90,58,34,.35);
+    }
+    .lib-filter input:focus, .lib-filter select:focus { outline: 2px solid var(--l-ox); outline-offset: 1px; }
+    .lib-filter .lib-btn { background: var(--l-ink); color: var(--l-cream); border-color: var(--l-ink); }
+    .lib-filter .lib-btn:hover { background: var(--l-ox); border-color: var(--l-ox); }
+    .lib-filter .lib-btn-ghost { background: transparent; color: var(--l-ink); border-color: rgba(42,29,22,.4); }
+    .lib-filter .lib-btn-ghost:hover { background: rgba(42,29,22,.08); color: var(--l-ink); }
+
+    /* Shelves */
+    .lib-plate-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
+    .lib-plate {
+        display: inline-block; padding: .3rem 1rem; font-size: 1.25rem; font-style: italic; font-weight: 700; color: #2a1d16;
+        background: linear-gradient(180deg, #e6c98c, #c99a45); border: 1px solid #8a5f1e; border-radius: 2px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 2px 4px rgba(59,36,21,.35);
+    }
+    .lib-plate-sub { font-size: .875rem; color: var(--l-muted); flex-shrink: 0; }
+    .lib-shelf {
+        display: flex; flex-wrap: wrap; align-items: stretch; min-height: var(--row-h); padding-inline: 10px;
+        background-color: rgba(59,36,21,.09);
+        background-image: linear-gradient(to bottom,
+            transparent calc(var(--row-h) - var(--plank)),
+            #8a5f3b calc(var(--row-h) - var(--plank)),
+            var(--l-wood) calc(var(--row-h) - var(--plank) + 3px),
+            var(--l-wood-dark) 100%);
+        background-size: 100% var(--row-h); background-repeat: repeat-y;
+        border-inline: 8px solid var(--l-wood); border-top: 8px solid var(--l-wood-dark);
+        box-shadow: inset 0 14px 18px -14px rgba(0,0,0,.55);
+    }
+    .lib-shelf-wrap { margin-bottom: 2.5rem; }
+    .bk { height: var(--row-h); padding: 14px 5px var(--plank); display: flex; align-items: flex-end; flex: 0 0 auto; position: relative; }
+    .bk-body { position: relative; }
+    .bk-link { display: block; position: relative; transition: transform .25s ease; }
+    .bk-link:hover, .bk-link:focus-visible { transform: translateY(-8px); }
+    .bk-link:focus-visible { outline: 3px solid var(--l-gold); outline-offset: 3px; }
+    .bk-cover {
+        display: block; position: relative; height: var(--bk-h); aspect-ratio: 2/3; overflow: hidden; background: var(--c);
+        box-shadow: 3px 3px 8px rgba(0,0,0,.4), inset 4px 0 6px -3px rgba(0,0,0,.45);
+    }
+    .bk-ph {
+        position: absolute; inset: 0; padding: .6rem .5rem; color: #f6ead4; font: italic 700 .75rem/1.25 'Fraunces', 'Playfair Display', serif;
+        overflow: hidden; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical;
+        background: linear-gradient(90deg, rgba(0,0,0,.25) 0 6px, transparent 6px), var(--c);
+    }
+    .bk-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .bk-flag {
+        position: absolute; left: 0; bottom: 0; padding: .1rem .45rem; font-size: .75rem; font-weight: 700; letter-spacing: .05em;
+        background: #f6ead4; color: var(--l-ink);
+    }
+    .bk-paused .bk-img, .bk-dnf .bk-img { filter: grayscale(.7); }
+    .bk-tbr .bk-img { filter: sepia(.35); }
+    .bk-spine {
+        display: none; position: relative; width: var(--sw); height: max(132px, calc(var(--bk-h) * var(--sh))); background: var(--c);
+        border-radius: 2px 2px 1px 1px; padding: 14px 0; overflow: hidden; text-align: center;
+        box-shadow: 2px 2px 6px rgba(0,0,0,.4), inset -3px 0 5px -2px rgba(0,0,0,.4), inset 3px 0 4px -2px rgba(255,255,255,.18);
+    }
+    .bk-spine::before, .bk-spine::after { content: ''; position: absolute; left: 0; right: 0; height: 3px; background: rgba(230,201,140,.8); }
+    .bk-spine::before { top: 7px; } .bk-spine::after { bottom: 7px; }
+    .bk-spine > span {
+        display: block; height: 100%; margin-inline: auto; writing-mode: vertical-rl; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        color: #f6ead4; font: 600 .8125rem/1.1 'Fraunces', 'Playfair Display', serif; letter-spacing: .02em;
+    }
+    [data-view="spines"] .bk-cover { display: none; }
+    [data-view="spines"] .bk-spine { display: block; }
+
+    .bk-actions {
+        position: absolute; inset: 0; z-index: 3; display: none; flex-direction: column; justify-content: flex-end;
+        background: linear-gradient(to bottom, transparent, rgba(42,29,22,.92) 45%); overflow: hidden; pointer-events: none;
+    }
+    .bk-actions form { display: contents; }
+    .lib-act {
+        display: block; width: 100%; min-height: 44px; font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+        color: #f6ead4; background: rgba(42,29,22,.92); border: 0; border-top: 1px solid rgba(246,234,212,.25); cursor: pointer; pointer-events: auto;
+    }
+    .lib-act:hover, .lib-act:focus-visible { background: rgba(246,234,212,.16); outline: none; }
+    .lib-act-danger { color: #ffb4a0; }
+    .bk-menu-btn {
+        display: none; position: absolute; top: 0; right: 0; z-index: 4; width: 44px; height: 44px; font-size: 1.5rem; line-height: 1;
+        color: #f6ead4; background: rgba(42,29,22,.7); border: 0; cursor: pointer;
+    }
+    @media (hover: none) { .bk-menu-btn { display: block; } }
+    .bk.is-open .bk-actions { display: flex; }
+    @media (hover: hover) {
+        .bk:hover .bk-actions, .bk:focus-within .bk-actions { display: flex; }
+        .bk-link[data-tip]:hover::after, .bk-link[data-tip]:focus-visible::after {
+            content: attr(data-tip); position: absolute; z-index: 5; left: 50%; bottom: calc(100% + 6px); transform: translateX(-50%);
+            max-width: 240px; width: max-content; padding: .3rem .6rem; font-size: .8125rem; line-height: 1.3;
+            background: var(--l-ink); color: #f6ead4; pointer-events: none; white-space: normal; text-align: center;
+        }
+    }
+    .lib-shelf { overflow-x: clip; }
+
+    /* Pagination */
+    .lib-pager { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: .35rem; margin: 1rem 0 2.5rem; }
+    .lib-pager a, .lib-pager span { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding: 0 .85rem; font-size: 1rem; }
+    .lib-pager a { border: 1px solid rgba(90,58,34,.4); color: var(--l-ink); transition: background-color .2s, color .2s; }
+    .lib-pager a:hover { background: var(--l-wood); color: #f6ead4; }
+    .lib-pager .is-current { background: var(--l-ox); color: #f6ead4; font-weight: 700; }
+    .lib-pager-gap { color: var(--l-muted); min-width: 24px !important; padding: 0 !important; }
+
+    .lib-empty { text-align: center; padding: 3rem 1rem; background: var(--l-paper); border: 1px dashed var(--l-leather); color: var(--l-ink); }
+    .lib-empty p { font-size: 1.125rem; font-style: italic; margin-bottom: 1rem; }
+    .lib-empty .lib-btn { background: var(--l-ink); color: var(--l-cream); border-color: var(--l-ink); }
+    .lib-empty .lib-btn:hover { background: var(--l-ox); border-color: var(--l-ox); }
+
+    @media (prefers-reduced-motion: reduce) {
+        .bk-link, .lib-hero-cover, .lib-btn, .lib-tab { transition: none; }
+        .bk-link:hover, .bk-link:focus-visible, .lib-hero-cover:hover { transform: none; }
+    }
+</style>
+
+<div class="lib" id="library" data-view="covers">
+    <script>
+        try { var v = localStorage.getItem('alexandria:view'); if (v === 'spines' || v === 'covers') document.getElementById('library').dataset.view = v; } catch (e) {}
+    </script>
+
+    {% set auth = current_user.is_authenticated %}
+
+    {% if not filtered and page == 1 %}
+    <!-- ─── Currently reading: hero ───────────────────────────────── -->
+    <section class="mb-8 sm:mb-10 space-y-6" aria-label="Currently reading">
+        {% for book in reading %}
+        {% set has_progress = book.current_page and book.page_count %}
+        {% set started = book.date_started or book.date_added %}
+        <article class="lib-hero">
+            <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="lib-hero-cover" aria-label="{{ book.title }}">
+                <span class="bk-ph" aria-hidden="true">{{ book.title }}</span>
+                {% if book|cover_for %}{{ book_cover_img(book, class='bk-img', loading='eager') }}{% endif %}
+            </a>
+            <div class="lib-hero-head">
+                <p class="lib-eyebrow">On the nightstand</p>
+                <h2 class="font-serif-display"><a href="{{ url_for('main.book_detail', book_id=book.id) }}">{{ book.title }}</a></h2>
+                <p class="lib-hero-author">by {{ book.authors or 'Anonymous' }}</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    {% for cat in book.categories|categories_list %}
+                    <a class="lib-chip" href="{{ url_for('main.index', category=cat) }}">{{ cat }}</a>
+                    {% endfor %}
+                    {% if book.shelves %}
+                    {% set shelf_names = book.shelves|categories_list if book.shelves is string else book.shelves %}
+                    {% for sh in shelf_names %}
+                    {% set shelf_name = sh.name if sh.name is defined else sh %}
+                    <a class="lib-chip" href="/shelf/{{ shelf_name|urlencode }}">&#9776; {{ shelf_name }}</a>
+                    {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="lib-hero-body">
+                {% if has_progress %}
+                {% set pct = [(book.current_page * 100 // book.page_count), 100]|min %}
+                <div class="lib-progress" role="progressbar" aria-label="Reading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ pct }}">
+                    <span style="width: {{ pct }}%"></span>
+                </div>
+                <p class="lib-progress-text">
+                    <strong>{{ pct }}%</strong> &middot; page {{ book.current_page }} of {{ book.page_count }}
+                    {% if book.page_count > book.current_page %}&middot; {{ book.page_count - book.current_page }} pages to go{% endif %}
+                </p>
+                {% else %}
+                <p class="lib-progress-text">
+                    {% if book.page_count %}<strong>{{ book.page_count }}</strong> pages{% endif %}
+                    {% if book.page_count and started %}&middot;{% endif %}
+                    {% if started %}started {{ started.strftime('%d %b %Y') }}{% endif %}
+                </p>
+                {% endif %}
+
+                {% if auth %}
+                {% if book.page_count and book.current_page is defined %}
+                <form class="lib-hero-form" action="/progress/{{ book.id }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <label for="pg-{{ book.id }}">I am on page</label>
+                    <input type="number" id="pg-{{ book.id }}" name="current_page" min="0" max="{{ book.page_count }}" inputmode="numeric" value="{{ book.current_page or '' }}" required>
+                    <button type="submit" class="lib-btn">Save</button>
+                </form>
+                {% endif %}
+                <div class="mt-4 flex flex-wrap gap-2 items-center">
+                    <button type="button" class="lib-btn lib-btn-solid js-open-finish-modal"
+                        data-finish-url="{{ url_for('books.finish_book', book_id=book.id) }}"
+                        data-book-title="{{ book.title|e }}">Close chapter</button>
+                    <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="status" value="paused">
+                        <button type="submit" class="lib-btn">Pause</button>
+                    </form>
+                    <button type="button" class="lib-btn lib-btn-quiet js-open-delete-modal"
+                        data-delete-url="{{ url_for('books.delete_book', book_id=book.id) }}"
+                        data-book-title="{{ book.title|e }}"
+                        title="Remove from library" aria-label="Remove {{ book.title }} from library">{{ trash_icon() }}</button>
+                </div>
+                {% endif %}
+            </div>
+        </article>
+        {% else %}
+        <div class="lib-hero-empty">
+            <p class="lib-eyebrow">On the nightstand</p>
+            <p class="font-serif-display text-xl sm:text-2xl italic my-3">Nothing is being read right now.</p>
+            {% if auth %}
+            <a href="{{ url_for('books.search') }}" class="lib-btn" style="color: var(--l-ink)">Find a book to start</a>
+            {% elif tbr %}
+            <p style="color: var(--l-muted)">{{ tbr|length }} {{ 'book waits' if tbr|length == 1 else 'books wait' }} on the wish list below.</p>
             {% endif %}
         </div>
         {% endfor %}
+    </section>
+
+    <!-- ─── This year ─────────────────────────────────────────────── -->
+    <section class="lib-strip mb-8 sm:mb-10" aria-label="This year">
+        {% if this_year.books %}
+        <p>
+            <span class="lib-eyebrow" style="margin-right:.5rem">{{ this_year.year }} so far</span>
+            <b>{{ this_year.books }}</b> {{ 'book' if this_year.books == 1 else 'books' }} finished &middot;
+            <b>{{ '{:,}'.format(this_year.pages) }}</b> pages
+            {% if this_year.avg_rating %}&middot; average rating <b>{{ this_year.avg_rating }}</b>&#9733;{% endif %}
+        </p>
+        {% else %}
+        <p><span class="lib-eyebrow" style="margin-right:.5rem">{{ this_year.year }} so far</span> No books finished yet this year.</p>
+        {% endif %}
+        <p class="text-base" style="color: var(--l-muted)">{{ counts.all }} {{ 'book' if counts.all == 1 else 'books' }} on the shelves</p>
+    </section>
+    {% endif %}
+
+    <!-- ─── Toolbar: status tabs + view toggle ────────────────────── -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <nav class="lib-tabs" aria-label="Filter by status">
+            <a class="lib-tab" href="{{ url_for('main.index') }}" {% if not filtered %}aria-current="page"{% endif %}>All <small>{{ counts.all }}</small></a>
+            {% for key, label in [('reading', 'Reading'), ('finished', 'Finished'), ('tbr', 'Wish list'), ('paused', 'Paused'), ('dnf', 'Did not finish')] %}
+            <a class="lib-tab" href="{{ url_for('main.index', status=key) }}" {% if status_filter == key %}aria-current="page"{% endif %}>{{ label }} <small>{{ counts[key] }}</small></a>
+            {% endfor %}
+        </nav>
+        <div class="lib-toggle" role="group" aria-label="Shelf view">
+            <button type="button" data-set-view="covers" aria-pressed="true">Covers</button>
+            <button type="button" data-set-view="spines" aria-pressed="false">Spines</button>
+        </div>
     </div>
 
-    <!-- Finished pagination -->
-    {% if finished_pages > 1 %}
-    <nav class="mt-12 flex items-center justify-center gap-3" aria-label="Finished books pages">
-        {% if current_page > 1 %}
-        <a href="{{ url_for('main.index', page=current_page - 1) }}"
-            class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft inline-flex items-center gap-2">
-            &larr; Previous
-        </a>
-        {% endif %}
-        <span class="text-sm italic opacity-50">Page {{ current_page }} of {{ finished_pages }}</span>
-        {% if current_page < finished_pages %}
-        <a href="{{ url_for('main.index', page=current_page + 1) }}"
-            class="min-h-[44px] px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft inline-flex items-center gap-2">
-            Next &rarr;
-        </a>
-        {% endif %}
-    </nav>
+    <details class="mb-10" {% if filtered %}open{% endif %}>
+        <summary class="lib-eyebrow cursor-pointer inline-flex items-center min-h-[44px] select-none">Search, filter &amp; sort</summary>
+        <form method="GET" action="{{ url_for('main.index') }}" class="lib-filter mt-2">
+            <div class="lg:col-span-2">
+                <label for="q">Title or author</label>
+                <input type="search" id="q" name="q" value="{{ q }}" placeholder="Borges, Dune&hellip;">
+            </div>
+            <div>
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="">All statuses</option>
+                    {% for key, label in [('reading', 'Reading'), ('finished', 'Finished'), ('tbr', 'Wish list (TBR)'), ('paused', 'Paused'), ('dnf', 'Did not finish')] %}
+                    <option value="{{ key }}" {% if status_filter == key %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="category">Category</label>
+                <select id="category" name="category">
+                    <option value="">Any category</option>
+                    {% for c in options.categories %}<option value="{{ c }}" {% if category == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="author">Author</label>
+                <input type="text" id="author" name="author" value="{{ author }}" list="authors-list" placeholder="Any author">
+                <datalist id="authors-list">{% for a in options.authors %}<option value="{{ a }}">{% endfor %}</datalist>
+            </div>
+            <div>
+                <label for="year">Year finished</label>
+                <select id="year" name="year">
+                    <option value="">Any year</option>
+                    {% for y in options.years %}<option value="{{ y }}" {% if year == y %}selected{% endif %}>{{ y }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="rating">My rating</label>
+                <select id="rating" name="rating">
+                    <option value="">Any rating</option>
+                    {% for r in [3, 4, 4.5] %}<option value="{{ r }}" {% if rating == r %}selected{% endif %}>{{ r }} &#9733; and up</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="sort">Sort by</label>
+                <select id="sort" name="sort">
+                    {% for key, label in sort_options.items() %}<option value="{{ key }}" {% if sort == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="flex gap-3 items-end justify-end sm:col-span-2 lg:col-span-4">
+                {% if filtered %}<a href="{{ url_for('main.index') }}" class="lib-btn lib-btn-ghost">Clear</a>{% endif %}
+                <button type="submit" class="lib-btn">Apply</button>
+            </div>
+        </form>
+    </details>
+
+    {% if filtered %}
+    <!-- ─── Filtered: one shelf of results ────────────────────────── -->
+    {% if books %}
+    {{ shelf('Results' ~ (' for "' ~ q ~ '"' if q else ''), books, auth, sub=pagination.total ~ (' book' if pagination.total == 1 else ' books'), show_status=true) }}
+    {{ pager(pagination.page, pagination.pages, qargs, 'Search results pages') }}
+    {% else %}
+    <div class="lib-empty">
+        <p>No book matches these filters.</p>
+        <a href="{{ url_for('main.index') }}" class="lib-btn">Clear filters</a>
+    </div>
     {% endif %}
 
     {% else %}
-    <div class="text-center py-12 sm:py-16 space-y-6 opacity-30">
-        <p class="italic text-sm sm:text-base">No completed journeys yet recorded.</p>
-        {% if current_user.is_authenticated and reading|length == 0 %}
-        <a href="{{ url_for('books.search') }}"
-            class="inline-flex min-h-[44px] items-center justify-center px-6 py-3 text-[10px] uppercase tracking-[0.2em] font-bold border border-vintage-accent text-vintage-accent hover:bg-vintage-accent hover:text-vintage-cream transition-soft">
-            Add your first volume
-        </a>
-        {% endif %}
+    <!-- ─── Grouped library ───────────────────────────────────────── -->
+    {% if counts.all == 0 %}
+    <div class="lib-empty">
+        <p>The shelves are bare. Every library starts with one book.</p>
+        {% if auth %}<a href="{{ url_for('books.search') }}" class="lib-btn">Add your first book</a>{% endif %}
     </div>
     {% endif %}
-</section>
 
-{% if paused or dnf %}
-<section class="mt-16 sm:mt-24">
-    <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-4 gap-4">
-        <h3 class="text-xl sm:text-2xl font-bold italic text-vintage-ink opacity-50">Other Entries</h3>
-    </div>
-    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 gap-x-3 sm:gap-x-5 gap-y-8">
-        {% for book in (paused + dnf) %}
-        <div class="group relative flex flex-col min-w-0">
-            <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
-                class="aspect-[2/3] overflow-hidden shadow-sm border border-black/5 mb-2 transition-soft block relative max-w-full opacity-50 group-hover:opacity-80">
-                {% if book|cover_for %}
-                {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover grayscale') }}
-                {% else %}
-                <div class="w-full h-full flex items-center justify-center text-[8px] p-1 opacity-20 italic text-center">MS</div>
-                {% endif %}
-                <div class="absolute bottom-0 left-0 right-0 text-center pb-1">
-                    <span class="text-[8px] uppercase tracking-widest font-bold px-1 py-0.5 {% if book.status == 'paused' %}bg-amber-100/90 text-amber-800{% else %}bg-red-100/90 text-red-800{% endif %}">
-                        {{ 'Paused' if book.status == 'paused' else 'DNF' }}
-                    </span>
-                </div>
-            </a>
-            <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="block hover:text-vintage-accent transition-soft min-w-0">
-                <h5 class="font-bold text-[10px] sm:text-xs leading-tight line-clamp-2 opacity-50 group-hover:opacity-80">{{ book.title }}</h5>
-            </a>
-            {% if current_user.is_authenticated %}
-            <div class="mt-2 flex gap-1 flex-wrap">
-                <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="flex-1 min-w-0">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="status" value="reading">
-                    <button type="submit" title="Resume reading"
-                        class="w-full min-h-[32px] text-[8px] uppercase tracking-widest font-bold border border-vintage-ink/20 hover:bg-vintage-ink hover:text-vintage-cream transition-soft py-1 px-1 leading-tight">
-                        Resume
-                    </button>
-                </form>
-                {% if book.status == 'paused' %}
-                <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="status" value="dnf">
-                    <button type="submit" title="Mark as did not finish"
-                        class="min-h-[32px] min-w-[32px] text-[8px] uppercase tracking-widest font-bold border border-red-900/20 text-red-900/60 hover:bg-red-900/10 transition-soft py-1 px-1 leading-tight">
-                        DNF
-                    </button>
-                </form>
-                {% endif %}
-                <button type="button"
-                    class="min-w-[32px] min-h-[32px] inline-flex items-center justify-center opacity-30 hover:opacity-100 hover:text-red-800 transition-soft js-open-delete-modal"
-                    data-delete-url="{{ url_for('books.delete_book', book_id=book.id) }}"
-                    data-book-title="{{ book.title|e }}"
-                    title="Remove from archives">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                    </svg>
-                </button>
-            </div>
-            {% endif %}
-        </div>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
+    {% if tbr and page == 1 %}{{ shelf('Up next', tbr, auth, sub=tbr|length ~ ' on the wish list') }}{% endif %}
 
-{% endif %}{# end filtered/normal mode #}
+    {% for year_key, year_books in finished_by_year %}
+    {{ shelf('Finished in ' ~ year_key if year_key else 'Finished (undated)', year_books, auth) }}
+    {% endfor %}
+    {{ pager(page, finished_pages, {}, 'Finished books pages') }}
+
+    {% if paused and page == 1 %}{{ shelf('Paused', paused, auth) }}{% endif %}
+    {% if dnf and page == 1 %}{{ shelf('Did not finish', dnf, auth) }}{% endif %}
+    {% endif %}
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.querySelectorAll('.js-open-finish-modal').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var url = btn.getAttribute('data-finish-url');
-            var title = btn.getAttribute('data-book-title') || '';
-            if (window.AlexandriaModal && url) window.AlexandriaModal.openFinish(url, title);
+    (function () {
+        var lib = document.getElementById('library');
+
+        function setView(v) {
+            lib.dataset.view = v;
+            document.querySelectorAll('[data-set-view]').forEach(function (b) {
+                b.setAttribute('aria-pressed', b.dataset.setView === v ? 'true' : 'false');
+            });
+            try { localStorage.setItem('alexandria:view', v); } catch (e) {}
+        }
+        document.querySelectorAll('[data-set-view]').forEach(function (b) {
+            b.addEventListener('click', function () { setView(b.dataset.setView); });
         });
-    });
-    document.querySelectorAll('.js-open-delete-modal').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            var url = btn.getAttribute('data-delete-url');
-            var title = btn.getAttribute('data-book-title') || '';
-            if (window.AlexandriaModal && url) window.AlexandriaModal.openDelete(url, title);
+        setView(lib.dataset.view);
+
+        // Touch devices: the corner button opens a book's action panel.
+        document.querySelectorAll('.bk-menu-btn').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var bk = btn.closest('.bk');
+                var open = !bk.classList.contains('is-open');
+                document.querySelectorAll('.bk.is-open').forEach(function (o) { o.classList.remove('is-open'); });
+                bk.classList.toggle('is-open', open);
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
         });
-    });
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.bk-actions')) {
+                document.querySelectorAll('.bk.is-open').forEach(function (o) { o.classList.remove('is-open'); });
+            }
+        });
+
+        document.querySelectorAll('.js-open-finish-modal').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var url = btn.getAttribute('data-finish-url');
+                var title = btn.getAttribute('data-book-title') || '';
+                if (window.AlexandriaModal && url) window.AlexandriaModal.openFinish(url, title);
+            });
+        });
+        document.querySelectorAll('.js-open-delete-modal').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var url = btn.getAttribute('data-delete-url');
+                var title = btn.getAttribute('data-book-title') || '';
+                if (window.AlexandriaModal && url) window.AlexandriaModal.openDelete(url, title);
+            });
+        });
+    })();
 </script>
 {% endblock %}

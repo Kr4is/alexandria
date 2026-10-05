@@ -2,32 +2,252 @@
 {% from '_macros.html' import book_cover_img %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto px-1 sm:px-0">
-    <header class="mb-8 sm:mb-12 text-center">
-        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-vintage-ink">Reading Calendar</h2>
-        <div class="flex justify-center items-center gap-4 mb-6">
-            <div class="h-px w-12 bg-vintage-gold/30"></div>
-            <div class="w-2 h-2 rounded-full border border-vintage-gold/30"></div>
-            <div class="h-px w-12 bg-vintage-gold/30"></div>
+{# Month summary, computed from the grid handed over by build_calendar_context. #}
+{% set ns = namespace(finished=[], started=0, active_days=0, events=0) %}
+{% for week in (weeks or []) %}
+{% for cell in week %}
+{% if cell.in_month and cell.events %}
+{% set ns.active_days = ns.active_days + 1 %}
+{% set ns.events = ns.events + cell.events|length %}
+{% for event in cell.events %}
+{% if event.kind == 'finished' %}
+{% set ns.finished = ns.finished + [event.book] %}
+{% else %}
+{% set ns.started = ns.started + 1 %}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endfor %}
+{% set today = now.date() if now is defined else none %}
+<style>
+    .cj-page {
+        --cj-paper: var(--vintage-paper, #f8f0e2);
+        --cj-cream: var(--vintage-cream, #efe3cf);
+        --cj-ink: var(--vintage-ink, #2a1d16);
+        --cj-gold: var(--vintage-gold, #b8832f);
+        --cj-accent: var(--vintage-accent, #6f2a24);
+        --cj-moss: var(--moss, #4a5d3a);
+        --cj-wood: var(--wood, #5a3a22);
+        --cj-leather: var(--leather, #8a5a36);
+        --cj-rule: rgba(90, 58, 34, 0.18);
+    }
+
+    .cj-sheet {
+        background: var(--cj-paper);
+        border: 1px solid var(--cj-rule);
+        box-shadow: 0 14px 30px -18px rgba(59, 36, 21, 0.45);
+        position: relative;
+    }
+
+    /* Leather binding down the left edge of the journal page */
+    @media (min-width: 640px) {
+        .cj-sheet { border-left: 10px solid var(--cj-wood); }
+    }
+
+    .cj-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 1px;
+        background: var(--cj-rule);
+        border: 1px solid var(--cj-rule);
+    }
+
+    .cj-dow {
+        background: var(--cj-cream);
+        padding: 0.5rem 0.25rem;
+        text-align: center;
+        font-size: 0.75rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--cj-wood);
+    }
+
+    .cj-day {
+        background: var(--cj-paper);
+        min-height: 6.75rem;
+        padding: 0.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        min-width: 0;
+    }
+
+    .cj-day--out { background: var(--cj-cream); opacity: 0.45; }
+    .cj-day--finished { background: color-mix(in srgb, var(--cj-gold) 9%, var(--cj-paper)); }
+
+    .cj-num {
+        font-size: 0.8125rem;
+        font-weight: 700;
+        color: var(--cj-wood);
+        line-height: 1;
+        align-self: flex-start;
+        min-width: 1.5rem;
+        height: 1.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+    }
+
+    .cj-num--today { background: var(--cj-accent); color: #fff; }
+
+    /* Signature: each day's books stand on a little wooden shelf. */
+    .cj-shelf {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        gap: 0.3rem;
+        padding: 0 0.1rem 0.2rem;
+        border-bottom: 4px solid var(--cj-wood);
+        border-radius: 0 0 2px 2px;
+    }
+
+    .cj-book {
+        position: relative;
+        display: block;
+        width: 2.25rem;
+        aspect-ratio: 2 / 3;
+        background: var(--cj-leather);
+        color: var(--cj-cream);
+        border-radius: 1px 3px 3px 1px;
+        box-shadow: inset 3px 0 0 rgba(0, 0, 0, 0.22), 1px 2px 3px rgba(59, 36, 21, 0.35);
+    }
+
+    @media (min-width: 1024px) { .cj-book { width: 2.5rem; } }
+
+    .cj-book:focus-visible { outline: 3px solid var(--cj-gold); outline-offset: 2px; }
+
+    .cj-book > img, .cj-book > .cj-blank {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .cj-badge {
+        position: absolute;
+        top: -0.3rem;
+        right: -0.35rem;
+        width: 1.05rem;
+        height: 1.05rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1.5px solid var(--cj-paper);
+        z-index: 1;
+    }
+
+    .cj-badge svg { width: 0.6rem; height: 0.6rem; }
+    .cj-badge--started { background: var(--cj-accent); color: #fff; }
+    .cj-badge--finished { background: var(--cj-gold); color: var(--cj-ink); }
+
+    .cj-nav-btn {
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--cj-rule);
+        background: var(--cj-paper);
+        color: var(--cj-ink);
+    }
+
+    a.cj-nav-btn:hover { background: var(--cj-ink); color: var(--cj-cream); }
+    a.cj-nav-btn:focus-visible, .cj-select:focus-visible { outline: 3px solid var(--cj-gold); outline-offset: 2px; }
+    .cj-nav-btn--off { opacity: 0.35; cursor: not-allowed; }
+
+    .cj-select {
+        min-height: 44px;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--cj-rule);
+        background: var(--cj-paper);
+        color: var(--cj-ink);
+        font-size: 1rem;
+    }
+
+    .cj-stat {
+        background: var(--cj-paper);
+        border: 1px solid var(--cj-rule);
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: baseline;
+        gap: 0.6rem;
+    }
+
+    .cj-stat b { font-size: 2rem; line-height: 1; color: var(--cj-accent); }
+    .cj-stat span { font-size: 0.875rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--cj-wood); }
+
+    /* Mobile agenda */
+    .cj-agenda { list-style: none; margin: 0; padding: 0; }
+    .cj-agenda > li { display: grid; grid-template-columns: 3.25rem 1fr; gap: 0.75rem; padding: 0.75rem 0; border-bottom: 1px dashed var(--cj-rule); }
+    .cj-agenda > li:last-child { border-bottom: 0; }
+    .cj-agenda-date { text-align: center; color: var(--cj-wood); line-height: 1.1; }
+    .cj-agenda-date b { display: block; font-size: 1.75rem; }
+    .cj-agenda-date span { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; }
+    .cj-agenda-date--today b { color: var(--cj-accent); }
+
+    .cj-entry {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-height: 56px;
+        padding: 0.25rem 0;
+        color: var(--cj-ink);
+        text-decoration: none;
+    }
+
+    .cj-entry .cj-book { flex: none; }
+    .cj-entry-kind { font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; }
+    .cj-entry-kind--started { color: var(--cj-accent); }
+    .cj-entry-kind--finished { color: #7a5416; }
+    .cj-entry-title { font-weight: 500; line-height: 1.25; }
+    .cj-entry-author { font-size: 0.875rem; color: var(--cj-wood); }
+    .cj-entry:hover .cj-entry-title { text-decoration: underline; }
+    .cj-entry:focus-visible { outline: 3px solid var(--cj-gold); outline-offset: 2px; }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .cj-book { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+        .cj-book:hover { transform: translateY(-3px); box-shadow: inset 3px 0 0 rgba(0, 0, 0, 0.22), 2px 6px 8px rgba(59, 36, 21, 0.35); }
+    }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="cj-check" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="cj-open" viewBox="0 0 24 24"><path fill="currentColor" d="M7 4l13 8-13 8z"/></symbol>
+    <symbol id="cj-book" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3V4zm0 13a3 3 0 013-3h11"/></symbol>
+</svg>
+
+<div class="cj-page max-w-6xl mx-auto px-1 sm:px-0">
+    <header class="mb-8 sm:mb-10 text-center">
+        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-vintage-ink">Reading Journal</h2>
+        <div class="flex justify-center items-center gap-4 mb-5" aria-hidden="true">
+            <div class="h-px w-12" style="background: var(--cj-gold)"></div>
+            <svg class="w-5 h-5" style="color: var(--cj-gold)"><use href="#cj-book"/></svg>
+            <div class="h-px w-12" style="background: var(--cj-gold)"></div>
         </div>
-        <p class="text-lg italic opacity-60">A day-by-day map of journeys begun and chapters closed.</p>
+        <p class="text-lg italic" style="color: var(--cj-wood)">Every book you started and every one you closed, shelved on the day it happened.</p>
     </header>
 
     {% if active_months %}
 
-    <div class="mb-6 sm:mb-10 flex flex-wrap items-center justify-between gap-4">
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div class="flex items-center gap-1 sm:gap-2">
             {% if prev_month %}
             <a href="{{ url_for('main.calendar', year=prev_month[0], month=prev_month[1]) }}"
-                class="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 border border-black/10 hover:border-vintage-ink/30 hover:bg-vintage-ink hover:text-vintage-cream transition-soft text-vintage-ink"
-                title="Previous month">
+                class="cj-nav-btn transition-soft" title="Previous month" aria-label="Previous month">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
             </a>
             {% else %}
-            <span class="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 border border-black/5 opacity-20 cursor-not-allowed">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <span class="cj-nav-btn cj-nav-btn--off" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
             </span>
@@ -39,15 +259,14 @@
 
             {% if next_month %}
             <a href="{{ url_for('main.calendar', year=next_month[0], month=next_month[1]) }}"
-                class="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 border border-black/10 hover:border-vintage-ink/30 hover:bg-vintage-ink hover:text-vintage-cream transition-soft text-vintage-ink"
-                title="Next month">
+                class="cj-nav-btn transition-soft" title="Next month" aria-label="Next month">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </a>
             {% else %}
-            <span class="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 border border-black/5 opacity-20 cursor-not-allowed">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <span class="cj-nav-btn cj-nav-btn--off" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </span>
@@ -55,9 +274,8 @@
         </div>
 
         <form method="GET" action="{{ url_for('main.calendar') }}" class="flex items-center gap-2">
-            <label for="month-select" class="text-[10px] uppercase tracking-widest opacity-40 font-bold hidden sm:inline">Jump to</label>
-            <select id="month-select" name="month_key"
-                class="min-h-[44px] px-3 py-2 border border-black/10 bg-vintage-paper text-sm font-medium text-vintage-ink focus:outline-none focus:border-vintage-gold hover:border-vintage-ink/30 transition-soft"
+            <label for="month-select" class="text-sm uppercase tracking-widest font-bold hidden sm:inline" style="color: var(--cj-wood)">Jump to</label>
+            <select id="month-select" name="month_key" class="cj-select transition-soft"
                 onchange="
                     var parts = this.value.split('-');
                     this.form.elements['year'].value = parts[0];
@@ -72,46 +290,77 @@
             <input type="hidden" name="month" value="{{ current_month }}">
         </form>
 
-        <div class="flex flex-wrap items-center gap-4 text-[10px] uppercase tracking-[0.18em] font-bold opacity-70">
-            <div class="inline-flex items-center gap-2">
-                <span class="inline-block w-4 h-5 border-2 border-vintage-accent bg-vintage-paper"></span>
-                <span>Started</span>
-            </div>
-            <div class="inline-flex items-center gap-2">
-                <span class="inline-block w-4 h-5 border-2 border-vintage-gold bg-vintage-paper"></span>
-                <span>Finished</span>
-            </div>
-        </div>
+        <ul class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm uppercase tracking-[0.12em] font-bold list-none p-0 m-0" style="color: var(--cj-wood)" aria-label="Legend">
+            <li class="inline-flex items-center gap-2">
+                <span class="cj-badge cj-badge--started" style="position:static" aria-hidden="true"><svg><use href="#cj-open"/></svg></span>
+                Started
+            </li>
+            <li class="inline-flex items-center gap-2">
+                <span class="cj-badge cj-badge--finished" style="position:static" aria-hidden="true"><svg><use href="#cj-check"/></svg></span>
+                Finished
+            </li>
+        </ul>
     </div>
 
-    <section class="paper-texture vintage-border p-3 sm:p-6">
-        <div class="grid grid-cols-7 gap-px bg-black/10 border border-black/10 overflow-hidden">
-            {% for weekday in weekday_headers %}
-            <div class="bg-vintage-ink/5 px-1 sm:px-2 py-2 text-center text-[8px] sm:text-[10px] uppercase tracking-widest font-bold opacity-50">
-                {{ weekday }}
+    <section aria-label="Summary for {{ current_label }}" class="mb-6">
+        <div class="grid grid-cols-3 gap-2 sm:gap-3">
+            <div class="cj-stat flex-col sm:flex-row !items-start sm:!items-baseline">
+                <b class="font-serif-display">{{ ns.finished|length }}</b><span>Finished</span>
             </div>
+            <div class="cj-stat flex-col sm:flex-row !items-start sm:!items-baseline">
+                <b class="font-serif-display">{{ ns.started }}</b><span>Started</span>
+            </div>
+            <div class="cj-stat flex-col sm:flex-row !items-start sm:!items-baseline">
+                <b class="font-serif-display">{{ ns.active_days }}</b><span>Active days</span>
+            </div>
+        </div>
+        {% if ns.finished %}
+        <div class="mt-4 flex items-end gap-3">
+            <p class="text-sm uppercase tracking-[0.12em] font-bold pb-1" style="color: var(--cj-wood)">Closed this month</p>
+            <div class="cj-shelf flex-1">
+                {% for book in ns.finished %}
+                <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="cj-book" title="{{ book.title }}" aria-label="Finished: {{ book.title }}">
+                    {% if book|cover_for %}
+                    {{ book_cover_img(book, alt='', class='book-cover-img') }}
+                    {% else %}
+                    <span class="cj-blank"><svg class="w-5 h-5"><use href="#cj-book"/></svg></span>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+    {% if not ns.events %}
+    <p class="text-center italic py-4" style="color: var(--cj-wood)">Nothing was started or finished in {{ current_label }}.</p>
+    {% endif %}
+
+    {# Desktop / tablet: month grid #}
+    <section class="cj-sheet p-3 sm:p-6 hidden sm:block" aria-label="{{ current_label }} calendar">
+        <div class="cj-grid">
+            {% for weekday in weekday_headers %}
+            <div class="cj-dow">{{ weekday }}</div>
             {% endfor %}
 
             {% for week in weeks %}
             {% for cell in week %}
-            <div class="min-h-[4.5rem] sm:min-h-[6.25rem] bg-vintage-paper p-1 sm:p-2 {% if not cell.in_month %}opacity-25 bg-vintage-cream{% endif %}">
+            {% set has_finished = cell.events|selectattr('kind', 'equalto', 'finished')|list|length > 0 %}
+            <div class="cj-day {% if not cell.in_month %}cj-day--out{% elif has_finished %}cj-day--finished{% endif %}">
                 {% if cell.in_month %}
-                <div class="mb-1 text-[10px] sm:text-xs font-bold opacity-40">{{ cell.day }}</div>
+                <span class="cj-num {% if today and cell.date == today %}cj-num--today{% endif %}">{% if today and cell.date == today %}<span class="sr-only">Today, </span>{% endif %}{{ cell.day }}</span>
                 {% if cell.events %}
-                <div class="flex flex-col gap-1">
+                <div class="cj-shelf">
                     {% for event in cell.events %}
                     {% set book = event.book %}
-                    {% set border_class = 'border-vintage-accent' if event.kind == 'started' else 'border-vintage-gold' %}
                     {% set label = 'Started' if event.kind == 'started' else 'Finished' %}
-                    <a href="{{ url_for('main.book_detail', book_id=book.id) }}"
-                        title="{{ label }}: {{ book.title }}"
-                        class="group block w-8 sm:w-10 aspect-[2/3] overflow-hidden border-2 {{ border_class }} bg-vintage-cream shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-soft">
+                    <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="cj-book"
+                        title="{{ label }}: {{ book.title }}" aria-label="{{ label }}: {{ book.title }}">
+                        <span class="cj-badge cj-badge--{{ event.kind }}" aria-hidden="true"><svg><use href="#{{ 'cj-open' if event.kind == 'started' else 'cj-check' }}"/></svg></span>
                         {% if book|cover_for %}
-                        {{ book_cover_img(book, alt=label ~ ': ' ~ book.title, class='book-cover-img w-full h-full object-cover sepia-[15%] group-hover:sepia-0 transition-soft') }}
+                        {{ book_cover_img(book, alt='', class='book-cover-img') }}
                         {% else %}
-                        <span class="w-full h-full flex items-center justify-center text-[6px] sm:text-[7px] p-1 opacity-40 italic text-center leading-tight">
-                            No Cover
-                        </span>
+                        <span class="cj-blank"><svg class="w-5 h-5"><use href="#cj-book"/></svg></span>
                         {% endif %}
                     </a>
                     {% endfor %}
@@ -124,9 +373,68 @@
         </div>
     </section>
 
+    {# Phones: agenda list of the days that have entries #}
+    <section class="cj-sheet px-4 py-2 sm:hidden" aria-label="{{ current_label }} agenda">
+        {% if ns.events %}
+        <ol class="cj-agenda">
+            {% for week in weeks %}
+            {% for cell in week %}
+            {% if cell.in_month and cell.events %}
+            <li>
+                <div class="cj-agenda-date {% if today and cell.date == today %}cj-agenda-date--today{% endif %}">
+                    <b class="font-serif-display">{{ cell.day }}</b>
+                    <span>{{ cell.date.strftime('%a') }}</span>
+                </div>
+                <div>
+                    {% for event in cell.events %}
+                    {% set book = event.book %}
+                    {% set label = 'Started' if event.kind == 'started' else 'Finished' %}
+                    <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="cj-entry">
+                        <span class="cj-book" aria-hidden="true">
+                            <span class="cj-badge cj-badge--{{ event.kind }}"><svg><use href="#{{ 'cj-open' if event.kind == 'started' else 'cj-check' }}"/></svg></span>
+                            {% if book|cover_for %}
+                            {{ book_cover_img(book, alt='', class='book-cover-img') }}
+                            {% else %}
+                            <span class="cj-blank"><svg class="w-5 h-5"><use href="#cj-book"/></svg></span>
+                            {% endif %}
+                        </span>
+                        <span class="min-w-0">
+                            <span class="cj-entry-kind cj-entry-kind--{{ event.kind }} block">{{ label }}</span>
+                            <span class="cj-entry-title block">{{ book.title }}</span>
+                            {% if book.authors %}<span class="cj-entry-author block">{{ book.authors }}</span>{% endif %}
+                        </span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </li>
+            {% endif %}
+            {% endfor %}
+            {% endfor %}
+        </ol>
+        {% else %}
+        <p class="text-center italic py-8" style="color: var(--cj-wood)">A quiet month on the shelves.</p>
+        {% endif %}
+    </section>
+
     {% else %}
-    <div class="text-center py-16 sm:py-20 paper-texture space-y-6">
-        <p class="italic opacity-50 text-base sm:text-lg">No dated reading journeys have been recorded yet.</p>
+    <div class="cj-sheet text-center py-14 sm:py-20 px-6 max-w-2xl mx-auto">
+        <svg viewBox="0 0 220 130" class="mx-auto mb-6 w-56 max-w-full" role="img" aria-label="An empty journal page with a ribbon bookmark">
+            <rect x="20" y="14" width="180" height="104" rx="4" fill="var(--vintage-cream, #efe3cf)" stroke="var(--wood, #5a3a22)" stroke-width="3"/>
+            <path d="M110 14v104" stroke="var(--wood, #5a3a22)" stroke-width="2"/>
+            <g stroke="var(--vintage-gold, #b8832f)" stroke-width="1.5" opacity=".6">
+                <path d="M34 40h62M34 58h62M34 76h62M34 94h62M124 40h62M124 58h62M124 76h62M124 94h62"/>
+            </g>
+            <path d="M150 14v40l9-7 9 7V14z" fill="var(--vintage-accent, #6f2a24)"/>
+        </svg>
+        <h3 class="text-2xl sm:text-3xl font-bold mb-3 text-vintage-ink">The journal is still blank</h3>
+        <p class="text-lg italic mb-8 max-w-md mx-auto" style="color: var(--cj-wood)">
+            When you add a book, the day you start it lands here, and the day you finish it gets its own mark.
+        </p>
+        <a href="{{ url_for('main.index') }}"
+            class="inline-flex items-center justify-center min-h-[44px] px-8 py-3 text-sm uppercase tracking-[0.2em] font-bold transition-soft"
+            style="background: var(--cj-ink); color: var(--cj-cream)">
+            Go to the library
+        </a>
     </div>
     {% endif %}
 </div>

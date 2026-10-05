@@ -38,6 +38,10 @@ class Book(db.Model):
     date_finished = db.Column(db.DateTime, nullable=True)
     personal_rating = db.Column(db.Float, nullable=True)
     personal_notes = db.Column(db.Text, nullable=True)
+    current_page = db.Column(db.Integer, nullable=True)
+    date_started = db.Column(db.DateTime, nullable=True)
+    format = db.Column(db.String(20), nullable=True)  # paper | ebook | audiobook
+    shelves = db.Column(db.String(200), nullable=True)  # comma-separated, like categories
 
     @property
     def cover_url(self):
@@ -72,4 +76,8 @@ class Book(db.Model):
             'date_finished': self.date_finished.strftime('%Y-%m-%d') if self.date_finished else None,
             'personal_rating': self.personal_rating,
             'personal_notes': self.personal_notes,
+            'current_page': self.current_page,
+            'date_started': self.date_started.strftime('%Y-%m-%d') if self.date_started else None,
+            'format': self.format,
+            'shelves': self.shelves,
         }

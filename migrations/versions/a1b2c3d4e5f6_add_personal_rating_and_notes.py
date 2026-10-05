@@ -15,9 +15,13 @@ depends_on = None
 
 
 def upgrade():
+    # Idempotent: the app's startup db.create_all() may already have added them.
+    existing = {c['name'] for c in sa.inspect(op.get_bind()).get_columns('book')}
     with op.batch_alter_table('book') as batch_op:
-        batch_op.add_column(sa.Column('personal_rating', sa.Float(), nullable=True))
-        batch_op.add_column(sa.Column('personal_notes', sa.Text(), nullable=True))
+        if 'personal_rating' not in existing:
+            batch_op.add_column(sa.Column('personal_rating', sa.Float(), nullable=True))
+        if 'personal_notes' not in existing:
+            batch_op.add_column(sa.Column('personal_notes', sa.Text(), nullable=True))
 
 
 def downgrade():
