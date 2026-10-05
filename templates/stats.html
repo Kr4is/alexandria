@@ -1,243 +1,347 @@
 {% extends 'base.html' %}
 {% from '_macros.html' import book_cover_img %}
 
-{% block content %}
-<div class="max-w-6xl mx-auto px-1 sm:px-0">
-    <!-- Header -->
-    <header class="mb-8 sm:mb-12 text-center">
-        <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-vintage-ink">Library Metrics</h2>
-        <div class="flex justify-center items-center gap-4 mb-6">
-            <div class="h-px w-12 bg-vintage-gold/30"></div>
-            <div class="w-2 h-2 rounded-full border border-vintage-gold/30"></div>
-            <div class="h-px w-12 bg-vintage-gold/30"></div>
+{# Month names for the year x month grid (books_by_year_month uses full names). #}
+{% set months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] %}
+
+{# Spine-style horizontal bars: label, count, bar width relative to the largest. #}
+{% macro spine_list(items, empty_text) %}
+{% if items %}
+{% set top = items[0][1] if items|length else 1 %}
+{% set spines = ['var(--wood, #5a3a22)', 'var(--vintage-accent, #6f2a24)', 'var(--moss, #4a5d3a)', 'var(--leather, #8a5a36)', 'var(--rust, #b4532a)', 'var(--wood-dark, #3b2415)'] %}
+<ol class="st-spines">
+    {% for name, count in items %}
+    <li>
+        <span class="st-spine-name" title="{{ name }}">{{ name }}</span>
+        <span class="st-spine-track" aria-hidden="true"><span class="st-spine-bar"
+                style="width: {{ (count / top * 100)|round(1) }}%; background: {{ spines[loop.index0 % spines|length] }};"></span></span>
+        <span class="st-spine-count">{{ count }}</span>
+    </li>
+    {% endfor %}
+</ol>
+{% else %}
+<p class="st-empty-inline">{{ empty_text }}</p>
+{% endif %}
+{% endmacro %}
+
+{% macro record_card(title, book, value, label, note='') %}
+<div class="st-card st-record">
+    <h4 class="st-eyebrow">{{ title }}</h4>
+    {% if book %}
+    <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="st-record-link">
+        <div class="st-record-cover">
+            {% if book|cover_for %}
+            {{ book_cover_img(book, alt='', class='w-full h-full object-cover') }}
+            {% else %}
+            <div class="st-record-nocover" aria-hidden="true">{{ book.title[:1] }}</div>
+            {% endif %}
         </div>
-        <p class="text-lg italic opacity-60">Quantifying the journey through pages and time.</p>
+        <p class="st-record-title">{{ book.title }}</p>
+        <p class="st-record-author">{{ book.authors or 'Unknown author' }}</p>
+    </a>
+    <p class="st-record-value"><strong>{{ value }}</strong> <span>{{ label }}</span></p>
+    {% if note %}<p class="st-record-note">{{ note }}</p>{% endif %}
+    {% else %}
+    <p class="st-empty-inline">Nothing to show yet.</p>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% block content %}
+<style>
+    .st-page {
+        --st-ink: var(--vintage-ink, #2a1d16);
+        --st-paper: var(--vintage-paper, #f8f0e2);
+        --st-cream: var(--vintage-cream, #efe3cf);
+        --st-gold: var(--vintage-gold, #b8832f);
+        --st-oxblood: var(--vintage-accent, #6f2a24);
+        --st-wood: var(--wood, #5a3a22);
+        --st-moss: var(--moss, #4a5d3a);
+        color: var(--st-ink);
+    }
+    .st-page h2, .st-page h3, .st-num, .st-record-value strong { font-family: 'Fraunces', Georgia, serif; }
+    .st-eyebrow { font-size: 0.75rem; letter-spacing: .14em; text-transform: uppercase; font-weight: 700; color: var(--st-wood); margin-bottom: .75rem; }
+    .st-card { background: var(--st-paper); border: 1px solid color-mix(in srgb, var(--st-gold) 55%, transparent); padding: 1.25rem; min-width: 0; }
+    .st-section { margin-bottom: 3.5rem; }
+    .st-section > header { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-bottom: 2px solid var(--st-wood); padding-bottom: .4rem; margin-bottom: 1.5rem; }
+    .st-section h3 { font-size: 1.6rem; font-weight: 700; font-style: italic; }
+    .st-section header p { font-size: .9rem; opacity: .8; }
+    .st-grid { display: grid; gap: 1.25rem; }
+    .st-empty-inline { font-style: italic; opacity: .75; font-size: .95rem; padding: 1rem 0; }
+
+    /* Year selector */
+    .st-years { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; margin-top: 1.5rem; }
+    .st-years a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding: 0 1rem; border: 1px solid var(--st-wood); font-size: .95rem; font-weight: 600; color: var(--st-wood); transition: background-color .2s, color .2s; }
+    .st-years a:hover { background: var(--st-cream); }
+    .st-years a[aria-current="page"] { background: var(--st-wood); color: var(--st-paper); }
+    .st-page a:focus-visible, .st-page summary:focus-visible { outline: 3px solid var(--st-oxblood); outline-offset: 2px; }
+
+    /* Headline numbers */
+    .st-headline { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border: 2px solid var(--st-wood); background: var(--st-paper); }
+    .st-headline > div { padding: 1.25rem 1rem; text-align: center; border: 1px solid color-mix(in srgb, var(--st-wood) 25%, transparent); min-width: 0; }
+    .st-num { display: block; font-size: 2.25rem; font-weight: 700; line-height: 1.1; }
+    .st-num small { font-size: .9rem; font-weight: 400; opacity: .75; }
+    .st-label { font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; font-weight: 700; margin-top: .35rem; display: block; color: var(--st-wood); }
+    .st-sub { font-size: .85rem; opacity: .8; display: block; margin-top: .15rem; }
+    @media (min-width: 900px) { .st-headline { grid-template-columns: repeat(5, minmax(0, 1fr)); } .st-num { font-size: 2.75rem; } }
+
+    /* Highlights strip */
+    .st-highlights { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 1.25rem; }
+    .st-highlights .st-card { text-align: center; }
+    .st-highlights .st-num { font-size: 1.6rem; color: var(--st-oxblood); }
+
+    /* Charts */
+    .st-chart { position: relative; height: 240px; width: 100%; min-width: 0; }
+    .st-chart-title { font-size: 1.05rem; font-weight: 700; margin-bottom: .25rem; }
+    .st-chart-note { font-size: .85rem; opacity: .8; margin-bottom: 1rem; }
+
+    /* Year x month register */
+    .st-register-wrap { overflow-x: auto; }
+    .st-register { border-collapse: separate; border-spacing: 3px; width: 100%; min-width: 440px; font-size: .85rem; }
+    .st-register th { font-weight: 600; font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--st-wood); text-align: center; padding: .15rem 0; }
+    .st-register th[scope="row"] { text-align: left; font-family: 'Fraunces', Georgia, serif; font-size: .95rem; letter-spacing: 0; padding-right: .5rem; }
+    .st-register td { text-align: center; height: 34px; min-width: 28px; font-weight: 600; }
+    .st-l0 { background: color-mix(in srgb, var(--st-wood) 8%, transparent); color: transparent; }
+    .st-l1 { background: #e3c98f; color: #2a1d16; }
+    .st-l2 { background: #c99a4e; color: #2a1d16; }
+    .st-l3 { background: #8a5a36; color: #fff; }
+    .st-l4 { background: #5a3a22; color: #fff; }
+
+    /* Spine lists */
+    .st-spines { list-style: none; padding: 0; margin: 0; display: grid; gap: .55rem; }
+    .st-spines li { display: grid; grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr) 2rem; gap: .6rem; align-items: center; font-size: .95rem; }
+    .st-spine-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .st-spine-track { display: block; height: 14px; background: color-mix(in srgb, var(--st-wood) 8%, transparent); }
+    .st-spine-bar { display: block; height: 100%; border-right: 3px solid var(--st-gold); }
+    .st-spine-count { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
+
+    /* Hall of fame */
+    .st-records { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (min-width: 900px) { .st-records { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+    .st-record { display: flex; flex-direction: column; text-align: center; }
+    .st-record-link { display: block; color: inherit; text-decoration: none; min-height: 44px; flex: 1; }
+    .st-record-cover { width: 80px; height: 116px; margin: 0 auto .75rem; box-shadow: 3px 4px 0 color-mix(in srgb, var(--st-wood) 35%, transparent); background: var(--st-cream); overflow: hidden; }
+    .st-record-nocover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', Georgia, serif; font-size: 2rem; color: var(--st-wood); }
+    .st-record-title { font-weight: 700; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .st-record-author { font-size: .9rem; font-style: italic; opacity: .8; margin: .15rem 0 .5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .st-record-link:hover .st-record-title { text-decoration: underline; }
+    .st-record-value { border-top: 1px solid color-mix(in srgb, var(--st-wood) 25%, transparent); padding-top: .6rem; margin-top: auto; }
+    .st-record-value strong { font-size: 1.5rem; color: var(--st-oxblood); }
+    .st-record-value span { font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; }
+    .st-record-note { font-size: .8rem; opacity: .8; margin-top: .2rem; }
+
+    /* Curiosities + empty state */
+    .st-details summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: .75rem; font-family: 'Fraunces', Georgia, serif; font-size: 1.25rem; font-style: italic; font-weight: 700; border-bottom: 2px solid var(--st-wood); list-style: none; }
+    .st-details summary::-webkit-details-marker { display: none; }
+    .st-details summary::before { content: '+'; display: inline-flex; align-items: center; justify-content: center; width: 1.5rem; height: 1.5rem; border: 1px solid var(--st-wood); font-style: normal; font-size: 1rem; }
+    .st-details[open] summary::before { content: '\2212'; }
+    .st-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; margin-top: 1rem; }
+    .st-tiles > div { background: var(--st-paper); border: 1px dashed color-mix(in srgb, var(--st-wood) 45%, transparent); padding: 1rem; text-align: center; }
+    .st-tiles strong { display: block; font-family: 'Fraunces', Georgia, serif; font-size: 1.35rem; }
+    .st-tiles span { font-size: .8rem; opacity: .85; }
+    .st-empty { text-align: center; padding: 3rem 1rem; }
+    .st-empty p { max-width: 36rem; margin: 0 auto .75rem; }
+    .st-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 1.5rem; border: 1px solid var(--st-wood); font-weight: 700; font-size: .85rem; letter-spacing: .12em; text-transform: uppercase; color: var(--st-wood); transition: background-color .2s, color .2s; }
+    .st-btn:hover { background: var(--st-wood); color: var(--st-paper); }
+    @media (prefers-reduced-motion: reduce) { .st-page * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="st-page max-w-6xl mx-auto px-1 sm:px-0">
+    <!-- Header + year selector -->
+    <header class="mb-10 text-center">
+        <p class="st-eyebrow">The reading ledger</p>
+        <h2 class="text-3xl sm:text-5xl font-bold">
+            {% if selected_year %}{{ selected_year }} in books{% else %}A life in books{% endif %}
+        </h2>
+        <p class="text-lg italic mt-3 opacity-80">
+            {% if selected_year %}Everything finished in {{ selected_year }}.{% else %}Every book finished, counted and shelved.{% endif %}
+        </p>
+        {% if available_years %}
+        <nav class="st-years" aria-label="Choose a year">
+            <a href="{{ url_for('main.stats') }}" {% if not selected_year %}aria-current="page"{% endif %}>All time</a>
+            {% for y in available_years %}
+            <a href="{{ url_for('main.stats', year=y) }}" {% if selected_year == y %}aria-current="page"{% endif %}>{{ y }}</a>
+            {% endfor %}
+        </nav>
+        {% endif %}
     </header>
 
-    <!-- 1. Overview Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-12 sm:mb-16">
-        <div class="p-4 sm:p-6 paper-texture vintage-border text-center min-h-[100px] flex flex-col justify-center">
-            <h3 class="text-[9px] sm:text-[10px] uppercase tracking-widest opacity-40 mb-1 sm:mb-2 font-bold">Volumes</h3>
-            <p class="text-2xl sm:text-4xl font-serif-display font-bold text-vintage-ink">{{ total_books }}</p>
-        </div>
-        <div class="p-4 sm:p-6 paper-texture vintage-border text-center min-h-[100px] flex flex-col justify-center">
-            <h3 class="text-[9px] sm:text-[10px] uppercase tracking-widest opacity-40 mb-1 sm:mb-2 font-bold">Total Pages</h3>
-            <p class="text-2xl sm:text-4xl font-serif-display font-bold text-vintage-accent break-all sm:break-normal">{{ "{:,}".format(total_pages) }}</p>
-        </div>
-        <div class="p-4 sm:p-6 paper-texture vintage-border text-center min-h-[100px] flex flex-col justify-center">
-            <h3 class="text-[9px] sm:text-[10px] uppercase tracking-widest opacity-40 mb-1 sm:mb-2 font-bold">Reading Time</h3>
-            <p class="text-2xl sm:text-4xl font-serif-display font-bold text-vintage-ink">{{ "{:,}".format(reading_hours) }} <span
-                    class="text-xs sm:text-sm font-normal opacity-50">hrs</span></p>
-        </div>
-        <div class="p-4 sm:p-6 paper-texture vintage-border text-center min-h-[100px] flex flex-col justify-center">
-            <h3 class="text-[9px] sm:text-[10px] uppercase tracking-widest opacity-40 mb-1 sm:mb-2 font-bold">Completion</h3>
-            <p class="text-2xl sm:text-4xl font-serif-display font-bold text-vintage-ink">{{ completion_rate }}<span
-                    class="text-lg sm:text-2xl opacity-50">%</span></p>
-        </div>
-    </div>
-
-    <!-- 2. Volume Analysis -->
-    <section class="mb-20">
-        <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-2">
-            <h3 class="text-2xl font-bold italic text-vintage-ink">Volume Analysis</h3>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Chart -->
-            <div class="lg:col-span-2 paper-texture vintage-border p-4 sm:p-6 min-w-0 overflow-hidden">
-                <h4 class="text-xs uppercase tracking-widest opacity-40 mb-4 font-bold text-center">Pages per Month</h4>
-                {% if pages_history_data %}
-                <div class="h-[220px] sm:h-[250px] w-full min-w-0 relative">
-                    <canvas id="pagesHistoryChart"></canvas>
-                </div>
-                {% else %}
-                <p class="italic opacity-40 text-center text-sm py-8">No reading history recorded yet.</p>
-                {% endif %}
-            </div>
-            <!-- Stats -->
-            <div class="flex flex-col gap-6">
-                <div
-                    class="flex-1 paper-texture vintage-border p-6 flex flex-col justify-center items-center text-center">
-                    <h4 class="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Monthly Average</h4>
-                    <p class="text-4xl font-bold text-vintage-gold">{{ "{:,}".format(avg_pages_month) }}</p>
-                    <span class="text-xs italic opacity-40">pages / month</span>
-                </div>
-                <div
-                    class="flex-1 paper-texture vintage-border p-6 flex flex-col justify-center items-center text-center">
-                    <h4 class="text-[10px] uppercase tracking-widest opacity-40 mb-2 font-bold">Yearly Projection</h4>
-                    <p class="text-4xl font-bold text-vintage-accent">{{ "{:,}".format(avg_pages_year) }}</p>
-                    <span class="text-xs italic opacity-40">pages / year</span>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 3. Hall of Fame (Records) -->
-    <section class="mb-20">
-        <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-2">
-            <h3 class="text-2xl font-bold italic text-vintage-ink">Hall of Fame</h3>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {% macro record_card(title, book, value, label) %}
-            <div
-                class="group relative paper-texture vintage-border p-6 flex flex-col h-full hover:-translate-y-1 transition-soft">
-                <h4
-                    class="text-[10px] uppercase tracking-widest opacity-40 mb-4 font-bold border-b border-black/5 pb-2">
-                    {{ title }}</h4>
-                {% if book %}
-                <div class="flex-grow flex flex-col text-center">
-                    <div class="mb-4 mx-auto w-20 h-28 shadow-md rotate-2 group-hover:rotate-0 transition-soft">
-                        {% if book|cover_for %}
-                        {{ book_cover_img(book, alt='', class='book-cover-img w-full h-full object-cover grayscale group-hover:grayscale-0 transition-soft') }}
-                        {% else %}
-                        <div
-                            class="w-full h-full bg-vintage-paper border border-black/10 flex items-center justify-center text-[8px]">
-                            No Cover</div>
-                        {% endif %}
-                    </div>
-                    <p class="font-bold text-sm leading-tight mb-1 line-clamp-2">{{ book.title }}</p>
-                    <p class="text-xs italic opacity-50 mb-3 line-clamp-1">{{ book.authors }}</p>
-                    <div class="mt-auto pt-3 border-t border-black/5">
-                        <span class="text-xl font-bold text-vintage-accent">{{ value }}</span>
-                        <span class="text-[10px] uppercase tracking-wider opacity-60 ml-1">{{ label }}</span>
-                    </div>
-                </div>
-                {% else %}
-                <div class="flex-grow flex items-center justify-center italic opacity-30 text-sm">No Record Yet</div>
-                {% endif %}
-            </div>
-            {% endmacro %}
-
-            {{ record_card("Longest Journey", longest_book, longest_book.page_count, "pages") }}
-            {{ record_card("Brief Encounter", shortest_book, shortest_book.page_count, "pages") }}
-            {{ record_card("Fastest Read", fastest_book, fastest_days, "days") }}
-            {{ record_card("Slowest Burn", slowest_book, slowest_days, "days") }}
-        </div>
-    </section>
-
-    <!-- 4. Trends & Speed -->
-    <section class="mb-20">
-        <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-2">
-            <h3 class="text-2xl font-bold italic text-vintage-ink">Habits & Trends</h3>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <!-- Velocity -->
-            <div class="paper-texture vintage-border p-8 flex flex-col justify-center items-center text-center">
-                <div
-                    class="w-16 h-16 rounded-full border-2 border-vintage-gold flex items-center justify-center mb-4 text-vintage-ink">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                </div>
-                <h4 class="text-xs uppercase tracking-widest opacity-40 mb-2 font-bold">Reading Velocity</h4>
-                <p class="text-5xl font-bold text-vintage-ink mb-1">{{ avg_days }}</p>
-                <span class="text-sm italic opacity-60">avg. days per book</span>
-            </div>
-
-            <!-- Seasons Chart -->
-            <div class="paper-texture vintage-border p-4 sm:p-6 relative min-w-0 overflow-hidden">
-                <h4 class="text-xs uppercase tracking-widest opacity-40 mb-4 font-bold text-center">Seasonal Preference
-                </h4>
-                {% if seasons.values()|list|sum > 0 %}
-                <div class="h-[200px] w-full min-w-0 flex justify-center">
-                    <canvas id="seasonsChart"></canvas>
-                </div>
-                {% else %}
-                <p class="italic opacity-40 text-center text-sm py-8">No seasonal data yet.</p>
-                {% endif %}
-            </div>
-
-            <!-- Categories Chart -->
-            <div class="paper-texture vintage-border p-4 sm:p-6 relative min-w-0 overflow-hidden">
-                <h4 class="text-xs uppercase tracking-widest opacity-40 mb-4 font-bold text-center">Top Categories</h4>
-                {% if cat_data %}
-                <div class="h-[200px] w-full min-w-0 flex justify-center">
-                    <canvas id="categoriesChart"></canvas>
-                </div>
-                {% else %}
-                <p class="italic opacity-40 text-center text-sm py-8">No category data yet.</p>
-                {% endif %}
-            </div>
-        </div>
-    </section>
-
-    <!-- 5. Curiosities -->
-    <section class="mb-20">
-        <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-2">
-            <h3 class="text-2xl font-bold italic text-vintage-ink">Curiosities</h3>
-        </div>
-        <div class="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-4">
-            {% macro stat_tile(title, value, unit) %}
-            <div
-                class="bg-vintage-paper border border-black/5 p-3 sm:p-4 text-center hover:bg-vintage-cream transition-colors min-h-[88px] flex flex-col justify-center">
-                <div class="text-[8px] sm:text-[9px] uppercase tracking-widest opacity-50 mb-1">{{ title }}</div>
-                <div class="font-bold text-lg sm:text-xl text-vintage-ink break-words">{{ value }}</div>
-                <div class="text-[8px] sm:text-[9px] italic opacity-40">{{ unit }}</div>
-            </div>
-            {% endmacro %}
-            {{ stat_tile("The Tower", tower_height ~ " m", "stack height") }}
-            {{ stat_tile("Ink Consumed", ink_litres ~ " L", "eye travel fluid") }}
-            {{ stat_tile("The Marathon", distance_km ~ " km", "eye travel dist.") }}
-            {{ stat_tile("Word Count", words_million ~ " M", "words read") }}
-            {{ stat_tile("Time Machine", most_read_decade, "favorite era") }}
-            {{ stat_tile("Golden Era", oldest_book.published_year if oldest_book else '-', "oldest book") }}
-            {{ stat_tile("Polyglot", num_languages, "languages") }}
-            {{ stat_tile("Solo vs Co-op", solo_ratio ~ "%", "single author") }}
-            {{ stat_tile("Critic's Choice", avg_public_rating, "avg public rating") }}
-            {{ stat_tile("Favorite Day", favorite_day, "to finish books") }}
-        </div>
-    </section>
-
-
-    <!-- 6. Monthly Ledger -->
-    <section>
-        <div class="flex items-baseline justify-between mb-8 border-b border-black/5 pb-2">
-            <h3 class="text-2xl font-bold italic text-vintage-ink opacity-80">The Monthly Ledger</h3>
-        </div>
-
-        {% if books_by_year_month %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {% for year, months in books_by_year_month.items()|sort(reverse=True) %}
-            <div class="paper-texture vintage-border p-6">
-                <h4 class="text-xl font-serif-display font-bold mb-4 text-vintage-accent">{{ year }}</h4>
-                <div class="space-y-3">
-                    {% for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
-                    'September', 'October', 'November', 'December'] %}
-                    {% if month in months %}
-                    <div class="flex justify-between items-center py-2 border-b border-dashed border-black/10 text-sm">
-                        <span class="italic opacity-70">{{ month }}</span>
-                        <div class="flex items-center gap-2">
-                            <span class="font-bold text-vintage-ink">{{ months[month] }}</span>
-                            <span class="text-[9px] uppercase tracking-widest opacity-40">vols</span>
-                        </div>
-                    </div>
-                    {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-            {% endfor %}
-        </div>
+    {% if total_books == 0 %}
+    <section class="st-card st-empty" aria-live="polite">
+        {% if selected_year %}
+        <h3 class="text-2xl font-bold italic mb-3">No books finished in {{ selected_year }}</h3>
+        <p>Nothing has a finish date in this year. Try another year{% if available_years %} from the list above{% endif %}, or look at your whole library.</p>
+        <a class="st-btn mt-4" href="{{ url_for('main.stats') }}">Show all time</a>
         {% else %}
-        <p class="text-center italic opacity-40 py-12">No records found in the ledger.</p>
+        <h3 class="text-2xl font-bold italic mb-3">Your ledger is empty</h3>
+        <p>Metrics appear once you mark a book as finished. Add one to start counting.</p>
+        <a class="st-btn mt-4" href="{{ url_for('books.search') }}">Find a book</a>
         {% endif %}
     </section>
+    {% else %}
+
+    <!-- Headline numbers -->
+    <section class="st-section" aria-labelledby="st-h-numbers">
+        <h3 id="st-h-numbers" class="sr-only">Headline numbers</h3>
+        <div class="st-headline">
+            <div><span class="st-num">{{ "{:,}".format(total_books) }}</span><span class="st-label">Books</span></div>
+            <div><span class="st-num">{{ "{:,}".format(total_pages) }}</span><span class="st-label">Pages</span></div>
+            <div><span class="st-num">{{ "{:,}".format(reading_hours) }} <small>hrs</small></span><span class="st-label">Reading time</span><span class="st-sub">estimate, ~2 min/page</span></div>
+            <div><span class="st-num">{{ avg_pages_per_day }} <small>/day</small></span><span class="st-label">Average pace</span><span class="st-sub">pages per day</span></div>
+            <div class="col-span-2 lg:col-span-1"><span class="st-num">{{ completion_rate }}<small>%</small></span><span class="st-label">Completion</span><span class="st-sub">of books started{% if selected_year %}, all time{% endif %}</span></div>
+        </div>
+        <div class="st-highlights">
+            <div class="st-card">
+                <h4 class="st-eyebrow">Most active month</h4>
+                {% if most_active_month %}
+                <span class="st-num">{{ most_active_month.label }}</span>
+                <span class="st-sub">{{ most_active_month.count }} book{{ '' if most_active_month.count == 1 else 's' }} finished</span>
+                {% else %}<p class="st-empty-inline">No finish dates yet.</p>{% endif %}
+            </div>
+            <div class="st-card">
+                <h4 class="st-eyebrow">Longest streak</h4>
+                {% if longest_streak %}
+                <span class="st-num">{{ longest_streak.length }} month{{ '' if longest_streak.length == 1 else 's' }}</span>
+                <span class="st-sub">in a row, {{ longest_streak.start }}{% if longest_streak.length > 1 %} to {{ longest_streak.end }}{% endif %}</span>
+                {% else %}<p class="st-empty-inline">No finish dates yet.</p>{% endif %}
+            </div>
+            <div class="st-card">
+                <h4 class="st-eyebrow">Average per book</h4>
+                <span class="st-num">{{ "{:,}".format(avg_pages) }} pages</span>
+                <span class="st-sub">{% if avg_days %}about {{ avg_days }} day{{ '' if avg_days == 1 else 's' }} each{% else %}reading time unknown{% endif %}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rhythm -->
+    <section class="st-section" aria-labelledby="st-h-rhythm">
+        <header><h3 id="st-h-rhythm">Reading rhythm</h3><p>When the books were finished.</p></header>
+        <div class="st-grid lg:grid-cols-2">
+            <div class="st-card">
+                <h4 class="st-chart-title">Pages per month</h4>
+                {% if pages_history_data %}
+                <div class="st-chart"><canvas id="pagesHistoryChart" role="img"
+                        aria-label="Bar chart of pages read per month, {{ pages_history_labels|first }} to {{ pages_history_labels|last }}. Full data follows in a table."></canvas></div>
+                <table class="sr-only"><caption>Pages read per month</caption>
+                    <thead><tr><th scope="col">Month</th><th scope="col">Pages</th></tr></thead>
+                    <tbody>{% for l in pages_history_labels %}<tr><th scope="row">{{ l }}</th><td>{{ pages_history_data[loop.index0] }}</td></tr>{% endfor %}</tbody></table>
+                {% else %}
+                <p class="st-empty-inline">No page counts recorded for these books, so there is no pace to chart.</p>
+                {% endif %}
+            </div>
+            <div class="st-card">
+                <h4 class="st-chart-title">Books per year</h4>
+                <p class="st-chart-note">All time{% if selected_year %}; {{ selected_year }} is highlighted{% endif %}.</p>
+                {% if books_per_year %}
+                <div class="st-chart"><canvas id="booksYearChart" role="img"
+                        aria-label="Bar chart of books finished per year. Full data follows in a table."></canvas></div>
+                <table class="sr-only"><caption>Books finished per year</caption>
+                    <thead><tr><th scope="col">Year</th><th scope="col">Books</th></tr></thead>
+                    <tbody>{% for y, n in books_per_year %}<tr><th scope="row">{{ y }}</th><td>{{ n }}</td></tr>{% endfor %}</tbody></table>
+                {% else %}
+                <p class="st-empty-inline">No finished books yet.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="st-card mt-5">
+            <h4 class="st-chart-title">Books finished, month by month</h4>
+            <p class="st-chart-note">Darker means more books that month.</p>
+            <div class="st-register-wrap" tabindex="0" role="region" aria-label="Books finished per month, by year">
+                <table class="st-register">
+                    <thead><tr><th scope="col"><span class="sr-only">Year</span></th>{% for m in months %}<th scope="col"><abbr title="{{ m }}">{{ m[:3] }}</abbr></th>{% endfor %}</tr></thead>
+                    <tbody>
+                        {% for year, counts in books_by_year_month.items()|sort(reverse=True) %}
+                        <tr><th scope="row">{{ year }}</th>
+                            {% for m in months %}{% set n = counts.get(m, 0) %}
+                            <td class="st-l{{ 0 if n == 0 else (1 if n == 1 else (2 if n == 2 else (3 if n <= 4 else 4))) }}">{{ n }}</td>{% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Taste -->
+    <section class="st-section" aria-labelledby="st-h-taste">
+        <header><h3 id="st-h-taste">Your taste</h3><p>What you read and how you rated it.</p></header>
+        <div class="st-grid lg:grid-cols-2">
+            <div class="st-card">
+                <h4 class="st-chart-title">Your ratings vs. the public</h4>
+                <p class="st-chart-note">
+                    {% if avg_my_rating is not none %}Your average: {{ avg_my_rating }}{% else %}You have not rated these books{% endif %}
+                    {% if avg_public_rating is not none %} &middot; public average: {{ avg_public_rating }}{% endif %}
+                </p>
+                {% if my_rating_dist|sum or public_rating_dist|sum %}
+                <div class="st-chart"><canvas id="ratingChart" role="img"
+                        aria-label="Grouped bar chart of how many books fall in each 1 to 5 star bucket, your rating against the public average. Full data follows in a table."></canvas></div>
+                <table class="sr-only"><caption>Books per star rating</caption>
+                    <thead><tr><th scope="col">Stars</th><th scope="col">Your ratings</th><th scope="col">Public average</th></tr></thead>
+                    <tbody>{% for l in rating_labels %}<tr><th scope="row">{{ l }}</th><td>{{ my_rating_dist[loop.index0] }}</td><td>{{ public_rating_dist[loop.index0] }}</td></tr>{% endfor %}</tbody></table>
+                {% else %}
+                <p class="st-empty-inline">Rate a finished book to see how your taste compares.</p>
+                {% endif %}
+            </div>
+            <div class="st-card">
+                <h4 class="st-chart-title">Publication decades</h4>
+                <p class="st-chart-note">When the books you finished were first published.</p>
+                {% if decades %}
+                <div class="st-chart"><canvas id="decadesChart" role="img"
+                        aria-label="Bar chart of finished books by publication decade, {{ decades|first|first }} to {{ decades|last|first }}. Full data follows in a table."></canvas></div>
+                <table class="sr-only"><caption>Books per publication decade</caption>
+                    <thead><tr><th scope="col">Decade</th><th scope="col">Books</th></tr></thead>
+                    <tbody>{% for d, n in decades %}<tr><th scope="row">{{ d }}</th><td>{{ n }}</td></tr>{% endfor %}</tbody></table>
+                {% else %}
+                <p class="st-empty-inline">No publication years recorded for these books.</p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="st-grid md:grid-cols-3 mt-5">
+            <div class="st-card"><h4 class="st-chart-title">Top authors</h4>{{ spine_list(top_authors, 'No authors recorded.') }}</div>
+            <div class="st-card"><h4 class="st-chart-title">Genres</h4>{{ spine_list(top_categories, 'No categories recorded.') }}</div>
+            <div class="st-card"><h4 class="st-chart-title">Languages</h4>{{ spine_list(languages, 'No languages recorded.') }}</div>
+        </div>
+    </section>
+
+    <!-- Hall of Fame -->
+    <section class="st-section" aria-labelledby="st-h-fame">
+        <header><h3 id="st-h-fame">Hall of Fame</h3><p>Reading time counts from the day you started (or added) a book.</p></header>
+        <div class="st-grid st-records">
+            {{ record_card("Longest journey", longest_book, "{:,}".format(longest_book.page_count) if longest_book else '', "pages") }}
+            {{ record_card("Brief encounter", shortest_book, "{:,}".format(shortest_book.page_count) if shortest_book else '', "pages") }}
+            {{ record_card("Fastest read", fastest_book, fastest_days, "day" if fastest_days == 1 else "days") }}
+            {{ record_card("Slowest burn", slowest_book, slowest_days, "day" if slowest_days == 1 else "days") }}
+            {{ record_card("Your highest rated", highest_rated_book, highest_rated_book.personal_rating if highest_rated_book else '', "of 5") }}
+            {{ record_card("Biggest disagreement", biggest_gap_book, ('%+.1f' % biggest_gap) if biggest_gap_book else '', "vs public", ('You: %s, public: %s' % (biggest_gap_book.personal_rating, biggest_gap_book.average_rating)) if biggest_gap_book else '') }}
+        </div>
+    </section>
+
+    <!-- Curiosities -->
+    <details class="st-details st-section">
+        <summary>Curiosities</summary>
+        <p class="st-chart-note mt-3">Rough, playful estimates based on page count only. Do not quote them.</p>
+        <div class="st-tiles">
+            <div><strong>{{ tower_height }} m</strong><span>height of your stack of books</span></div>
+            <div><strong>{{ ink_litres }} L</strong><span>ink, roughly</span></div>
+            <div><strong>{{ distance_km }} km</strong><span>distance your eyes travelled</span></div>
+            <div><strong>{{ words_million }} M</strong><span>words, at ~250 per page</span></div>
+        </div>
+    </details>
+    {% endif %}
 
     <!-- Export -->
-    <section class="mt-16 sm:mt-24 pt-10 border-t border-black/5 text-center space-y-4">
-        <h3 class="text-[10px] uppercase tracking-[0.3em] font-bold opacity-30">Export Collection</h3>
-        <p class="text-sm italic opacity-40">Download a full copy of your library for safekeeping or analysis.</p>
+    <section class="mt-16 pt-10 border-t border-black/10 text-center space-y-4">
+        <h3 class="st-eyebrow" style="margin-bottom:0">Export collection</h3>
+        <p class="text-sm italic opacity-80">Download a full copy of your library for safekeeping or analysis.</p>
         <div class="flex flex-col sm:flex-row justify-center gap-3">
-            <a href="{{ url_for('main.export', fmt='csv') }}"
-                class="inline-flex min-h-[44px] items-center justify-center gap-2 px-8 py-3 border border-vintage-ink/20 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-vintage-ink hover:text-vintage-cream transition-soft">
-                <svg class="w-4 h-4 opacity-60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <a href="{{ url_for('main.export', fmt='csv') }}" class="st-btn gap-2">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 Download CSV
             </a>
-            <a href="{{ url_for('main.export', fmt='json') }}"
-                class="inline-flex min-h-[44px] items-center justify-center gap-2 px-8 py-3 border border-vintage-ink/20 text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-vintage-ink hover:text-vintage-cream transition-soft">
-                <svg class="w-4 h-4 opacity-60 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <a href="{{ url_for('main.export', fmt='json') }}" class="st-btn gap-2">
+                <svg class="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 Download JSON
@@ -245,94 +349,58 @@
         </div>
     </section>
 </div>
+{% endblock %}
 
+{% block scripts %}
+{% if total_books %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    Chart.defaults.font.family = "'EB Garamond', serif";
-    Chart.defaults.color = 'rgba(26, 22, 20, 0.6)';
+    (function () {
+        if (typeof Chart === 'undefined') return; // data tables above remain available
+        var C = { ink: '#2a1d16', gold: '#b8832f', oxblood: '#6f2a24', moss: '#4a5d3a', wood: '#5a3a22', leather: '#8a5a36' };
+        Chart.defaults.font.family = "'EB Garamond', serif";
+        Chart.defaults.font.size = 13;
+        Chart.defaults.color = C.ink;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) Chart.defaults.animation = false;
 
-    // Pages History Chart
-    if (document.getElementById('pagesHistoryChart')) {
-    const histCtx = document.getElementById('pagesHistoryChart').getContext('2d');
-    new Chart(histCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ pages_history_labels| tojson }},
-        datasets: [{
-            label: 'Pages Read',
-            data: {{ pages_history_data| tojson }},
-        backgroundColor: 'rgba(181, 141, 74, 0.6)',
-        borderColor: '#b58d4a',
-        borderWidth: 1,
-        barThickness: 20
-            }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
-            x: { grid: { display: false } }
+        function bar(id, labels, datasets, extra) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            new Chart(el.getContext('2d'), {
+                type: 'bar',
+                data: { labels: labels, datasets: datasets },
+                options: Object.assign({
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: datasets.length > 1 } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(90,58,34,0.12)' } },
+                        x: { grid: { display: false } }
+                    }
+                }, extra || {})
+            });
         }
-        }
-    });
-    } // end pagesHistoryChart guard
 
-    // Seasons Chart
-    if (document.getElementById('seasonsChart')) {
-    const seasonsCtx = document.getElementById('seasonsChart').getContext('2d');
-    const seasonData = {{ seasons| tojson }};
-    new Chart(seasonsCtx, {
-        type: 'polarArea',
-        data: {
-            labels: Object.keys(seasonData),
-            datasets: [{
-                data: Object.values(seasonData),
-                backgroundColor: [
-                    'rgba(45, 74, 62, 0.7)',  // Winter
-                    'rgba(181, 141, 74, 0.7)', // Spring
-                    'rgba(212, 197, 176, 0.9)', // Summer
-                    'rgba(26, 22, 20, 0.7)'    // Autumn
-                ],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }
-            },
-            scales: { r: { ticks: { display: false } } }
-        }
-    });
-    } // end seasonsChart guard
+        bar('pagesHistoryChart', {{ pages_history_labels | tojson }},
+            [{ label: 'Pages read', data: {{ pages_history_data | tojson }}, backgroundColor: C.gold, maxBarThickness: 28 }]);
 
-    // Categories Chart
-    if (document.getElementById('categoriesChart')) {
-    const catCtx = document.getElementById('categoriesChart').getContext('2d');
-    new Chart(catCtx, {
-        type: 'doughnut',
-        data: {
-            labels: {{ cat_labels| tojson }},
-        datasets: [{
-            data: {{ cat_data| tojson }},
-        backgroundColor: [
-            '#2d4a3e', '#b58d4a', '#1a1614', '#8c7b75', '#d4c5b0', '#5c524b'
-        ],
-        borderWidth: 0
-            }]
-        },
-        options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } }
-        },
-        cutout: '60%'
-    }
-    });
-    } // end categoriesChart guard
+        var years = {{ books_per_year | map('first') | list | tojson }};
+        var selected = {{ (selected_year or '') | string | tojson }};
+        bar('booksYearChart', years,
+            [{ label: 'Books finished', data: {{ books_per_year | map('last') | list | tojson }},
+               backgroundColor: years.map(function (y) { return !selected || y === selected ? C.leather : 'rgba(138,90,54,0.35)'; }),
+               maxBarThickness: 48 }]);
+
+        bar('ratingChart', {{ rating_labels | tojson }}, [
+            { label: 'Your ratings', data: {{ my_rating_dist | tojson }}, backgroundColor: C.oxblood },
+            { label: 'Public average', data: {{ public_rating_dist | tojson }}, backgroundColor: C.gold }
+        ], { scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: 'rgba(90,58,34,0.12)' } },
+            x: { grid: { display: false }, title: { display: true, text: 'Stars' } } } });
+
+        bar('decadesChart', {{ decades | map('first') | list | tojson }},
+            [{ label: 'Books', data: {{ decades | map('last') | list | tojson }}, backgroundColor: C.moss, maxBarThickness: 40 }]);
+    })();
 </script>
+{% endif %}
 {% endblock %}
