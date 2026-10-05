@@ -3,6 +3,7 @@ import io
 import json
 
 from flask import Blueprint, Response, redirect, render_template, request, url_for
+from flask_login import current_user
 
 from alexandria.models import Book
 from alexandria.services.books import (
@@ -15,6 +16,9 @@ from alexandria.services.calendar import build_calendar_context, get_active_mont
 from alexandria.services.stats import build_stats_context
 
 bp = Blueprint('main', __name__)
+
+# Personal fields only the librarian sees in exports.
+PRIVATE_EXPORT_FIELDS = ('personal_notes', 'shelves', 'current_page')
 
 
 @bp.route('/')
@@ -129,6 +133,10 @@ def export(fmt: str):
     """Export the full book collection as CSV or JSON."""
     books = Book.query.order_by(Book.date_added.desc()).all()
     data = [b.to_dict() for b in books]
+    if not current_user.is_authenticated:
+        for row in data:
+            for key in PRIVATE_EXPORT_FIELDS:
+                row[key] = None
 
     if fmt == 'json':
         payload = json.dumps(data, ensure_ascii=False, indent=2)

@@ -12,6 +12,8 @@ services:
       - GOOGLE_BOOKS_API_KEY=${GOOGLE_BOOKS_API_KEY}
       - GOOGLE_BOOKS_CACHE_TTL_SECONDS=${GOOGLE_BOOKS_CACHE_TTL_SECONDS}
       - REFRESH_LIBRARY_METADATA_ON_STARTUP=${REFRESH_LIBRARY_METADATA_ON_STARTUP}
+      - READING_API_TOKEN=${READING_API_TOKEN:-}
+      - FLASK_ENV=${FLASK_ENV:-}
     volumes:
       - ./instance:/app/instance
     restart: unless-stopped

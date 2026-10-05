@@ -319,3 +319,10 @@ def test_migrations_run_on_database_already_created_by_create_all(app):
     with app.app_context():
         upgrade()
         assert Book.query.count() == 0
+
+
+def test_export_hides_private_fields_from_anonymous(client, auth_client, make_book):
+    make_book(title='Secret', personal_notes='my private note')
+    anon = client.get('/export.json').get_json()[0]
+    assert anon['personal_notes'] is None
+    assert auth_client.get('/export.json').get_json()[0]['personal_notes'] == 'my private note'

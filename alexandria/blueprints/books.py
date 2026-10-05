@@ -11,7 +11,7 @@ bp = Blueprint('books', __name__)
 @bp.route('/search')
 @login_required
 def search():
-    query = request.args.get('q')
+    query = (request.args.get('q') or '').strip()
     outcome = search_books(query) if query else SearchOutcome([])
     return render_template(
         'search.html',
