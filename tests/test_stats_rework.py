@@ -80,7 +80,8 @@ class TestVelocity:
         assert S.reading_days(b) == 3
 
     def test_negative_or_missing_dates_are_unknown(self):
-        assert S.reading_days(SimpleNamespace(date_added=datetime(2025, 2, 1), date_finished=datetime(2025, 1, 1))) is None
+        book = SimpleNamespace(date_added=datetime(2025, 2, 1), date_finished=datetime(2025, 1, 1))
+        assert S.reading_days(book) is None
         assert S.reading_days(SimpleNamespace(date_added=None, date_finished=datetime(2025, 1, 1))) is None
 
     def test_naive_and_aware_mix(self):

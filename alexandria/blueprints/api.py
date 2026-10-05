@@ -264,7 +264,7 @@ def stats():
         'pages_history': {'labels': ctx.pages_history_labels, 'data': ctx.pages_history_data},
         'avg_days': ctx.avg_days,
         'completion_rate': ctx.completion_rate,
-        'seasons': ctx.seasons,
+        'avg_pages_per_day': ctx.avg_pages_per_day,
     })
 
 
@@ -344,7 +344,7 @@ def _openapi_schemas() -> dict:
         'ReadingStats': {'type': 'object', 'properties': stats_props},
         'Stats': {'type': 'object', 'properties': {
             'year': _INT_NULL, **stats_props, 'avg_days': _INT, 'completion_rate': _INT,
-            'seasons': {'type': 'object', 'additionalProperties': _INT}}},
+            'avg_pages_per_day': {'type': 'number'}}},
         'ReadingActivity': {'type': 'object', 'properties': {
             'period': {'type': 'object', 'properties': {'since': _DATE_NULL, 'until': _DATE_NULL}},
             'books_finished': {'type': 'array', 'items': _ref('Book')},
@@ -376,7 +376,8 @@ def _openapi_paths() -> dict:
             _json_response('A page of books.', _ref('BookList')), bad)},
         '/api/books/{id}': {'get': _op(
             'Get one book with external links and metrics',
-            [{'name': 'id', 'in': 'path', 'required': True, 'schema': {'type': 'integer', 'minimum': 1}, 'description': 'Book id.'}],
+            [{'name': 'id', 'in': 'path', 'required': True,
+              'schema': {'type': 'integer', 'minimum': 1}, 'description': 'Book id.'}],
             _json_response('The book.', _ref('BookDetail')),
             {'404': _error_ref('Unknown book id.')})},
         '/api/stats': {'get': _op(

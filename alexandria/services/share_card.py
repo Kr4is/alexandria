@@ -316,7 +316,8 @@ def render_card(book, metrics: dict | None = None, cover: Image.Image | None = N
         if public:
             draw.text((x, y + 17), f'public {_num(public)}', font=_font('text', 26, 500), fill=LEATHER, anchor='lm')
     elif public:
-        draw.text((left, y + 17), f'public rating {_num(public)} / 5', font=_font('text', 28, 500), fill=LEATHER, anchor='lm')
+        draw.text((left, y + 17), f'public rating {_num(public)} / 5',
+                  font=_font('text', 28, 500), fill=LEATHER, anchor='lm')
 
     # metrics row
     items = metrics['items'][:4]

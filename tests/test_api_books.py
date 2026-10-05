@@ -95,7 +95,8 @@ class TestListBooks:
     def test_per_page_clamped_to_100(self, client, library):
         assert client.get('/api/books?per_page=500').get_json()['per_page'] == 100
 
-    @pytest.mark.parametrize('query', ['page=0', 'page=x', 'page=99999999999999999999', 'per_page=0', 'per_page=-1', 'year=abc', 'year=0'])
+    @pytest.mark.parametrize('query', ['page=0', 'page=x', 'page=99999999999999999999', 'per_page=0',
+                                       'per_page=-1', 'year=abc', 'year=0'])
     def test_invalid_numeric_params(self, client, library, query):
         response = client.get(f'/api/books?{query}')
         assert response.status_code == 400
@@ -162,7 +163,7 @@ class TestGetBook:
 
 class TestStats:
     STAT_KEYS = {'books_finished_count', 'total_pages', 'avg_pages_per_book', 'reading_hours',
-                 'categories', 'pages_history', 'avg_days', 'completion_rate', 'seasons'}
+                 'categories', 'pages_history', 'avg_days', 'completion_rate', 'avg_pages_per_day'}
 
     def test_all_time(self, client, library):
         data = client.get('/api/stats').get_json()
@@ -170,14 +171,14 @@ class TestStats:
         assert data['year'] is None
         assert data['books_finished_count'] == 2
         assert data['total_pages'] == 700
-        assert data['completion_rate'] == 40
+        assert data['completion_rate'] == 50  # finished / started (TBR excluded)
 
     def test_year_scoped(self, client, library):
         data = client.get('/api/stats?year=2025').get_json()
         assert data['year'] == 2025
         assert data['books_finished_count'] == 1
         assert data['total_pages'] == 400
-        assert data['seasons']['Winter'] == 1
+        assert data['avg_pages_per_day'] >= 0
 
     def test_empty_year(self, client, library):
         assert client.get('/api/stats?year=1999').get_json()['books_finished_count'] == 0
