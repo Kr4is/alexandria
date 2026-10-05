@@ -4,7 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from flask import Flask
 
-from alexandria.blueprints import api, auth, books, main
+from alexandria.blueprints import api, auth, books, main, share
 from alexandria.bootstrap import refresh_library_metadata, run_startup_bootstrap
 from alexandria.config import configure_app
 from alexandria.extensions import csrf, db, limiter, login_manager, migrate
@@ -37,6 +37,7 @@ def create_app() -> Flask:
     app.register_blueprint(auth.bp)
     app.register_blueprint(books.bp)
     app.register_blueprint(api.bp)
+    app.register_blueprint(share.bp)
 
     @app.errorhandler(404)
     def not_found(e):
