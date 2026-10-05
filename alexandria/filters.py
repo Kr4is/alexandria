@@ -1,6 +1,8 @@
 import re
 
+from alexandria.services.book_metrics import book_metrics, library_average_pages
 from alexandria.utils.covers import resolve_cover_fallback_url, resolve_cover_url
+from alexandria.utils.external_links import external_links
 from alexandria.utils.languages import LANGUAGE_NAMES
 from alexandria.utils.text import strip_book_description_html
 
@@ -39,6 +41,14 @@ def register_template_filters(app):
             google_books_id=book.get('google_books_id'),
             isbn=book.get('isbn'),
         )
+
+    @app.template_filter('external_links')
+    def external_links_filter(book):
+        return external_links(book)
+
+    @app.template_filter('book_metrics')
+    def book_metrics_filter(book):
+        return book_metrics(book, library_average_pages())
 
     @app.template_filter('cover_fallback_for')
     def cover_fallback_for_filter(book):
