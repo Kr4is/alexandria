@@ -1,0 +1,230 @@
+<!doctype html>
+{% set page_url = url_for('share.book_share', book_id=book.id, _external=True) %}
+{% set card_url = url_for('share.card_png', book_id=book.id, v=etag[:8], _external=True) %}
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ book.title }} · Alexandria</title>
+  <meta name="description" content="{{ description }}">
+  <link rel="canonical" href="{{ page_url }}">
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+
+  <meta property="og:site_name" content="Alexandria">
+  <meta property="og:type" content="book">
+  <meta property="og:title" content="{{ book.title }}{% if book.authors %} · {{ book.authors }}{% endif %}">
+  <meta property="og:description" content="{{ description }}">
+  <meta property="og:url" content="{{ page_url }}">
+  <meta property="og:image" content="{{ card_url }}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Share card for {{ book.title }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ book.title }}">
+  <meta name="twitter:description" content="{{ description }}">
+  <meta name="twitter:image" content="{{ card_url }}">
+
+  <style>
+    @font-face {
+      font-family: 'Fraunces'; font-style: normal; font-weight: 100 900; font-display: swap;
+      src: url('{{ url_for("static", filename="fonts/Fraunces-Variable.ttf") }}') format('truetype');
+    }
+    @font-face {
+      font-family: 'EB Garamond'; font-style: normal; font-weight: 400 800; font-display: swap;
+      src: url('{{ url_for("static", filename="fonts/EBGaramond-Variable.ttf") }}') format('truetype');
+    }
+    :root {
+      --vintage-cream: #efe3cf; --vintage-paper: #f8f0e2; --vintage-ink: #2a1d16;
+      --vintage-gold: #b8832f; --vintage-accent: #6f2a24; --moss: #4a5d3a;
+      --wood: #5a3a22; --wood-dark: #3b2415; --leather: #8a5a36; --rust: #b4532a;
+      --display: 'Fraunces', Georgia, 'Times New Roman', serif;
+      --text: 'EB Garamond', Georgia, 'Times New Roman', serif;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0; min-height: 100vh;
+      background: var(--vintage-paper, #f8f0e2);
+      background-image: radial-gradient(ellipse at 20% 0%, var(--vintage-cream, #efe3cf) 0, transparent 55%),
+                        radial-gradient(ellipse at 100% 100%, var(--vintage-cream, #efe3cf) 0, transparent 50%);
+      color: var(--vintage-ink, #2a1d16);
+      font-family: var(--text); font-size: 1.1875rem; line-height: 1.55;
+    }
+    a { color: var(--vintage-accent, #6f2a24); text-underline-offset: 3px; }
+    a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 3px solid var(--vintage-gold, #b8832f); outline-offset: 2px;
+    }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+
+    .topbar { background: var(--wood-dark, #3b2415); border-bottom: 3px solid var(--vintage-gold, #b8832f); }
+    .topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .brand { font-family: var(--display); font-weight: 700; font-size: 1.375rem; color: var(--vintage-cream, #efe3cf); text-decoration: none; display: inline-flex; align-items: center; min-height: 56px; }
+    .back { color: var(--vintage-cream, #efe3cf); display: inline-flex; align-items: center; min-height: 44px; font-size: 1rem; }
+
+    .hero { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 48px; padding: 48px 0 32px; align-items: start; }
+    .shelf { position: relative; padding-bottom: 18px; }
+    .shelf::after {
+      content: ''; position: absolute; left: -14px; right: -14px; bottom: 0; height: 18px; border-radius: 3px;
+      background: linear-gradient(var(--leather, #8a5a36), var(--wood, #5a3a22));
+      box-shadow: 0 10px 18px rgba(59, 36, 21, .35);
+    }
+    .cover, .cover-fallback {
+      position: relative; z-index: 1; display: block; width: 100%; aspect-ratio: 2 / 3; border-radius: 3px 6px 6px 3px;
+      box-shadow: -3px 0 0 rgba(0, 0, 0, .18) inset, 0 14px 24px rgba(42, 29, 22, .38);
+    }
+    .cover { object-fit: cover; background: var(--vintage-cream, #efe3cf); }
+    .cover-fallback {
+      background: var(--leather, #8a5a36); color: var(--vintage-cream, #efe3cf);
+      display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 800; font-size: 6.5rem;
+      border: 3px double var(--vintage-gold, #b8832f); outline: 12px solid var(--leather, #8a5a36); outline-offset: -15px;
+    }
+    .cover-fallback[hidden] { display: none; }
+
+    .eyebrow { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; font-size: 0.9375rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--vintage-accent, #6f2a24); }
+    .eyebrow::before { content: ''; width: 36px; height: 2px; background: var(--vintage-gold, #b8832f); }
+    h1 { margin: 0; font-family: var(--display); font-weight: 700; font-size: clamp(2rem, 5.2vw, 3.5rem); line-height: 1.08; letter-spacing: -.01em; overflow-wrap: anywhere; }
+    .author { margin: 10px 0 0; font-size: 1.5rem; color: var(--wood, #5a3a22); }
+    .rating { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: 20px 0 0; }
+    .stars { position: relative; display: inline-block; font-size: 2rem; line-height: 1; letter-spacing: 3px; color: #d9c8a8; }
+    .stars-fill { position: absolute; left: 0; top: 0; overflow: hidden; white-space: nowrap; color: var(--vintage-gold, #b8832f); }
+    .rating strong { font-family: var(--display); font-size: 1.75rem; }
+    .rating .public { color: var(--leather, #8a5a36); font-size: 1.125rem; }
+    .unrated { font-style: italic; color: var(--leather, #8a5a36); }
+
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin: 28px 0 0; padding: 0; }
+    .metric { background: rgba(255, 255, 255, .45); border: 1px solid var(--vintage-gold, #b8832f); border-radius: 4px; padding: 14px 16px; }
+    .metric dd { margin: 0; font-family: var(--display); font-weight: 700; font-size: 2rem; line-height: 1.1; }
+    .metric dt { margin-top: 4px; font-size: 0.8125rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--wood, #5a3a22); }
+    .metric { display: flex; flex-direction: column-reverse; justify-content: flex-end; }
+
+    .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 28px 0 0; }
+    .linkbox { flex: 1 1 260px; min-width: 0; min-height: 44px; padding: 0 12px; font: inherit; font-size: 1rem; color: var(--vintage-ink, #2a1d16); background: var(--vintage-paper, #f8f0e2); border: 1px solid var(--leather, #8a5a36); border-radius: 4px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 20px; font: inherit; font-size: 1rem; font-weight: 600; border-radius: 4px; border: 2px solid var(--wood-dark, #3b2415); cursor: pointer; text-decoration: none; background: var(--wood-dark, #3b2415); color: var(--vintage-cream, #efe3cf); }
+    .btn:hover { background: var(--vintage-accent, #6f2a24); border-color: var(--vintage-accent, #6f2a24); }
+    .btn.ghost { background: transparent; color: var(--wood-dark, #3b2415); }
+    .btn.ghost:hover { background: var(--vintage-cream, #efe3cf); border-color: var(--wood-dark, #3b2415); }
+    .btn[hidden] { display: none; }
+    .status-msg { min-height: 1.5em; margin: 8px 0 0; font-size: 1rem; color: var(--moss, #4a5d3a); }
+
+    .preview { padding: 16px 0 56px; }
+    .preview h2 { font-family: var(--display); font-size: 1.5rem; margin: 0 0 4px; }
+    .preview p { margin: 0 0 16px; color: var(--wood, #5a3a22); }
+    .preview img { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--leather, #8a5a36); box-shadow: 0 16px 32px rgba(42, 29, 22, .28); background: var(--vintage-cream, #efe3cf); }
+
+    footer { background: var(--wood-dark, #3b2415); color: var(--vintage-cream, #efe3cf); border-top: 3px solid var(--vintage-gold, #b8832f); padding: 20px 0; font-size: 1rem; }
+    footer a { color: var(--vintage-cream, #efe3cf); display: inline-flex; align-items: center; min-height: 44px; }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .hero > * { animation: rise .6s ease both; }
+      .hero > :nth-child(2) { animation-delay: .1s; }
+      @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    }
+    @media (max-width: 720px) {
+      .hero { grid-template-columns: minmax(0, 1fr); gap: 32px; padding-top: 32px; }
+      .shelf { max-width: 240px; margin: 0 auto; }
+      .info { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="{{ url_for('main.index') }}">Alexandria</a>
+      <a class="back" href="{{ url_for('main.index') }}">&larr; Back to the library</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <article class="hero">
+      <div class="shelf">
+        {% if book.cover_url %}
+        <img class="cover" src="{{ book.cover_url }}" alt="Cover of {{ book.title }}" width="300" height="450" referrerpolicy="no-referrer"
+             {% if book.cover_fallback_url %}data-fallback="{{ book.cover_fallback_url }}"{% endif %}
+             onload="if(this.naturalWidth<=1){this.onerror();}"
+             onerror="if(this.dataset.fallback){var f=this.dataset.fallback;this.dataset.fallback='';this.src=f;}else{this.hidden=true;this.nextElementSibling.hidden=false;}">
+        <div class="cover-fallback" aria-hidden="true" hidden>{{ (book.title|trim)[:1]|upper }}</div>
+        {% else %}
+        <div class="cover-fallback" aria-hidden="true">{{ (book.title|trim)[:1]|upper }}</div>
+        {% endif %}
+      </div>
+
+      <div class="info">
+        <p class="eyebrow">{{ m.status_label }}</p>
+        <h1>{{ book.title }}</h1>
+        {% if book.authors %}<p class="author">by {{ book.authors }}</p>{% endif %}
+
+        <div class="rating">
+          {% if m.my_rating %}
+          <span class="stars" role="img" aria-label="My rating: {{ '%g'|format(m.my_rating) }} out of 5">
+            <span class="stars-fill" style="width: {{ ([m.my_rating, 5]|min / 5 * 100)|round(1) }}%" aria-hidden="true">★★★★★</span>
+            <span aria-hidden="true">★★★★★</span>
+          </span>
+          <strong>{{ '%g'|format(m.my_rating) }}</strong>
+          {% else %}
+          <span class="unrated">Not rated yet</span>
+          {% endif %}
+          {% if m.public_rating %}<span class="public">Public rating {{ '%g'|format(m.public_rating) }} / 5</span>{% endif %}
+        </div>
+
+        {% if m.items %}
+        <dl class="metrics">
+          {% for value, label in m['items'] %}
+          <div class="metric"><dt>{{ label }}</dt><dd>{{ value }}</dd></div>
+          {% endfor %}
+        </dl>
+        {% endif %}
+
+        <div class="actions">
+          <input class="linkbox" id="share-url" type="text" readonly value="{{ page_url }}" aria-label="Link to this page" onfocus="this.select()">
+          <button class="btn" id="copy-btn" type="button" hidden>Copy link</button>
+          <button class="btn ghost" id="share-btn" type="button" hidden>Share…</button>
+          <a class="btn ghost" href="{{ card_url }}" download="alexandria-book-{{ book.id }}.png">Download card</a>
+        </div>
+        <p class="status-msg" id="status-msg" role="status" aria-live="polite"></p>
+      </div>
+    </article>
+
+    <section class="preview" aria-labelledby="preview-title">
+      <h2 id="preview-title">The share card</h2>
+      <p>This is the image that appears when the link is shared.</p>
+      <img src="{{ card_url }}" alt="Share card for {{ book.title }}: {{ description }}" width="1200" height="630" loading="lazy">
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <a href="{{ url_for('main.index') }}">Alexandria &middot; my personal library</a>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var url = {{ page_url|tojson }};
+      var title = {{ book.title|tojson }};
+      var msg = document.getElementById('status-msg');
+      var copy = document.getElementById('copy-btn');
+      var share = document.getElementById('share-btn');
+      function say(t) { msg.textContent = t; setTimeout(function () { msg.textContent = ''; }, 3000); }
+      copy.hidden = false;
+      copy.addEventListener('click', function () {
+        function fallback() {
+          var box = document.getElementById('share-url');
+          box.focus(); box.select();
+          try { say(document.execCommand('copy') ? 'Link copied.' : 'Press Ctrl+C to copy the link.'); }
+          catch (e) { say('Press Ctrl+C to copy the link.'); }
+        }
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(url).then(function () { say('Link copied.'); }, fallback);
+        } else { fallback(); }
+      });
+      if (navigator.share) {
+        share.hidden = false;
+        share.addEventListener('click', function () {
+          navigator.share({ title: title, url: url }).catch(function () {});
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
