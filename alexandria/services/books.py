@@ -14,16 +14,16 @@ def get_reading_and_finished_lists():
 def get_collection_lists(page: int = 1, per_page: int = 24) -> dict:
     """Return all books grouped by status for the index page.
 
-    The ``finished`` key is a Flask-SQLAlchemy Pagination object;
-    all others are plain lists.
+    ``finished`` holds only the requested page of finished books (newest first);
+    ``finished_by_year`` splits that same page into ``[(year, [books])]`` for shelving.
+    ``this_year`` and ``counts`` summarise the whole library.
     """
     all_books = Book.query.order_by(Book.date_added.desc()).all()
-    groups: dict[str, list] = {s: [] for s in BookStatus.ALL}
+    groups: dict = {s: [] for s in BookStatus.ALL}
     for book in all_books:
         if book.status in groups:
             groups[book.status].append(book)
 
-    # Sort finished by date_finished descending, then paginate in Python
     finished_sorted = sorted(
         groups[BookStatus.FINISHED],
         key=lambda b: b.date_finished or b.date_added,
@@ -31,15 +31,38 @@ def get_collection_lists(page: int = 1, per_page: int = 24) -> dict:
     )
     total = len(finished_sorted)
     start = (page - 1) * per_page
-    groups[BookStatus.FINISHED] = finished_sorted[start:start + per_page]
+    page_books = finished_sorted[start:start + per_page]
+
+    by_year: dict = {}
+    for book in page_books:
+        by_year.setdefault(_shelf_year(book), []).append(book)
+
+    groups['counts'] = {s: len(groups[s]) for s in BookStatus.ALL}
+    groups['counts']['all'] = sum(groups['counts'].values())
+    groups['this_year'] = _this_year_summary(finished_sorted)
+    groups[BookStatus.FINISHED] = page_books
+    groups['finished_by_year'] = list(by_year.items())
     groups['_finished_total'] = total
     groups['_finished_pages'] = max(1, (total + per_page - 1) // per_page)
     return groups
 
 
+SORT_OPTIONS = {
+    'date_added_desc': 'Recently added',
+    'date_finished_desc': 'Recently finished',
+    'rating_desc': 'Highest rated',
+    'pages_desc': 'Longest first',
+    'pages_asc': 'Shortest first',
+    'title_asc': 'Title A\u2013Z',
+    'title_desc': 'Title Z\u2013A',
+}
+
+
 def filter_books(q: str | None = None, status: str | None = None,
-                 sort: str = 'date_added_desc', page: int = 1, per_page: int = 24):
-    """Full-text + status filter with pagination. Returns Flask-SQLAlchemy Pagination."""
+                 sort: str = 'date_added_desc', page: int = 1, per_page: int = 24,
+                 category: str | None = None, author: str | None = None,
+                 year: int | None = None, min_rating: float | None = None):
+    """Search + filter + sort with pagination. Returns Flask-SQLAlchemy Pagination."""
     query = Book.query
     if q:
         like = f'%{q}%'
@@ -48,16 +71,77 @@ def filter_books(q: str | None = None, status: str | None = None,
         )
     if status and status in BookStatus.ALL:
         query = query.filter_by(status=status)
+    if category:
+        # categories is a comma-separated string: match whole entries, not substrings
+        padded = db.literal(',').concat(db.func.replace(Book.categories, ', ', ',')).concat(',')
+        query = query.filter(padded.icontains(f',{category},', autoescape=True))
+    if author:
+        query = query.filter(Book.authors.icontains(author, autoescape=True))
+    if year:
+        query = query.filter(db.extract('year', Book.date_finished) == year)
+    if min_rating:
+        query = query.filter(Book.personal_rating >= min_rating)
 
     sort_map = {
         'date_added_desc': Book.date_added.desc(),
         'title_asc': Book.title.asc(),
         'title_desc': Book.title.desc(),
         'date_finished_desc': Book.date_finished.desc().nulls_last(),
+        'rating_desc': Book.personal_rating.desc().nulls_last(),
+        'pages_desc': Book.page_count.desc().nulls_last(),
+        'pages_asc': Book.page_count.asc().nulls_last(),
     }
     order = sort_map.get(sort, Book.date_added.desc())
-    query = query.order_by(order)
+    query = query.order_by(order, Book.id.desc())
     return query.paginate(page=page, per_page=per_page, error_out=False)
+
+
+def get_filter_options() -> dict:
+    """Distinct categories, authors and finished-years for the filter form."""
+    rows = Book.query.with_entities(Book.categories, Book.authors, Book.date_finished).all()
+    # keyed by lowercase: the category filter is case-insensitive, so 'fiction' == 'Fiction'
+    categories: dict[str, str] = {}
+    authors: dict[str, str] = {}
+    years: set[int] = set()
+    for cats, auths, finished in rows:
+        for c in (cats or '').split(','):
+            if c.strip():
+                categories.setdefault(c.strip().lower(), c.strip())
+        for a in (auths or '').split(','):
+            if a.strip():
+                authors.setdefault(a.strip().lower(), a.strip())
+        if finished:
+            years.add(finished.year)
+    return {
+        'categories': sorted(categories.values(), key=str.lower),
+        'authors': sorted(authors.values(), key=str.lower),
+        'years': sorted(years, reverse=True),
+    }
+
+
+def get_status_counts() -> dict:
+    """Books per status plus an ``all`` total, using a single GROUP BY."""
+    rows = db.session.query(Book.status, db.func.count(Book.id)).group_by(Book.status).all()
+    counts = {s: 0 for s in BookStatus.ALL}
+    counts.update({status: n for status, n in rows if status in counts})
+    counts['all'] = sum(counts.values())
+    return counts
+
+
+def _shelf_year(book: Book) -> int | None:
+    return book.date_finished.year if book.date_finished else None
+
+
+def _this_year_summary(finished: list) -> dict:
+    year = datetime.now(UTC).year
+    done = [b for b in finished if b.date_finished and b.date_finished.year == year]
+    ratings = [b.personal_rating for b in done if b.personal_rating]
+    return {
+        'year': year,
+        'books': len(done),
+        'pages': sum(b.page_count or 0 for b in done),
+        'avg_rating': round(sum(ratings) / len(ratings), 1) if ratings else None,
+    }
 
 
 def get_book_or_404(book_id: int):
