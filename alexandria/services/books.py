@@ -93,16 +93,74 @@ def add_book_from_api_details(details: dict, status: str = BookStatus.READING) -
         language=details.get('language'),
         average_rating=details.get('average_rating'),
         status=status,
+        date_started=datetime.now(UTC) if status == BookStatus.READING else None,
     )
     db.session.add(new_book)
     db.session.commit()
     return new_book
 
 
+BOOK_FORMATS = ('paper', 'ebook', 'audiobook')
+
+
+MAX_PAGE = 1_000_000  # keeps absurd input inside the INTEGER column when page_count is unknown
+
+
+def _clamp_page(book: Book, page: int) -> int:
+    return max(0, min(page, book.page_count or MAX_PAGE))
+
+
+def _apply_status_progress(book: Book, old_status: str | None, new_status: str) -> None:
+    """Keep date_started / current_page coherent when a book changes status."""
+    if new_status == BookStatus.READING:
+        if old_status == BookStatus.FINISHED:  # re-reading: a fresh start
+            book.current_page = None
+            book.date_started = datetime.now(UTC)
+        elif not book.date_started:
+            book.date_started = datetime.now(UTC)
+    elif new_status == BookStatus.FINISHED:
+        if book.page_count:
+            book.current_page = book.page_count
+    elif new_status == BookStatus.TBR:  # not started: forget any progress
+        book.current_page = None
+        book.date_started = None
+    elif old_status == BookStatus.FINISHED:  # reopened as paused / DNF
+        book.current_page = None
+
+
+def set_progress(book: Book, current_page) -> bool:
+    """Record the page reached, clamped to [0, page_count]. False if not a number."""
+    try:
+        page = _clamp_page(book, int(str(current_page).strip()))
+    except (TypeError, ValueError):
+        return False
+    book.current_page = page
+    if page > 0 and not book.date_started:
+        book.date_started = datetime.now(UTC)
+    db.session.commit()
+    return True
+
+
+def _split_shelves(raw: str | None) -> list[str]:
+    return [s.strip() for s in (raw or '').split(',') if s.strip()]
+
+
+def books_on_shelf(name: str) -> list[Book]:
+    """Books whose comma-separated ``shelves`` contain ``name`` (case-insensitive, exact entry)."""
+    wanted = name.strip().casefold()
+    if not wanted:
+        return []
+    # Matched in Python: SQLite's LIKE is only ASCII case-insensitive.
+    # ponytail: scans every shelved book; fine for a personal library, index a shelf table if it grows.
+    candidates = Book.query.filter(Book.shelves.isnot(None)).order_by(Book.title.asc()).all()
+    return [b for b in candidates if wanted in (s.casefold() for s in _split_shelves(b.shelves))]
+
+
 def quick_set_status(book: Book, new_status: str) -> bool:
     """Set book status without touching the full edit form. Returns True if changed."""
     if new_status not in BookStatus.ALL:
         return False
+    _apply_status_progress(book, book.status, new_status)
     book.status = new_status
     if new_status == BookStatus.FINISHED:
         if not book.date_finished:
@@ -116,6 +174,7 @@ def quick_set_status(book: Book, new_status: str) -> bool:
 def mark_book_finished(book: Book) -> None:
     if book.status == BookStatus.FINISHED:
         return
+    _apply_status_progress(book, book.status, BookStatus.FINISHED)
     book.status = BookStatus.FINISHED
     book.date_finished = datetime.now(UTC)
     db.session.commit()
@@ -125,7 +184,9 @@ def update_book_from_form(book: Book, form) -> list[tuple[str, str]]:
     """Apply POST form to book. Returns list of (message, category) tuples for errors."""
     flashes: list[tuple[str, str]] = []
     new_status = form.get('status')
+    old_page, old_started = book.current_page, book.date_started
     if new_status in BookStatus.ALL:
+        _apply_status_progress(book, book.status, new_status)
         book.status = new_status
         if new_status == BookStatus.READING:
             book.date_finished = None
@@ -161,8 +222,64 @@ def update_book_from_form(book: Book, form) -> list[tuple[str, str]]:
 
     book.personal_notes = form.get('personal_notes', '').strip() or None
 
+    _apply_reading_fields(book, form, old_page, old_started, flashes)
+
     db.session.commit()
     return flashes
+
+
+def _apply_reading_fields(book: Book, form, old_page, old_started, flashes) -> None:
+    """Apply date_started / current_page / format / shelves; each only when posted.
+
+    A posted value equal to what was stored is not an edit, so the status-driven
+    defaults from ``_apply_status_progress`` win (e.g. finished -> reading resets progress).
+    """
+    if 'date_started' in form:
+        raw = form['date_started'].strip()
+        old_str = old_started.strftime('%Y-%m-%d') if old_started else ''
+        if raw != old_str:
+            if not raw:
+                book.date_started = datetime.now(UTC) if book.status == BookStatus.READING else None
+            else:
+                try:
+                    book.date_started = datetime.strptime(raw, '%Y-%m-%d').replace(tzinfo=UTC)
+                except ValueError:
+                    flashes.append(('Invalid date format for Date Started', 'error'))
+
+    finished_with_pages = book.status == BookStatus.FINISHED and book.page_count
+    if 'current_page' in form and not finished_with_pages:
+        raw = form['current_page'].strip()
+        if not raw:
+            if old_page is not None:
+                book.current_page = None
+        else:
+            try:
+                page = int(raw)
+            except ValueError:
+                flashes.append(('Invalid page number', 'error'))
+            else:
+                if page != old_page:
+                    book.current_page = _clamp_page(book, page)
+
+    if 'format' in form:
+        fmt = form['format'].strip().lower()
+        if not fmt:
+            book.format = None
+        elif fmt in BOOK_FORMATS:
+            book.format = fmt
+        else:
+            flashes.append(('Unknown format', 'error'))
+
+    if 'shelves' in form:
+        names: list[str] = []
+        for name in _split_shelves(form['shelves']):
+            if name.casefold() not in (n.casefold() for n in names):
+                names.append(name)
+        joined = ', '.join(names)
+        if len(joined) > 200:
+            flashes.append(('Shelves list is too long (200 characters max)', 'error'))
+        else:
+            book.shelves = joined or None
 
 
 def delete_book(book: Book) -> None:

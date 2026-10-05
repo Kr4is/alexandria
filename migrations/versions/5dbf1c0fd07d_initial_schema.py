@@ -15,6 +15,11 @@ depends_on = None
 
 
 def upgrade():
+    # The app's startup db.create_all() runs before `flask db upgrade` can, so
+    # the tables may already exist; skip creation then (later migrations add
+    # any missing columns).
+    if sa.inspect(op.get_bind()).has_table('book'):
+        return
     op.create_table(
         'user',
         sa.Column('id', sa.Integer(), nullable=False),
