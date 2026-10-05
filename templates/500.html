@@ -1,20 +1,90 @@
-{% extends 'base.html' %}
-
-{% block content %}
-<div class="flex flex-col items-center justify-center py-24 text-center px-4">
-    <div class="opacity-10 mb-8 select-none" aria-hidden="true">
-        <span style="font-family:'Playfair Display',serif; font-size:10rem; line-height:1; font-weight:700;">500</span>
-    </div>
-    <h2 class="text-3xl md:text-4xl font-bold mb-4 text-vintage-ink">The Scriptorium Caught Fire</h2>
-    <p class="text-base md:text-lg italic opacity-60 max-w-md mb-10">
-        An unexpected error disturbed the archives. The scribes have been notified and are working to restore order.
-    </p>
-    <a href="{{ url_for('main.index') }}"
-        class="px-10 py-4 bg-vintage-ink text-vintage-cream text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-vintage-accent transition-soft shadow-xl">
-        Return to Collection
-    </a>
-    <div class="mt-20 opacity-10 italic text-sm">
-        &mdash; Sincerest apologies from the Head Librarian &mdash;
-    </div>
-</div>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+{# Standalone on purpose: no base.html, no url_for, no DB-backed context. This page must render even when the app is unhealthy. #}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Something went wrong - Alexandria</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --vintage-cream: #efe3cf;
+            --vintage-ink: #2a1d16;
+            --vintage-gold: #b8832f;
+            --vintage-accent: #6f2a24;
+            --wood: #5a3a22;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; min-height: 100%; }
+        body {
+            background: var(--vintage-cream);
+            color: var(--vintage-ink);
+            font-family: 'EB Garamond', Georgia, serif;
+            font-size: 1.125rem;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+        main { max-width: 32rem; width: 100%; text-align: center; }
+        svg { width: 100%; max-width: 22rem; height: auto; margin-bottom: 1.5rem; }
+        .eyebrow { font-size: 0.8125rem; letter-spacing: 0.3em; text-transform: uppercase; font-weight: 700; color: var(--vintage-accent); margin: 0 0 0.75rem; }
+        h1 { font-family: 'Fraunces', Georgia, serif; font-weight: 700; font-size: clamp(1.75rem, 6vw, 2.5rem); line-height: 1.15; margin: 0 0 1rem; }
+        p.lede { font-style: italic; color: var(--wood); margin: 0 auto 2rem; max-width: 28rem; }
+        .actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-height: 48px; padding: 0.75rem 1.75rem;
+            font: inherit; font-size: 0.875rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+            text-decoration: none; cursor: pointer;
+            background: var(--vintage-ink); color: var(--vintage-cream); border: 2px solid var(--vintage-ink);
+        }
+        .btn:hover { background: var(--vintage-accent); border-color: var(--vintage-accent); }
+        .btn--ghost { background: transparent; color: var(--vintage-ink); }
+        .btn--ghost:hover { color: var(--vintage-cream); }
+        .btn:focus-visible { outline: 3px solid var(--vintage-gold); outline-offset: 3px; }
+        @media (prefers-reduced-motion: no-preference) {
+            .btn { transition: background-color 0.2s ease, color 0.2s ease; }
+            .tumble { transform-box: fill-box; transform-origin: 50% 100%; animation: tumble 0.9s ease-out both; }
+            @keyframes tumble { from { transform: rotate(-35deg) translateY(-18px); opacity: 0; } to { transform: none; opacity: 1; } }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <svg viewBox="0 0 320 170" role="img" aria-label="A bookshelf with one book fallen over onto the floor">
+            <rect x="20" y="20" width="280" height="110" fill="#e5d3b6" stroke="#5a3a22" stroke-width="4"/>
+            <rect x="34" y="44" width="22" height="82" fill="#6f2a24"/>
+            <rect x="58" y="32" width="18" height="94" fill="#4a5d3a"/>
+            <rect x="78" y="52" width="26" height="74" fill="#8a5a36"/>
+            <rect x="106" y="38" width="16" height="88" fill="#b8832f"/>
+            <rect x="124" y="50" width="22" height="76" fill="#3b2415"/>
+            <rect x="214" y="40" width="18" height="86" fill="#8a5a36"/>
+            <rect x="234" y="56" width="28" height="70" fill="#4a5d3a"/>
+            <rect x="264" y="42" width="20" height="84" fill="#b8832f"/>
+            <!-- empty slot where the volume fell from -->
+            <rect x="150" y="46" width="60" height="80" fill="#cdb68f" opacity=".5"/>
+            <!-- shelf -->
+            <rect x="10" y="126" width="300" height="12" fill="#5a3a22"/>
+            <rect x="10" y="138" width="300" height="6" fill="#3b2415"/>
+            <!-- fallen book on the floor -->
+            <g class="tumble">
+                <rect x="140" y="148" width="86" height="18" fill="#6f2a24" transform="rotate(-4 183 157)"/>
+                <rect x="144" y="150" width="78" height="4" fill="#e3c585" transform="rotate(-4 183 157)"/>
+                <rect x="144" y="160" width="78" height="3" fill="#f8f0e2" opacity=".7" transform="rotate(-4 183 157)"/>
+            </g>
+        </svg>
+        <p class="eyebrow">Error 500</p>
+        <h1>A book slipped off the shelf</h1>
+        <p class="lede">That one is on us, not you. Give it a moment and try again. If it keeps happening, check the server logs.</p>
+        <div class="actions">
+            <a class="btn" href="/">Back to the library</a>
+            <button class="btn btn--ghost" type="button" onclick="location.reload()">Try again</button>
+        </div>
+    </main>
+</body>
+</html>

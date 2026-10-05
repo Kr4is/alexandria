@@ -1,42 +1,142 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="max-w-md mx-auto mt-12 md:mt-24">
-    <div class="paper-texture p-10 md:p-16 text-center shadow-2xl relative">
-        <div
-            class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-vintage-cream p-4 rounded-full border border-black/5">
-            <img src="{{ url_for('static', filename='logo.svg') }}" class="w-10 h-10 opacity-60">
+<style>
+    .lc-card {
+        --lc-paper: var(--vintage-paper, #f8f0e2);
+        --lc-ink: var(--vintage-ink, #2a1d16);
+        --lc-gold: var(--vintage-gold, #b8832f);
+        --lc-accent: var(--vintage-accent, #6f2a24);
+        --lc-wood: var(--wood, #5a3a22);
+        --lc-wood-dark: var(--wood-dark, #3b2415);
+        --lc-rule: rgba(90, 58, 34, 0.28);
+        position: relative;
+        background: var(--lc-paper);
+        border: 1px solid var(--lc-rule);
+        border-radius: 6px;
+        box-shadow: 0 22px 40px -22px rgba(59, 36, 21, 0.6), 0 2px 0 rgba(255, 255, 255, 0.5) inset;
+        overflow: hidden;
+    }
+
+    .lc-band {
+        background: var(--lc-wood-dark);
+        color: var(--vintage-cream, #efe3cf);
+        padding: 1rem 1.5rem 1rem 3.75rem;
+        position: relative;
+        border-bottom: 3px solid var(--lc-gold);
+    }
+
+    /* Punched hole, like a card on a catalogue rod */
+    .lc-band::before {
+        content: '';
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        width: 1.1rem;
+        height: 1.1rem;
+        margin-top: -0.55rem;
+        border-radius: 999px;
+        background: var(--vintage-cream, #efe3cf);
+        box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    .lc-eyebrow { font-size: 0.75rem; letter-spacing: 0.28em; text-transform: uppercase; color: #e3c585; font-weight: 700; }
+    .lc-title { font-size: 1.75rem; line-height: 1.1; color: var(--vintage-cream, #efe3cf); margin: 0.1rem 0 0; }
+
+    .lc-body {
+        padding: 1.5rem 1.5rem 1.75rem;
+    }
+
+    .lc-field { display: block; margin-bottom: 1.25rem; }
+    .lc-label { display: block; font-size: 0.8125rem; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 700; color: var(--lc-wood); margin-bottom: 0.1rem; }
+    .lc-input {
+        width: 100%;
+        min-height: 48px;
+        padding: 0.4rem 0.25rem;
+        background: transparent;
+        border: 0;
+        border-bottom: 2px solid var(--lc-wood);
+        font-family: 'Courier Prime', 'Courier New', ui-monospace, monospace;
+        font-size: 1.15rem;
+        color: var(--lc-ink);
+        border-radius: 0;
+    }
+
+    .lc-input:focus { outline: none; border-bottom-color: var(--lc-accent); background: rgba(184, 131, 47, 0.1); }
+    .lc-input:focus-visible { outline: 3px solid var(--lc-gold); outline-offset: 2px; }
+
+    .lc-btn {
+        width: 100%;
+        min-height: 52px;
+        margin-top: 0.5rem;
+        background: var(--lc-ink);
+        color: var(--vintage-cream, #efe3cf);
+        border: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
+    .lc-btn:hover { background: var(--lc-accent); }
+    .lc-btn:focus-visible { outline: 3px solid var(--lc-gold); outline-offset: 3px; }
+
+    .lc-stamp {
+        display: inline-block;
+        margin-top: 1.5rem;
+        padding: 0.3rem 0.8rem;
+        border: 2px solid var(--lc-accent);
+        color: var(--lc-accent);
+        border-radius: 3px;
+        font-size: 0.8125rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        font-weight: 700;
+        transform: rotate(-3deg);
+        opacity: 0.85;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .lc-btn, .lc-input { transition: background-color 0.2s ease, border-color 0.2s ease; }
+    }
+
+    @media (max-width: 639px) {
+        .lc-title { font-size: 1.5rem; }
+    }
+</style>
+
+<div class="max-w-md mx-auto mt-6 md:mt-16 px-1">
+    <div class="lc-card">
+        <div class="lc-band">
+            <div class="lc-eyebrow">Private collection</div>
+            <h2 class="lc-title font-serif-display">Library card</h2>
         </div>
 
-        <header class="mb-12 pt-4">
-            <h2 class="text-3xl md:text-4xl font-bold mb-4 text-vintage-ink">Librarian Access</h2>
-            <p class="italic opacity-60 text-sm">Identify yourself to manage the private archives.</p>
-        </header>
+        <div class="lc-body">
+            <p class="italic mb-6" style="color: var(--lc-wood)">
+                Browsing is open to everyone. Adding, editing and removing books is for the librarian only.
+            </p>
 
-        <form action="{{ url_for('auth.login') }}" method="POST" class="flex flex-col gap-8">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="text-left space-y-2 group">
-                <label for="username"
-                    class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 group-focus-within:opacity-100 group-focus-within:text-vintage-accent transition-soft block">Username</label>
-                <input type="text" id="username" name="username" required
-                    class="w-full bg-transparent border-b border-vintage-gold/20 py-3 outline-none focus:border-vintage-gold transition-soft italic text-xl text-vintage-ink">
+            <form action="{{ url_for('auth.login') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <label class="lc-field" for="username">
+                    <span class="lc-label">Username</span>
+                    <input type="text" id="username" name="username" class="lc-input" required autofocus
+                        autocomplete="username" autocapitalize="none" spellcheck="false">
+                </label>
+                <label class="lc-field" for="password">
+                    <span class="lc-label">Password</span>
+                    <input type="password" id="password" name="password" class="lc-input" required
+                        autocomplete="current-password">
+                </label>
+
+                <button type="submit" class="lc-btn">Sign in</button>
+            </form>
+
+            <div class="text-center">
+                <span class="lc-stamp" aria-hidden="true">Librarian only</span>
             </div>
-            <div class="text-left space-y-2 group">
-                <label for="password"
-                    class="text-[9px] uppercase tracking-[0.2em] font-bold opacity-30 group-focus-within:opacity-100 group-focus-within:text-vintage-accent transition-soft block">Secret
-                    Key</label>
-                <input type="password" id="password" name="password" required
-                    class="w-full bg-transparent border-b border-vintage-gold/20 py-3 outline-none focus:border-vintage-gold transition-soft italic text-xl text-vintage-ink">
-            </div>
-
-            <button type="submit"
-                class="mt-8 py-5 bg-vintage-ink text-vintage-cream uppercase tracking-[0.3em] font-bold hover:bg-vintage-accent transition-soft shadow-xl">
-                Authorize Entry
-            </button>
-        </form>
-
-        <div class="mt-16 pt-8 border-t border-black/5 opacity-20 italic text-[11px] leading-relaxed">
-            "Knowledge is the only wealth that grows when shared, but some ledgers require a steady hand to maintain."
         </div>
     </div>
 </div>
