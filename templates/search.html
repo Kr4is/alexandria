@@ -74,7 +74,7 @@
     .sx-card:hover { transform: translateY(-3px); box-shadow: 0 22px 34px -22px var(--wood-dark, #3b2415); }
     .sx-card.is-owned { border-top-color: var(--moss, #4a5d3a); }
     .sx-cover {
-        aspect-ratio: 2 / 3; width: 7rem; flex-shrink: 0; overflow: hidden;
+        position: relative; aspect-ratio: 2 / 3; width: 7rem; flex-shrink: 0; overflow: hidden;
         background: linear-gradient(145deg, var(--leather, #8a5a36), var(--wood-dark, #3b2415));
         border-radius: 2px 5px 5px 2px;
         box-shadow: -3px 0 0 rgba(0, 0, 0, .25) inset, 4px 6px 14px -4px rgba(59, 36, 21, .55);
@@ -162,7 +162,7 @@
 
 {% if search_api_error %}
 <div class="sx-alert max-w-2xl mx-auto mb-10 sm:mb-14 p-5 sm:p-6" role="alert">
-    <h3 class="sx-display text-lg font-bold mb-2" style="color: var(--rust, #b4532a);">Archives unreachable</h3>
+    <h3 class="sx-display text-lg font-bold mb-2" style="color: var(--vintage-accent, #6f2a24);">Archives unreachable</h3>
     <p class="text-base leading-relaxed mb-3">
         Google Books did not return search results. This often happens when the shared API quota is exhausted (HTTP 429) or the service is temporarily unavailable.
     </p>
@@ -187,10 +187,9 @@
     <article class="sx-card p-4 sm:p-6 {{ 'is-owned' if in_library }}">
         <div class="flex gap-4 sm:gap-6">
             <div class="sx-cover w-24 sm:w-28">
+                <div class="sx-cover-empty sx-display italic" aria-hidden="true">{{ book.title }}</div>
                 {% if book|cover_for %}
-                {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover') }}
-                {% else %}
-                <div class="sx-cover-empty sx-display italic">{{ book.title }}</div>
+                {{ book_cover_img(book, class='book-cover-img absolute inset-0 w-full h-full object-cover') }}
                 {% endif %}
             </div>
             <div class="min-w-0 flex-1">

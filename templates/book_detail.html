@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from '_macros.html' import book_cover_img %}
+{% from '_macros.html' import book_cover_img, book3d %}
 
 {% block content %}
 {% set m = book|book_metrics %}
@@ -56,16 +56,8 @@
         <div class="bd-body">
             {# ── Left column: cover + shelf marks ── #}
             <aside class="bd-aside">
-                <div class="bd-cover vintage-border">
-                    <div class="aspect-[3/4] overflow-hidden bg-stone-100">
-                        {% if book|cover_for %}
-                        {{ book_cover_img(book, class='book-cover-img w-full h-full object-cover', loading='eager', decoding='sync', fetchpriority='high') }}
-                        {% else %}
-                        <div class="w-full h-full flex items-center justify-center italic text-vintage-ink/60 text-center p-8 text-sm">
-                            Manuscript without illustration
-                        </div>
-                        {% endif %}
-                    </div>
+                <div class="bd-cover" data-tilt-host>
+                    {{ book3d(book, class='bd-book', loading='eager', fetchpriority='high', tilt=true, detail=true) }}
                 </div>
 
                 <span class="bd-status bd-status-{{ book.status }}">{{ status_labels.get(book.status, book.status|capitalize) }}</span>
@@ -332,10 +324,11 @@
         font-size: .75rem; letter-spacing: .22em; text-transform: uppercase; font-weight: 700;
     }
     .bd-callno, .bd-mono { font-family: ui-monospace, 'Courier New', monospace; letter-spacing: .06em; }
-    .bd-callno { color: var(--bd-gold); font-size: .875rem; }
+    .bd-callno { color: var(--brass-light, #dcae65); font-size: .875rem; }
     .bd-body { display: flex; flex-direction: column; gap: 2rem; padding: 2rem 1.5rem; }
     .bd-aside { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; }
-    .bd-cover { width: 100%; max-width: 260px; padding: 4px; box-shadow: 6px 8px 0 -2px var(--bd-rule), 0 14px 28px -12px rgba(0,0,0,.5); }
+    .bd-cover { width: 100%; max-width: 240px; padding: .5rem 1.5rem 1.25rem .75rem; }
+    .bd-book { --ry: -20deg; width: 100%; }
     .bd-status {
         font-size: .75rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
         padding: .4rem .8rem; border: 1px solid currentColor; color: var(--bd-wood);
@@ -386,7 +379,7 @@
 
     .bd-progress-head { display: flex; justify-content: space-between; font-size: .9rem; margin-bottom: .4rem; }
     .bd-bar { height: .7rem; background: var(--bd-rule); overflow: hidden; border-radius: 99px; }
-    .bd-bar > div { height: 100%; background: linear-gradient(90deg, var(--bd-moss), var(--bd-gold)); border-radius: 99px; transition: width .6s ease-out; }
+    .bd-bar > div { height: 100%; background: linear-gradient(90deg, var(--bd-gold), #e6b95c); border-radius: 99px; transition: width .6s ease-out; }
     .bd-progress-form label { display: block; font-size: .75rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 700; margin-bottom: .4rem; color: color-mix(in srgb, var(--bd-ink) 68%, transparent); }
     .bd-progress-form div { display: flex; gap: .5rem; }
     .bd-progress-form input {
