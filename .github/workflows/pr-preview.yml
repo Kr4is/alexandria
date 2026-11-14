@@ -1,0 +1,14 @@
+name: pr-preview
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+jobs:
+  preview:
+    if: contains(github.event.pull_request.labels.*.name, 'preview')
+    uses: Kr4is/homelab-workflows/.github/workflows/pr-preview.yml@main
+    with:
+      dockerfile: Dockerfile.preview
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: write
