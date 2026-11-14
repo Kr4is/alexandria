@@ -1,7 +1,37 @@
+{#- A cover that silently fails over: 1x1 pixels and Google's 128x170
+    "image not available" card count as missing. The fallback provider is
+    tried once; after that the <img> is removed so whatever placeholder sits
+    behind it (title-on-leather, initial, etc.) shows through. -#}
 {% macro book_cover_img(book, alt='', class='book-cover-img w-full h-full object-cover', loading='lazy', decoding='async', fetchpriority='') %}
 {% set src = book|cover_for %}
 {% set fallback = book|cover_fallback_for %}
 {% if src %}
-<img src="{{ src }}" alt="{{ alt or book.title }}" class="{{ class }}" loading="{{ loading }}" decoding="{{ decoding }}" referrerpolicy="no-referrer"{% if fetchpriority %} fetchpriority="{{ fetchpriority }}"{% endif %}{% if fallback %} data-fallback="{{ fallback }}" onload="if(this.naturalWidth<=1&&this.dataset.fallback){this.src=this.dataset.fallback;}" onerror="this.onerror=null;this.src=this.dataset.fallback;"{% endif %}>
+<img src="{{ src }}" alt="{{ alt or book.title }}" class="{{ class }}" loading="{{ loading }}" decoding="{{ decoding }}" referrerpolicy="no-referrer"{% if fetchpriority %} fetchpriority="{{ fetchpriority }}"{% endif %}{% if fallback %} data-fallback="{{ fallback }}"{% endif %} onload="var w=this.naturalWidth,h=this.naturalHeight;if(w<=1||(w===128&&h===170&&this.currentSrc.indexOf('books.google')>-1)){this.onerror();}" onerror="var f=this.dataset.fallback;if(f){this.dataset.fallback='';this.src=f;}else{this.onload=this.onerror=null;this.remove();}">
 {% endif %}
+{% endmacro %}
+
+{#- Binding colour for a book without (or behind) its cover. Stable per book. -#}
+{% macro binding_color(book) -%}
+{{ ['#6f2a24', '#4a5d3a', '#8a5a36', '#2f3e4e', '#4e2f43', '#3b2415', '#9c4622', '#5d4a1f'][book.id % 8] }}
+{%- endmacro %}
+
+{#- A book as a 3D object (static/css/books3d.css). Size it from outside: give
+    the element a width or a height. Thickness follows the page count.
+    `detail=True` marks the catalogue-card copy that view transitions land on. -#}
+{% macro book3d(book, class='', loading='lazy', fetchpriority='', tilt=false, detail=false, flag='') %}
+{% set pc = [book.page_count or 320, 1200]|min %}
+<span class="b3d {{ class }}" style="--c: {{ binding_color(book) }}; --t: {{ '%.3f'|format(0.035 + pc / 1000 * 0.13) }}"
+    {%- if detail %} data-book-detail-cover{% else %} data-book-cover="{{ book.id }}"{% endif %}{% if tilt %} data-tilt{% endif %}>
+    <span class="b3d-obj">
+        <span class="b3d-face b3d-back"></span>
+        <span class="b3d-face b3d-spine"></span>
+        <span class="b3d-face b3d-top"></span>
+        <span class="b3d-face b3d-pages"></span>
+        <span class="b3d-face b3d-front">
+            <span class="b3d-ph" aria-hidden="true">{{ book.title }}</span>
+            {% if book|cover_for %}{{ book_cover_img(book, alt='', class='b3d-img', loading=loading, fetchpriority=fetchpriority) }}{% endif %}
+            {% if flag %}<span class="b3d-flag">{{ flag }}</span>{% endif %}
+        </span>
+    </span>
+</span>
 {% endmacro %}

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from '_macros.html' import book_cover_img %}
+{% from '_macros.html' import book_cover_img, book3d %}
 
 {% block content %}
 {# Month summary, computed from the grid handed over by build_calendar_context. #}
@@ -108,26 +108,14 @@
         position: relative;
         display: block;
         width: 2.25rem;
-        aspect-ratio: 2 / 3;
-        background: var(--cj-leather);
-        color: var(--cj-cream);
-        border-radius: 1px 3px 3px 1px;
-        box-shadow: inset 3px 0 0 rgba(0, 0, 0, 0.22), 1px 2px 3px rgba(59, 36, 21, 0.35);
+        flex-shrink: 0;
     }
 
-    @media (min-width: 1024px) { .cj-book { width: 2.5rem; } }
+    @media (min-width: 1024px) { .cj-book { width: 2.6rem; } }
 
     .cj-book:focus-visible { outline: 3px solid var(--cj-gold); outline-offset: 2px; }
-
-    .cj-book > img, .cj-book > .cj-blank {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: inherit;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+    .cj-book .b3d { width: 100%; --ry: -28deg; }
+    .cj-badge { z-index: 2; }
 
     .cj-badge {
         position: absolute;
@@ -319,12 +307,8 @@
             <p class="text-sm uppercase tracking-[0.12em] font-bold pb-1" style="color: var(--cj-wood)">Closed this month</p>
             <div class="cj-shelf flex-1">
                 {% for book in ns.finished %}
-                <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="cj-book" title="{{ book.title }}" aria-label="Finished: {{ book.title }}">
-                    {% if book|cover_for %}
-                    {{ book_cover_img(book, alt='', class='book-cover-img') }}
-                    {% else %}
-                    <span class="cj-blank"><svg class="w-5 h-5"><use href="#cj-book"/></svg></span>
-                    {% endif %}
+                <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="cj-book b3d-lift" title="{{ book.title }}" aria-label="Finished: {{ book.title }}">
+                    {{ book3d(book) }}
                 </a>
                 {% endfor %}
             </div>
@@ -354,14 +338,10 @@
                     {% for event in cell.events %}
                     {% set book = event.book %}
                     {% set label = 'Started' if event.kind == 'started' else 'Finished' %}
-                    <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="cj-book"
+                    <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="cj-book b3d-lift"
                         title="{{ label }}: {{ book.title }}" aria-label="{{ label }}: {{ book.title }}">
                         <span class="cj-badge cj-badge--{{ event.kind }}" aria-hidden="true"><svg><use href="#{{ 'cj-open' if event.kind == 'started' else 'cj-check' }}"/></svg></span>
-                        {% if book|cover_for %}
-                        {{ book_cover_img(book, alt='', class='book-cover-img') }}
-                        {% else %}
-                        <span class="cj-blank"><svg class="w-5 h-5"><use href="#cj-book"/></svg></span>
-                        {% endif %}
+                    {{ book3d(book) }}
                     </a>
                     {% endfor %}
                 </div>
@@ -390,13 +370,9 @@
                     {% set book = event.book %}
                     {% set label = 'Started' if event.kind == 'started' else 'Finished' %}
                     <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="cj-entry">
-                        <span class="cj-book" aria-hidden="true">
+                        <span class="cj-book b3d-lift" aria-hidden="true">
                             <span class="cj-badge cj-badge--{{ event.kind }}"><svg><use href="#{{ 'cj-open' if event.kind == 'started' else 'cj-check' }}"/></svg></span>
-                            {% if book|cover_for %}
-                            {{ book_cover_img(book, alt='', class='book-cover-img') }}
-                            {% else %}
-                            <span class="cj-blank"><svg class="w-5 h-5"><use href="#cj-book"/></svg></span>
-                            {% endif %}
+                    {{ book3d(book) }}
                         </span>
                         <span class="min-w-0">
                             <span class="cj-entry-kind cj-entry-kind--{{ event.kind }} block">{{ label }}</span>
