@@ -82,8 +82,9 @@
             font-size: 1.125rem;
             background-color: var(--vintage-cream);
             background-image:
-                radial-gradient(ellipse at 50% -10%, rgba(255, 248, 232, 0.65), transparent 60%),
+                radial-gradient(ellipse 120% 900px at 50% -10%, rgba(255, 248, 232, 0.65), transparent 60%),
                 var(--grain);
+            background-repeat: no-repeat, repeat;
             color: var(--vintage-ink);
             line-height: 1.6;
         }
@@ -102,6 +103,12 @@
         ::selection {
             background: var(--vintage-gold);
             color: var(--wood-dark);
+        }
+
+        html {
+            accent-color: var(--vintage-accent);
+            caret-color: var(--vintage-accent);
+            scrollbar-color: var(--leather) var(--vintage-cream);
         }
 
         :focus-visible {
@@ -481,6 +488,8 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/books3d.css') }}">
+    <script src="{{ url_for('static', filename='js/books3d.js') }}"></script>
     {% block head %}{% endblock %}
 </head>
 

@@ -63,6 +63,9 @@ class StatsContext:
     biggest_gap: float = 0.0
     most_active_month: dict | None = None
     longest_streak: dict | None = None
+    # Page-only: every finished book grouped by year, oldest finish first, for
+    # the "stacked" view. Not part of the API payload.
+    finished_by_year: list = field(default_factory=list)
 
     def template_kwargs(self) -> dict:
         return {f.name: getattr(self, f.name) for f in fields(self)}
@@ -224,6 +227,14 @@ def _compute_curiosities(total_pages: int) -> dict:
     }
 
 
+def _group_by_year(finished_books: list) -> list[tuple[int, list]]:
+    """[(year, [books in finish order])], oldest year first."""
+    years: dict[int, list] = {}
+    for b in sorted(finished_books, key=lambda b: as_utc(b.date_finished)):
+        years.setdefault(b.date_finished.year, []).append(b)
+    return sorted(years.items())
+
+
 def _requested_year() -> int | None:
     """``?year=YYYY`` of the /stats page; ignored elsewhere (e.g. the public API)."""
     if not has_request_context() or request.endpoint != 'main.stats':
@@ -316,6 +327,7 @@ def build_stats_context(
         decades=_compute_decades(finished_books),
         most_active_month=most_active,
         longest_streak=streak,
+        finished_by_year=_group_by_year(all_finished),
         **_compute_hall_of_fame(finished_books),
         **_compute_curiosities(total_pages_read),
     )

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% from '_macros.html' import book_cover_img %}
+{% from '_macros.html' import book_cover_img, book3d, binding_color %}
 
 {# Month names for the year x month grid (books_by_year_month uses full names). #}
 {% set months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] %}
@@ -8,13 +8,12 @@
 {% macro spine_list(items, empty_text) %}
 {% if items %}
 {% set top = items[0][1] if items|length else 1 %}
-{% set spines = ['var(--wood, #5a3a22)', 'var(--vintage-accent, #6f2a24)', 'var(--moss, #4a5d3a)', 'var(--leather, #8a5a36)', 'var(--rust, #b4532a)', 'var(--wood-dark, #3b2415)'] %}
 <ol class="st-spines">
     {% for name, count in items %}
     <li>
         <span class="st-spine-name" title="{{ name }}">{{ name }}</span>
         <span class="st-spine-track" aria-hidden="true"><span class="st-spine-bar"
-                style="width: {{ (count / top * 100)|round(1) }}%; background: {{ spines[loop.index0 % spines|length] }};"></span></span>
+                style="width: {{ (count / top * 100)|round(1) }}%;"></span></span>
         <span class="st-spine-count">{{ count }}</span>
     </li>
     {% endfor %}
@@ -28,13 +27,9 @@
 <div class="st-card st-record">
     <h4 class="st-eyebrow">{{ title }}</h4>
     {% if book %}
-    <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="st-record-link">
+    <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="st-record-link b3d-lift">
         <div class="st-record-cover">
-            {% if book|cover_for %}
-            {{ book_cover_img(book, alt='', class='w-full h-full object-cover') }}
-            {% else %}
-            <div class="st-record-nocover" aria-hidden="true">{{ book.title[:1] }}</div>
-            {% endif %}
+            {{ book3d(book) }}
         </div>
         <p class="st-record-title">{{ book.title }}</p>
         <p class="st-record-author">{{ book.authors or 'Unknown author' }}</p>
@@ -112,16 +107,59 @@
     .st-spines li { display: grid; grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr) 2rem; gap: .6rem; align-items: center; font-size: .95rem; }
     .st-spine-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .st-spine-track { display: block; height: 14px; background: color-mix(in srgb, var(--st-wood) 8%, transparent); }
-    .st-spine-bar { display: block; height: 100%; border-right: 3px solid var(--st-gold); }
+    .st-spine-bar { display: block; height: 100%; background: var(--st-wood); border-right: 3px solid var(--st-gold); }
     .st-spine-count { font-variant-numeric: tabular-nums; font-weight: 700; text-align: right; }
+
+    /* The pile */
+    .st-piles {
+        --pile-h: 300px;
+        display: flex; align-items: flex-end; gap: clamp(1rem, 4vw, 3.5rem); overflow-x: auto;
+        padding: 2.5rem 1rem 0; scrollbar-width: thin;
+    }
+    @media (min-width: 768px) { .st-piles { --pile-h: 400px; justify-content: center; } }
+    .st-pile { flex: 0 0 auto; width: clamp(150px, 22vw, 230px); margin: 0; display: flex; flex-direction: column; transition: opacity .4s; }
+    .st-pile.is-dim { opacity: .55; }
+    .st-pile.is-dim:hover { opacity: 1; }
+    .st-pile-books { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
+    .st-tome {
+        width: var(--len); height: max(4px, calc(var(--h) * var(--pile-h)));
+        transform: translateX(var(--dx)) rotate(var(--rot));
+        transition: transform .7s cubic-bezier(.16, 1, .3, 1), opacity .5s ease-out;
+        transition-delay: calc(var(--i) * 55ms);
+    }
+    .st-tome a {
+        position: relative; display: flex; align-items: center; height: 100%; padding: 0 12%; overflow: hidden;
+        border-radius: 3px 2px 2px 3px; color: #f6ead4; text-decoration: none;
+        background:
+            linear-gradient(180deg, rgba(255,248,230,.22), transparent 30%, transparent 70%, rgba(0,0,0,.3)),
+            linear-gradient(90deg, transparent 5%, rgba(230,201,140,.7) 5% 6%, transparent 6% 94%, rgba(230,201,140,.7) 94% 95%, transparent 95%),
+            var(--c);
+        box-shadow: 0 1px 0 rgba(0,0,0,.25), 2px 2px 4px -1px rgba(30,16,8,.35);
+        transition: transform .35s cubic-bezier(.2, .8, .2, 1);
+    }
+    .st-tome a:hover, .st-tome a:focus-visible { transform: translateX(14px); }
+    .st-tome a:focus-visible { outline: 3px solid var(--st-gold); outline-offset: 1px; }
+    .st-tome span {
+        display: block; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        font: 600 min(.8125rem, calc(var(--h) * var(--pile-h) * .55))/1 'Fraunces', Georgia, serif; letter-spacing: .02em;
+    }
+    .st-pile figcaption {
+        margin-top: 0; padding: .65rem .5rem .5rem; text-align: center; color: #f6ead4;
+        background: linear-gradient(180deg, #8a5f3b, var(--st-wood) 4px, var(--wood-dark, #3b2415));
+        border-radius: 2px; box-shadow: 0 10px 18px -10px rgba(30,16,8,.7);
+    }
+    .st-pile-year { display: inline-flex; align-items: center; min-height: 44px; font: italic 700 1.6rem/1 'Fraunces', Georgia, serif; color: #fff7e6; }
+    .st-pile-year:hover, .st-pile-year[aria-current] { color: #e6c98c; }
+    .st-pile figcaption span { display: block; font-size: .875rem; color: #e9d8b8; }
+    /* staged entrance: books drop onto the pile, bottom first */
+    .motion-ok .st-piles:not(.is-in) .st-tome { transform: translate(var(--dx), -140px) rotate(calc(var(--rot) * 4)); opacity: 0; }
 
     /* Hall of fame */
     .st-records { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     @media (min-width: 900px) { .st-records { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
     .st-record { display: flex; flex-direction: column; text-align: center; }
     .st-record-link { display: block; color: inherit; text-decoration: none; min-height: 44px; flex: 1; }
-    .st-record-cover { width: 80px; height: 116px; margin: 0 auto .75rem; box-shadow: 3px 4px 0 color-mix(in srgb, var(--st-wood) 35%, transparent); background: var(--st-cream); overflow: hidden; }
-    .st-record-nocover { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', Georgia, serif; font-size: 2rem; color: var(--st-wood); }
+    .st-record-cover { width: 84px; margin: .25rem auto 1.1rem; }
     .st-record-title { font-weight: 700; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .st-record-author { font-size: .9rem; font-style: italic; opacity: .8; margin: .15rem 0 .5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .st-record-link:hover .st-record-title { text-decoration: underline; }
@@ -149,7 +187,6 @@
 <div class="st-page max-w-6xl mx-auto px-1 sm:px-0">
     <!-- Header + year selector -->
     <header class="mb-10 text-center">
-        <p class="st-eyebrow">The reading ledger</p>
         <h2 class="text-3xl sm:text-5xl font-bold">
             {% if selected_year %}{{ selected_year }} in books{% else %}A life in books{% endif %}
         </h2>
@@ -213,10 +250,44 @@
         </div>
     </section>
 
+    <!-- The pile: every finished book, stacked by year -->
+    {% if finished_by_year %}
+    {% set ns = namespace(max=1) %}
+    {% for year, books in finished_by_year %}
+    {% set t = namespace(p=0) %}{% for b in books %}{% set t.p = t.p + (b.page_count or 300) %}{% endfor %}
+    {% if t.p > ns.max %}{% set ns.max = t.p %}{% endif %}
+    {% endfor %}
+    <section class="st-section" aria-labelledby="st-h-pile">
+        <header><h3 id="st-h-pile">Every book, stacked</h3><p>One pile per year; each volume as thick as its page count.</p></header>
+        <div class="st-piles" data-reveal data-scroll-end tabindex="0" role="region" aria-label="Book piles by year">
+            {% for year, books in finished_by_year %}
+            {% set t = namespace(p=0) %}{% for b in books %}{% set t.p = t.p + (b.page_count or 0) %}{% endfor %}
+            {% set dim = selected_year and selected_year != year %}
+            <figure class="st-pile{% if dim %} is-dim{% endif %}{% if selected_year == year %} is-current{% endif %}">
+                <ol class="st-pile-books" aria-label="Books finished in {{ year }}, first at the bottom" reversed>
+                    {% for b in books|reverse %}
+                    {% set frac = (b.page_count or 300) / ns.max %}
+                    <li class="st-tome" style="--h: {{ '%.4f'|format(frac) }}; --c: {{ binding_color(b) }}; --len: {{ 78 + (b.id * 37) % 22 }}%; --dx: {{ (b.id * 53) % 15 - 7 }}px; --rot: {{ '%.1f'|format(((b.id * 17) % 9 - 4) * 0.35) }}deg; --i: {{ books|length - loop.index }}">
+                        <a href="{{ url_for('main.book_detail', book_id=b.id) }}" title="{{ b.title }}{% if b.page_count %} · {{ b.page_count }} pages{% endif %}">
+                            <span>{{ b.title }}</span>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ol>
+                <figcaption>
+                    <a class="st-pile-year" href="{{ url_for('main.stats', year=year) }}"{% if selected_year == year %} aria-current="true"{% endif %}>{{ year }}</a>
+                    <span>{{ books|length }} book{{ '' if books|length == 1 else 's' }} &middot; {{ "{:,}".format(t.p) }} pages</span>
+                </figcaption>
+            </figure>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
     <!-- Rhythm -->
     <section class="st-section" aria-labelledby="st-h-rhythm">
         <header><h3 id="st-h-rhythm">Reading rhythm</h3><p>When the books were finished.</p></header>
-        <div class="st-grid lg:grid-cols-2">
+        <div class="st-grid">
             <div class="st-card">
                 <h4 class="st-chart-title">Pages per month</h4>
                 {% if pages_history_data %}
@@ -227,19 +298,6 @@
                     <tbody>{% for l in pages_history_labels %}<tr><th scope="row">{{ l }}</th><td>{{ pages_history_data[loop.index0] }}</td></tr>{% endfor %}</tbody></table>
                 {% else %}
                 <p class="st-empty-inline">No page counts recorded for these books, so there is no pace to chart.</p>
-                {% endif %}
-            </div>
-            <div class="st-card">
-                <h4 class="st-chart-title">Books per year</h4>
-                <p class="st-chart-note">All time{% if selected_year %}; {{ selected_year }} is highlighted{% endif %}.</p>
-                {% if books_per_year %}
-                <div class="st-chart"><canvas id="booksYearChart" role="img"
-                        aria-label="Bar chart of books finished per year. Full data follows in a table."></canvas></div>
-                <table class="sr-only"><caption>Books finished per year</caption>
-                    <thead><tr><th scope="col">Year</th><th scope="col">Books</th></tr></thead>
-                    <tbody>{% for y, n in books_per_year %}<tr><th scope="row">{{ y }}</th><td>{{ n }}</td></tr>{% endfor %}</tbody></table>
-                {% else %}
-                <p class="st-empty-inline">No finished books yet.</p>
                 {% endif %}
             </div>
         </div>
@@ -383,13 +441,6 @@
 
         bar('pagesHistoryChart', {{ pages_history_labels | tojson }},
             [{ label: 'Pages read', data: {{ pages_history_data | tojson }}, backgroundColor: C.gold, maxBarThickness: 28 }]);
-
-        var years = {{ books_per_year | map('first') | list | tojson }};
-        var selected = {{ (selected_year or '') | string | tojson }};
-        bar('booksYearChart', years,
-            [{ label: 'Books finished', data: {{ books_per_year | map('last') | list | tojson }},
-               backgroundColor: years.map(function (y) { return !selected || y === selected ? C.leather : 'rgba(138,90,54,0.35)'; }),
-               maxBarThickness: 48 }]);
 
         bar('ratingChart', {{ rating_labels | tojson }}, [
             { label: 'Your ratings', data: {{ my_rating_dist | tojson }}, backgroundColor: C.oxblood },

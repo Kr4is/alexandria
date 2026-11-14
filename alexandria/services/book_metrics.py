@@ -48,7 +48,8 @@ def book_metrics(book, library_avg_pages=None, now=None):
     if finished:
         progress_pct = 100
     elif pages and current:
-        progress_pct = max(0, min(100, round(current * 100 / pages)))
+        # Floor, so an unfinished book never reads as 100%; matches the shelves.
+        progress_pct = max(0, min(100, current * 100 // pages))
 
     pages_left = 0 if finished else (max(pages - current, 0) if pages and current else None)
 
