@@ -17,6 +17,10 @@ def configure_app(app, root: Path) -> None:
 
     # Covers downloaded once and served from /cover/<id>; keep it on the persistent volume.
     app.config['COVERS_DIR'] = _resolve_covers_dir(app, root)
+    # After the first request, store a local cover for any book that lacks one (background).
+    app.config['STORE_COVERS_ON_STARTUP'] = os.getenv('STORE_COVERS_ON_STARTUP', '1').strip().lower() not in (
+        '0', 'false', 'no', 'off', '',
+    )
 
     # Optional shared-secret bearer token for the public reading-activity API.
     # Left unset (the default), the endpoint stays fully open, matching the

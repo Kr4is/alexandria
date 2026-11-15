@@ -12,6 +12,7 @@ from alexandria.models import Book
 def no_cover_lookups(monkeypatch):
     """Adding a book looks up covers on the network; tests never do."""
     monkeypatch.setattr('alexandria.services.books.improve_cover', lambda book: False)
+    monkeypatch.setenv('STORE_COVERS_ON_STARTUP', '0')  # tests never start background work
 
 
 @pytest.fixture

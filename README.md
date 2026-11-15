@@ -189,6 +189,7 @@ cp .env.example .env
 | `GOOGLE_BOOKS_API_KEY` | Optional API key for Google Books (avoids shared anonymous quota / HTTP 429) | _(unset)_ |
 | `GOOGLE_BOOKS_CACHE_TTL_SECONDS` | In-memory cache TTL for search and volume lookups (0 disables caching) | `3600` |
 | `REFRESH_LIBRARY_METADATA_ON_STARTUP` | Refresh all library metadata from Google Books on startup (1 API call per book) | `false` |
+| `STORE_COVERS_ON_STARTUP` | After the first request, store a local cover in the background for any book that lacks one (never runs a title search) | `1` |
 | `COVERS_DIR` | Where covers are stored once downloaded and served from `/cover/<id>`; keep it on the persistent volume | `instance/covers` |
 | `DATABASE_URL` | SQLite database URI | `sqlite:///instance/alexandria.db` |
 | `READING_API_TOKEN` | Optional bearer token for the public JSON API. Unset leaves the API open | _(unset)_ |
@@ -201,11 +202,12 @@ cp .env.example .env
 
 ### Covers
 
-New books get their cover downloaded and stored in `COVERS_DIR`. For an existing
-library, run `flask covers repair` to see what would be stored or fixed (nothing
-is saved), then `flask covers repair --apply`. It stores working covers and, for
-books whose cover does not load, looks for another edition on Open Library by
-exact title and author surname.
+New books get their cover downloaded and stored in `COVERS_DIR`, and after the first
+request the app fills in, in the background, any book that is still missing one.
+
+For books whose cover does not load at all, `flask covers repair` looks for another
+edition on Open Library (exact title and a shared author surname). It prints what
+it would store or change and saves nothing; run it again with `--apply` to save.
 
 A stored cover always wins and `repair` skips it. To replace one, delete
 `<COVERS_DIR>/<id>.jpg` and run `flask covers repair --apply` again.
