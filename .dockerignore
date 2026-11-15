@@ -6,3 +6,6 @@ instance/
 *.db
 .python-version
 .uv/
+node_modules/
+static/dist/
+.impeccable/

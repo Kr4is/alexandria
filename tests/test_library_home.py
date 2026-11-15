@@ -119,24 +119,33 @@ def test_index_filter_pagination(client, make_book):
 
 
 def test_grouped_view_has_shelves_per_status_and_is_read_only(client, make_book):
-    _finished(make_book, 'Done')
+    _finished(make_book, 'Done', personal_notes='Secret finished note')
     make_book(title='Wanted', status=BookStatus.TBR)
-    make_book(title='Stalled', status=BookStatus.PAUSED)
+    make_book(title='Stalled', status=BookStatus.PAUSED, personal_notes='Secret paused note')
     make_book(title='Dropped', status=BookStatus.DNF)
+    make_book(title='Now', status=BookStatus.READING, personal_notes='Secret reading note')
     html = client.get('/').get_data(as_text=True)
-    for text in ('Up next', 'Finished in', 'Paused', 'Did not finish', 'Wanted', 'Stalled', 'Dropped'):
+    for text in ('To read', 'Finished in', 'Paused', 'Did not finish', 'Wanted', 'Stalled', 'Dropped'):
         assert text in html
-    assert 'class="bk-actions"' not in html
-    assert 'data-delete-url="' not in html
+    # anonymous visitors get no management controls and no private notes
+    assert 'data-confirm="finish"' not in html
+    assert 'data-confirm="delete"' not in html
+    assert 'name="status" value=' not in html
+    assert 'name="csrf_token"' not in html.split('id="modal-finish"')[0]
+    assert 'name="current_page"' not in html
+    assert 'Secret' not in html
+    assert 'Private note' not in html
 
 
 def test_authenticated_sees_actions(auth_client, make_book):
     make_book(title='Wanted', status=BookStatus.TBR)
-    make_book(title='Stalled', status=BookStatus.PAUSED)
+    make_book(title='Stalled', status=BookStatus.PAUSED, personal_notes='Owner-only note')
     make_book(title='Now', status=BookStatus.READING)
     html = auth_client.get('/').get_data(as_text=True)
-    assert 'js-open-finish-modal' in html
-    assert 'js-open-delete-modal' in html
-    assert 'Resume' in html and 'Start' in html and 'DNF' in html
-    assert 'class="bk-actions"' in html
+    assert 'data-confirm="finish"' in html
+    assert 'data-confirm="delete"' in html
+    assert 'Resume' in html and 'Start reading' in html
+    assert 'name="status" value="dnf"' in html
     assert 'name="status" value="reading"' in html
+    assert 'name="current_page"' in html
+    assert 'Owner-only note' in html

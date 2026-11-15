@@ -4,8 +4,11 @@ from typing import Any
 
 from flask import has_request_context, request
 
+import calendar as _calendar
+
 from alexandria.constants import BookStatus
 from alexandria.models import Book
+from alexandria.services.calendar import book_events, density, start_date
 from alexandria.utils.languages import LANGUAGE_NAMES
 
 
@@ -66,6 +69,13 @@ class StatsContext:
     # Page-only: every finished book grouped by year, oldest finish first, for
     # the "stacked" view. Not part of the API payload.
     finished_by_year: list = field(default_factory=list)
+    # Page-only: books started in the window (start = date_started, else
+    # date_added once off the to-read pile), finished books by format, and the
+    # stamped twelve-month roll of one year (the selected one, else the latest).
+    started_count: int = 0
+    formats: list = field(default_factory=list)
+    roll_year: int | None = None
+    roll_months: list = field(default_factory=list)
 
     def template_kwargs(self) -> dict:
         return {f.name: getattr(self, f.name) for f in fields(self)}
@@ -235,6 +245,41 @@ def _group_by_year(finished_books: list) -> list[tuple[int, list]]:
     return sorted(years.items())
 
 
+def _compute_roll(all_books: list, year: int | None) -> tuple[int | None, list]:
+    """Twelve months of one year with every started/finished stamp on its day."""
+    events = [(d, kind, b) for b in all_books for d, kind in book_events(b)]
+    if year is None:
+        if not events:
+            return None, []
+        year = max(d for d, _, _ in events).year
+    by_day: dict = {}
+    for d, kind, b in events:
+        if d.year == year:
+            by_day.setdefault((d.month, d.day), []).append({'kind': kind, 'book': b})
+    cal = _calendar.Calendar(firstweekday=6)
+    months = []
+    for m in range(1, 13):
+        cells, started, finished = [], 0, 0
+        for day in cal.itermonthdays(year, m):
+            if not day:
+                cells.append(None)
+                continue
+            evs = sorted(by_day.get((m, day), []), key=lambda e: e['kind'] != 'started')
+            started += sum(1 for e in evs if e['kind'] == 'started')
+            finished += sum(1 for e in evs if e['kind'] == 'finished')
+            cells.append({'day': day, 'events': evs})
+        months.append({
+            'month': m,
+            'abbr': _calendar.month_abbr[m],
+            'name': _calendar.month_name[m],
+            'started': started,
+            'finished': finished,
+            'density': density(started + finished),
+            'cells': cells,
+        })
+    return year, months
+
+
 def _requested_year() -> int | None:
     """``?year=YYYY`` of the /stats page; ignored elsewhere (e.g. the public API)."""
     if not has_request_context() or request.endpoint != 'main.stats':
@@ -290,6 +335,13 @@ def build_stats_context(
     started = [b for b in all_books if b.status != BookStatus.TBR]
     completion_rate = int(safe_div(len(all_finished), len(started)) * 100)
 
+    started_books = [b for b in all_books if start_date(b)]
+    if since is not None:
+        started_books = [b for b in started_books if as_utc(start_date(b)) >= since]
+    if until is not None:
+        started_books = [b for b in started_books if as_utc(start_date(b)) < until]
+    roll_year, roll_months = _compute_roll(all_books, year)
+
     my_ratings = [b.personal_rating for b in finished_books if b.personal_rating]
     public_ratings = [b.average_rating for b in finished_books if b.average_rating]
     author_counts = _count(a for b in finished_books for a in _split_csv(b.authors))
@@ -328,6 +380,10 @@ def build_stats_context(
         most_active_month=most_active,
         longest_streak=streak,
         finished_by_year=_group_by_year(all_finished),
+        started_count=len(started_books),
+        formats=_ranked(_count(b.format for b in finished_books if b.format), 10),
+        roll_year=roll_year,
+        roll_months=roll_months,
         **_compute_hall_of_fame(finished_books),
         **_compute_curiosities(total_pages_read),
     )

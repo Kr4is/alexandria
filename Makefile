@@ -1,9 +1,16 @@
-.PHONY: install run test lint cov seed docker
+.PHONY: install run test lint cov seed docker css css-watch
 
-install: ## Install runtime and dev dependencies
+install: ## Install runtime and dev dependencies (Python and the CSS toolchain)
 	uv sync --group dev
+	npm ci
 
-run: ## Start the Flask app
+css: ## Build static/dist/app.css from static/src (Tailwind CLI)
+	npm run build
+
+css-watch: ## Rebuild the CSS on every template or stylesheet change
+	npm run watch
+
+run: css ## Build the CSS and start the Flask app
 	uv run python app.py
 
 test: ## Run the test suite

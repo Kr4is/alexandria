@@ -1,0 +1,142 @@
+/* stats page styles (/stats) */
+@layer components {
+  .st-head { margin-bottom: 8px; }
+  .st-lede { margin: 0 0 clamp(20px, 3vw, 36px); font-family: var(--font-mono); font-size: 14px; }
+  .st-note { font-family: var(--font-mono); font-size: 13px; margin: 12px 0 0; }
+  .st-none { font-family: var(--font-mono); font-size: 13px; margin: 8px 0 0; }
+  .st-h3 { margin: 0 0 10px; font-weight: 800; font-stretch: 85%; font-size: 19px; line-height: 1.1; text-transform: uppercase; letter-spacing: .02em; }
+  .st-slip { background: var(--color-slip); border: var(--rule); padding: clamp(14px, 1.6vw, 20px); min-width: 0; }
+
+  /* empty */
+  .st-empty { border: var(--rule); background: var(--color-slip); padding: clamp(24px, 4vw, 48px); max-width: 44rem; }
+  .st-empty h2 { margin: 0 0 10px; font-family: var(--font-dater); font-weight: 900; font-size: clamp(34px, 4vw, 52px); line-height: .9; text-transform: uppercase; }
+  .st-empty p { margin: 0 0 20px; font-family: var(--font-mono); font-size: 14px; }
+
+  /* the tally and the roll */
+  .st-year { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: clamp(20px, 3vw, 48px); align-items: start; }
+  .st-year .tally > div:only-child, .st-year .tally > div { min-width: 0; }
+  .st-share { margin-top: 18px; }
+  .st-share .segbar > span { min-width: 0; text-overflow: clip; }
+  .st-key { margin: 4px 0 0; display: flex; flex-wrap: wrap; gap: 2px 14px; font-family: var(--font-mono); font-size: 13px; }
+  .st-key small { font-size: 12px; }
+  .st-roll-head { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 16px; flex-wrap: wrap; margin-bottom: 10px; }
+  .st-more {
+    font-family: var(--font-mono); font-size: 13px; font-weight: 600; min-height: 44px; display: inline-flex; align-items: center;
+    padding: 0 12px; border: var(--rule); background: var(--color-slip); text-decoration: none;
+  }
+  .st-more:hover { background: var(--color-d1); }
+  .st-months { list-style: none; margin: 0; padding: 0; }
+  .st-months > li { min-width: 0; display: flex; }
+  .st-months .month { flex: 1; display: block; text-decoration: none; color: var(--color-type); }
+  .st-months a.month:hover { box-shadow: 4px 4px 0 var(--color-type); transform: translate(-2px, -2px); }
+  .st-months .month h3 span:first-child { font-weight: 700; }
+  /* 58% ground: day pips and the cell outline flip to slip so they stay visible */
+  .st-months .month[data-d="4"] .days > i::before { background: var(--color-slip); opacity: .6; }
+  .st-roll-key { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; margin-top: 12px; font-family: var(--font-mono); font-size: 12px; }
+  .st-ink { display: inline-flex; align-items: center; gap: 8px; }
+  .st-ink .dot { position: relative; inset: auto; width: 20px; height: 20px; flex: none; }
+
+  /* figures */
+  .st-figs { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); border: var(--rule); background: var(--color-slip); }
+  .st-figs > div { padding: 14px 16px 16px; border-right: var(--rule); border-bottom: var(--rule); margin: 0 -2px -2px 0; min-width: 0; }
+  .st-figs dt { font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+  .st-figs dd { margin: 6px 0 0; font-family: var(--font-mono); font-size: 14px; }
+  .st-figs dd b { font-family: var(--font-dater); font-weight: 900; font-size: clamp(40px, 3.6vw, 56px); line-height: .9; margin-right: 4px; }
+  .st-figs dd.sub { margin-top: 4px; font-size: 12px; }
+
+  .st-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 2vw, 28px); }
+  .st-three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(16px, 2vw, 28px); margin-top: clamp(16px, 2vw, 28px); }
+
+  /* ruled bar tables: the chart is the table */
+  .st-bars { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 13px; }
+  .st-bars th { text-align: left; font-weight: 500; padding: 5px 12px 5px 0; white-space: nowrap; max-width: 11rem; overflow: hidden; text-overflow: ellipsis; width: 1%; }
+  .st-bars td { padding: 5px 0; }
+  .st-bars tbody tr + tr { border-top: 1px dashed var(--color-d2); }
+  .st-bars td { display: flex; align-items: center; gap: 8px; }
+  .st-bars .bar { flex: 1; height: 16px; background: var(--color-d1); position: relative; min-width: 24px; }
+  .st-bars .fill { position: absolute; inset: 0 auto 0 0; background: var(--color-type); }
+  .st-bars .n { min-width: 3.5ch; text-align: right; font-weight: 600; }
+  .st-pair thead th { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; padding-bottom: 8px; width: auto; }
+  .st-pair thead th:first-child { width: 1%; }
+  .st-pair .bar.pub .fill { background: var(--color-d3); }
+  .st-pair .sw { display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; background: var(--color-type); }
+  .st-pair .sw.pub { background: var(--color-d3); }
+  .st-pair td { padding-right: 10px; }
+
+  /* the register: years by months, shaded on the ramp */
+  .st-register-wrap { overflow-x: auto; }
+  .st-register { width: 100%; border-collapse: separate; border-spacing: 3px; font-family: var(--font-mono); font-size: 13px; }
+  .st-register thead th { font-weight: 600; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; text-align: center; }
+  .st-register abbr { text-decoration: none; }
+  .st-register tbody th { text-align: left; font-family: var(--font-dater); font-weight: 900; font-size: 20px; padding-right: 6px; }
+  .st-register td { text-align: center; height: 34px; font-weight: 700; border: 1px solid var(--color-d2); background: var(--color-d0); }
+  .st-register td[data-d="1"] { background: var(--color-d1); }
+  .st-register td[data-d="2"] { background: var(--color-d2); }
+  .st-register td[data-d="3"] { background: var(--color-d3); }
+  .st-register td[data-d="4"] { background: var(--color-d4); color: var(--color-slip); }
+
+  /* every book, stacked */
+  .st-piles { display: flex; align-items: flex-end; gap: clamp(16px, 3vw, 40px); overflow-x: auto; padding: 12px 4px 4px; }
+  .st-pile { flex: 0 0 auto; width: clamp(140px, 18vw, 220px); margin: 0; display: flex; flex-direction: column; }
+  .st-pile.dim { opacity: .5; }
+  .st-pile.dim:hover, .st-pile.dim:focus-within { opacity: 1; }
+  .st-pile-books { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; }
+  .st-pile-books li { width: var(--len); height: max(18px, calc(var(--h) * 320px)); transform: translateX(var(--dx)); margin-top: -2px; }
+  .st-pile-books a {
+    display: flex; align-items: center; height: 100%; padding: 0 10px; text-decoration: none;
+    background: var(--color-slip); border: var(--rule); overflow: hidden;
+  }
+  .st-pile-books a:hover { background: var(--color-d1); }
+  .st-pile-books span { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-family: var(--font-mono); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+  .st-pile figcaption { background: var(--color-type); color: var(--color-paper); padding: 4px 10px 10px; text-align: center; border-radius: 0 0 6px 6px; }
+  .st-pile figcaption a { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; font-family: var(--font-dater); font-weight: 900; font-size: 34px; text-decoration: none; }
+  .st-pile figcaption a[aria-current] { text-decoration: underline; text-underline-offset: 4px; }
+  .st-pile figcaption span { display: block; font-family: var(--font-mono); font-size: 12px; }
+
+  /* hall of fame */
+  .st-recs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2vw, 24px); }
+  .st-rec { background: var(--color-slip); border: var(--rule); padding: 14px 16px; display: flex; flex-direction: column; min-width: 0; }
+  .st-rec .label { margin: 0 0 10px; font-weight: 600; }
+  .st-rec-link { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; align-items: start; text-decoration: none; min-height: 44px; }
+  .st-rec-link:hover .st-rec-title { text-decoration: underline; }
+  .st-rec-cover { width: 64px; }
+  .st-rec-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .st-rec-title { font-weight: 800; font-stretch: 85%; font-size: 18px; line-height: 1.1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .st-rec-author { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .st-rec-value { margin: auto 0 0; padding-top: 10px; border-top: 1px dashed var(--color-type); margin-top: 12px; font-family: var(--font-mono); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+  .st-rec-value b { font-family: var(--font-dater); font-weight: 900; font-size: 40px; line-height: .9; letter-spacing: 0; }
+  .st-rec-note { margin: 4px 0 0; font-family: var(--font-mono); font-size: 12px; }
+
+  /* curiosities and export */
+  .st-curio { margin-top: clamp(32px, 5vw, 72px); border-top: var(--rule); padding-top: 6px; }
+  .st-curio summary {
+    cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 12px; list-style: none;
+    font-family: var(--font-dater); font-weight: 900; font-size: clamp(28px, 3vw, 40px); text-transform: uppercase;
+  }
+  .st-curio summary::-webkit-details-marker { display: none; }
+  .st-curio summary::before { content: "+"; display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: var(--rule); font-family: var(--font-mono); font-size: 20px; }
+  .st-curio[open] summary::before { content: "\2212"; }
+  .st-curio .st-figs { margin-top: 14px; }
+  .st-export { margin-top: clamp(32px, 5vw, 72px); border-top: var(--rule); padding-top: 16px; }
+  .st-export-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+
+  @media (max-width: 1100px) {
+    .st-year { grid-template-columns: 1fr; }
+    .st-three { grid-template-columns: 1fr 1fr; }
+    .st-recs { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 760px) {
+    .st-two, .st-three, .st-recs { grid-template-columns: 1fr; }
+    .st-wide { display: none; }
+    .st-register { border-spacing: 2px; font-size: 12px; }
+    .st-register tbody th { font-size: 16px; }
+    .st-register td { height: 28px; }
+  }
+  @media (max-width: 640px) {
+    .st-figs { grid-template-columns: 1fr 1fr; }
+    .st-figs dd b { font-size: 36px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .st-months a.month:hover { transform: none; }
+  }
+}

@@ -19,7 +19,7 @@ def _add_books(app):
 
 def test_calendar_empty_state(client):
     html = client.get('/calendar').get_data(as_text=True)
-    assert 'The journal is still blank' in html
+    assert 'Nothing stamped yet' in html
     assert 'month-select' not in html
 
 

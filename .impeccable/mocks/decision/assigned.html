@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alexandria · Circulation Record</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,400..800&family=Big+Shoulders+Display:wght@700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ------------------------------------------------------------------
+   Tokens
+   Card stock = status. Ink = event. Nothing else gets a colour.
+   ------------------------------------------------------------------ */
+:root{
+  /* card stock, one per status */
+  --stock-reading:#f2d13a;
+  --stock-finished:#7fc4a0;
+  --stock-tbr:#8fc1e6;
+  --stock-paused:#f29a85;
+  --stock-dnf:#fbfaf6;          /* plain slip stock */
+  /* inks, one per event */
+  --ink-started:#5236a8;        /* violet */
+  --ink-finished:#d8232a;       /* red */
+  --ink-returned:#141414;       /* black: returned unread */
+  /* type + ground */
+  --type:#141414;
+  --paper:#f4f1ea;
+  --slip:#fffdf8;
+  /* the only tonal ramp: five ink densities */
+  --d0:var(--paper);
+  --d1:color-mix(in srgb, #141414 9%, var(--paper));
+  --d2:color-mix(in srgb, #141414 20%, var(--paper));
+  --d3:color-mix(in srgb, #141414 36%, var(--paper));
+  --d4:color-mix(in srgb, #141414 58%, var(--paper));
+
+  --f-dater:"Big Shoulders Display", "Arial Narrow", sans-serif;
+  --f-type:"IBM Plex Mono", ui-monospace, monospace;
+  --f-ui:"Archivo", system-ui, sans-serif;
+  --rule:2px solid var(--type);
+  --gutter:clamp(16px, 4vw, 56px);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--paper);color:var(--type);
+  font-family:var(--f-ui);font-size:16px;line-height:1.45;
+  font-variant-numeric:tabular-nums lining-nums;
+  padding-bottom:140px;
+}
+img{display:block;max-width:100%}
+button,input{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--type);outline-offset:3px;box-shadow:0 0 0 6px var(--slip)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.mono{font-family:var(--f-type)}
+.wrap{max-width:1440px;margin:0 auto;padding:0 var(--gutter)}
+
+/* ---------- header ---------- */
+.top{border-bottom:var(--rule);background:var(--paper)}
+.top .wrap{display:flex;align-items:center;gap:24px;min-height:68px;flex-wrap:wrap}
+.mark{font-family:var(--f-dater);font-weight:900;font-size:28px;letter-spacing:.06em;text-decoration:none;text-transform:uppercase}
+.nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+.nav a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;text-decoration:none;font-weight:600;font-stretch:85%;text-transform:uppercase;letter-spacing:.04em;font-size:14px;border:2px solid transparent}
+.nav a[aria-current]{border-color:var(--type)}
+.nav a:hover{background:var(--d1)}
+.nav .add{background:var(--type);color:var(--slip)}
+.nav .add:hover{background:var(--type)}
+.who{font-family:var(--f-type);font-size:13px;display:flex;align-items:center;gap:8px}
+.who::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--type)}
+
+/* ---------- hero: the dater ---------- */
+.hero{padding-top:clamp(20px,2.4vw,36px);padding-bottom:clamp(8px,1vw,16px)}
+.hero-head{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-bottom:clamp(14px,2vw,24px)}
+.kicker{font-family:var(--f-type);font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase}
+.hero-head p{margin:0;font-family:var(--f-type);font-size:14px;max-width:46ch}
+.dater{display:grid;grid-template-columns:1fr 1.45fr 2fr;gap:clamp(6px,1vw,14px);margin:0}
+.band{
+  background:var(--type);color:var(--paper);border-radius:clamp(8px,1.4vw,22px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:clamp(4px,.8vw,12px) 0 clamp(8px,1vw,16px);position:relative;overflow:hidden;
+}
+/* the ridges of a rubber band dater */
+.band::before,.band::after{content:"";position:absolute;left:0;right:0;height:clamp(6px,.9vw,12px);
+  background:repeating-linear-gradient(90deg,transparent 0 6px,rgba(244,241,234,.18) 6px 8px)}
+.band::before{top:0}.band::after{bottom:0}
+.band b{font-family:var(--f-dater);font-weight:900;font-size:clamp(86px,14vw,214px);line-height:.86;letter-spacing:-.01em}
+.band small{font-family:var(--f-type);font-size:clamp(10px,1vw,13px);letter-spacing:.2em;text-transform:uppercase;opacity:1}
+.legend{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:18px;font-family:var(--f-type);font-size:13px;align-items:center}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{width:18px;height:18px;border-radius:50%;border:3px solid currentColor;display:inline-block}
+.legend .chip{width:22px;height:16px;border-radius:2px;border:2px solid var(--type)}
+
+/* ---------- section headings ---------- */
+.sec{padding-top:clamp(32px,5vw,72px)}
+.sec-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;border-top:var(--rule);padding-top:14px;margin-bottom:clamp(18px,2.4vw,32px)}
+.sec-head h2{margin:0;font-family:var(--f-dater);font-weight:900;font-size:clamp(40px,4.4vw,68px);line-height:.9;text-transform:uppercase;letter-spacing:.005em}
+.sec-head .count{font-family:var(--f-type);font-size:14px}
+.sec-head .aside{margin-left:auto;font-family:var(--f-type);font-size:13px}
+
+/* ---------- ink stamps ---------- */
+.stamp{
+  --r:-4deg;
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+  border:3px solid currentColor;border-radius:6px;padding:4px 10px 3px;
+  font-family:var(--f-dater);font-weight:800;text-transform:uppercase;line-height:1;
+  letter-spacing:.04em;transform:rotate(var(--r));filter:url(#ink);mix-blend-mode:multiply;
+  white-space:nowrap;
+}
+.stamp .ev{font-size:.62em;letter-spacing:.16em}
+.stamp .dt{font-size:1em}
+.stamp.started{color:var(--ink-started)}
+.stamp.finished{color:var(--ink-finished)}
+.stamp.returned{color:var(--ink-returned)}
+.stamp.big{font-size:clamp(28px,3vw,40px);border-width:4px;padding:6px 14px 4px}
+.stamp.med{font-size:30px;border-width:3.5px}
+.stamp.sm{font-size:21px;border-width:3px;padding:3px 8px 2px}
+
+/* ---------- pockets (currently reading) ---------- */
+.pockets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(20px,3vw,44px)}
+.pocket{position:relative;padding-top:0;transition:opacity .25s, filter .25s}
+.pocket-sleeve{
+  position:relative;margin-top:-64px;z-index:2;height:110px;
+  background:var(--slip);border:var(--rule);border-top:none;border-radius:0 0 6px 6px;
+  display:flex;align-items:flex-end;justify-content:space-between;padding:0 18px 14px;
+  font-family:var(--f-type);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+}
+.pocket-sleeve::before{ /* the thumb notch */
+  content:"";position:absolute;top:-2px;left:50%;width:88px;height:30px;transform:translateX(-50%);
+  border:var(--rule);border-top:none;border-radius:0 0 44px 44px;background:var(--paper);
+}
+.pocket-sleeve::after{content:"";position:absolute;left:0;right:0;top:-2px;border-top:var(--rule)}
+.card{
+  position:relative;z-index:1;background:var(--stock-reading);border:var(--rule);border-radius:6px 6px 0 0;
+  padding:clamp(16px,2vw,24px);padding-bottom:84px;
+  transition:transform .35s cubic-bezier(.2,.7,.2,1);
+}
+.card-top{display:grid;grid-template-columns:clamp(84px,9vw,124px) 1fr;gap:clamp(14px,1.6vw,22px);align-items:start}
+.cover{aspect-ratio:2/3;background:var(--slip);border:var(--rule);overflow:hidden;position:relative}
+.cover img{width:100%;height:100%;object-fit:cover}
+.cover .nocover{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;font-family:var(--f-type);font-size:11px;line-height:1.25;background:repeating-linear-gradient(0deg,var(--slip) 0 17px,var(--d1) 17px 18px)}
+.card h3{margin:0;font-family:var(--f-ui);font-weight:800;font-stretch:80%;font-size:clamp(26px,2.6vw,38px);line-height:1;letter-spacing:-.01em}
+.card .by{margin:6px 0 0;font-size:16px}
+.card .meta{margin:10px 0 0;font-family:var(--f-type);font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+.page-big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:18px 0 6px}
+.page-big .now{font-family:var(--f-dater);font-weight:900;font-size:clamp(64px,7vw,112px);line-height:.82}
+.page-big .of{font-family:var(--f-type);font-size:15px}
+/* page ruler: ticks every 10% */
+.ruler{position:relative;height:30px;border:var(--rule);background:var(--slip);
+  background-image:repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),var(--type) calc(10% - 2px) 10%);
+  background-size:100% 9px;background-repeat:no-repeat;background-position:bottom}
+.ruler .fill{position:absolute;left:0;top:0;bottom:0;background:var(--type);transition:width .4s}
+.ruler .pct{position:absolute;top:50%;transform:translateY(-50%);right:6px;font-family:var(--f-type);font-weight:600;font-size:13px;background:var(--slip);padding:0 4px}
+/* the slip: where stamps land */
+.slip{margin-top:16px;background:var(--slip);border:var(--rule);display:grid;grid-template-columns:auto 1fr;}
+.slip-stamp{padding:14px 18px;border-right:1px dashed var(--type);display:flex;align-items:center;justify-content:center;min-width:170px}
+.log{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.log label{font-family:var(--f-type);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.log-row{display:flex;gap:8px;align-items:stretch}
+.stepper{display:flex;border:var(--rule)}
+.stepper button{width:44px;min-height:48px;border:none;background:var(--slip);font-size:22px;font-weight:700;cursor:pointer}
+.stepper button:hover{background:var(--d1)}
+.stepper input{width:88px;border:none;border-left:var(--rule);border-right:var(--rule);text-align:center;font-family:var(--f-type);font-weight:600;font-size:20px;background:var(--slip);-moz-appearance:textfield}
+.stepper input::-webkit-inner-spin-button,.stepper input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.btn-stamp{flex:1;min-height:52px;border:var(--rule);background:var(--type);color:var(--slip);font-weight:800;font-stretch:80%;text-transform:uppercase;letter-spacing:.06em;font-size:16px;cursor:pointer;padding:0 14px}
+.btn-stamp:hover{background:#000}
+.log-lines{list-style:none;margin:0;padding:0;font-family:var(--f-type);font-size:13px}
+.log-lines li{display:flex;justify-content:space-between;border-top:1px solid var(--d2);padding:5px 0}
+.card-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.btn-line{min-height:44px;padding:0 14px;border:var(--rule);background:transparent;font-weight:700;font-stretch:85%;text-transform:uppercase;letter-spacing:.05em;font-size:13px;cursor:pointer}
+.btn-line:hover{background:rgba(20,20,20,.08)}
+.held-only{display:none}
+.finish-stamp{position:absolute;right:22px;top:22px;z-index:3;pointer-events:none}
+
+/* ---------- one record held at a time ---------- */
+body.holding [data-record]:not(.held){opacity:.28;filter:saturate(.4)}
+[data-record].held{z-index:20}
+.pocket.held .card{transform:translateY(-40px)}
+[data-record].held .held-only{display:block}
+.detail{margin-top:14px;border-top:1px dashed var(--type);padding-top:12px}
+.detail dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;margin:0;font-family:var(--f-type);font-size:13px}
+.detail dt{text-transform:uppercase;letter-spacing:.08em}
+.detail dd{margin:0;font-weight:600}
+.detail .note{margin:10px 0 0;font-size:15px;font-style:italic}
+.detail .private{font-family:var(--f-type);font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-style:normal;display:block;margin-bottom:2px}
+
+/* ---------- the drawers: collection by status ---------- */
+.drawers{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:clamp(20px,2.4vw,36px) clamp(16px,2vw,28px)}
+.drawer{grid-column:span 12}
+.drawer.third{grid-column:span 4}
+.drawer-tab{margin:0 0 -2px;position:relative;z-index:1;display:inline-flex;align-items:center;gap:12px;padding:10px 18px 8px;border:var(--rule);border-bottom:none;border-radius:8px 8px 0 0;font-family:var(--f-dater);font-weight:900;font-size:clamp(26px,2.6vw,36px);text-transform:uppercase;line-height:1}
+.drawer-tab .n{font-family:var(--f-type);font-weight:600;font-size:15px;border:2px solid var(--type);padding:2px 7px;border-radius:999px;background:var(--slip)}
+.drawer-body{border:var(--rule);padding:clamp(12px,1.6vw,20px);display:grid;gap:clamp(12px,1.4vw,18px)}
+.drawer.finished .drawer-tab,.drawer.finished .drawer-body{background:var(--stock-finished)}
+.drawer.tbr .drawer-tab,.drawer.tbr .drawer-body{background:var(--stock-tbr)}
+.drawer.paused .drawer-tab,.drawer.paused .drawer-body{background:var(--stock-paused)}
+.drawer.dnf .drawer-tab,.drawer.dnf .drawer-body{background:var(--stock-dnf)}
+.drawer.finished .drawer-body{grid-template-columns:repeat(6,minmax(0,1fr))}
+.drawer.third .drawer-body{grid-template-columns:1fr}
+.drawer-foot{display:flex;justify-content:flex-end;margin-top:8px}
+.drawer-foot a{font-family:var(--f-type);font-size:13px;font-weight:600;min-height:44px;display:inline-flex;align-items:center;padding:0 4px}
+
+.rec{position:relative;background:var(--slip);border:var(--rule);display:flex;flex-direction:column;transition:opacity .25s, filter .25s, transform .3s}
+.rec-btn{all:unset;cursor:pointer;display:flex;flex-direction:column;flex:1}
+.rec-btn:focus-visible{outline:3px solid var(--type);outline-offset:3px}
+.rec .cover{border:none;border-bottom:var(--rule)}
+.rec-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:4px;flex:1}
+.rec-body .h4{margin:0;font-weight:800;font-stretch:85%;font-size:17px;line-height:1.1}
+.rec-body .a{font-size:14px}
+.rec-body .t{font-family:var(--f-type);font-size:12px;letter-spacing:.04em;text-transform:uppercase;margin-top:auto;padding-top:6px}
+.rec .stamp-wrap{padding:4px 10px 12px;display:flex;justify-content:center}
+.rec.row .rec-btn{flex-direction:row}
+.rec.row .cover{width:84px;flex:none;border-bottom:none;border-right:var(--rule)}
+.rec.row .stamp-wrap{position:absolute;right:12px;bottom:12px;padding:0}
+.rec.row:has(.stamp-wrap) .rec-body{padding-bottom:70px}
+.rec.held{transform:translateY(-8px);box-shadow:8px 8px 0 var(--type)}
+.drawer.finished .rec.held{grid-column:span 2}
+.rec .detail{padding:0 12px 12px;margin-top:0}
+.rating{font-family:var(--f-type);font-weight:700;font-size:14px}
+
+/* ---------- the year: overprinted stamps ---------- */
+.year{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,2fr);gap:clamp(20px,3vw,48px);align-items:start}
+.tally{display:grid;grid-template-columns:1fr 1fr;border:var(--rule);background:var(--slip)}
+.tally div{padding:16px 18px;border-bottom:var(--rule)}
+.tally div:nth-child(odd){border-right:var(--rule)}
+.tally div:nth-last-child(-n+2){border-bottom:none}
+.tally b{display:block;font-family:var(--f-dater);font-weight:900;font-size:clamp(52px,5vw,80px);line-height:.85}
+.tally span{font-family:var(--f-type);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.tally .v{color:var(--ink-started)}
+.tally .r{color:var(--ink-finished)}
+.formats{margin-top:16px;font-family:var(--f-type);font-size:13px}
+.formats .bar{display:flex;height:28px;border:var(--rule);margin:6px 0}
+.formats .bar span{display:flex;align-items:center;padding:0 8px;border-right:var(--rule);background:var(--slip);overflow:hidden;white-space:nowrap}
+.formats .bar span:last-child{border-right:none}
+.yearsel{display:inline-flex;border:var(--rule);margin-left:auto}
+.yearsel button{min-height:44px;min-width:72px;border:none;background:var(--slip);font-family:var(--f-type);font-weight:600;cursor:pointer}
+.yearsel button[aria-pressed="true"]{background:var(--type);color:var(--slip)}
+.months{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.month{border:var(--rule);padding:8px 8px 10px;background:var(--d0)}
+.month[data-d="1"]{background:var(--d1)}
+.month[data-d="2"]{background:var(--d2)}
+.month[data-d="3"]{background:var(--d3)}
+.month[data-d="4"]{background:var(--d4)}
+.month h3{margin:0 0 6px;display:flex;justify-content:space-between;font-family:var(--f-type);font-size:12px;letter-spacing:.1em;text-transform:uppercase}
+.month h3 span{font-weight:700}
+.month[data-d="4"] h3{background:var(--slip);margin:-8px -8px 6px;padding:4px 8px;border-bottom:var(--rule)}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.days i{aspect-ratio:1;position:relative;display:flex;align-items:center;justify-content:center}
+.days i::before{content:"";width:3px;height:3px;border-radius:50%;background:var(--type);opacity:.35}
+.days i.x::before{display:none}
+.days i.today{outline:2px solid var(--type);outline-offset:-1px;background:var(--slip)}
+.days i.today::before{display:none}
+.dot{position:absolute;inset:-1px;border-radius:50%;border:2.5px solid currentColor;filter:url(#ink);mix-blend-mode:multiply;display:flex;align-items:center;justify-content:center;font-style:normal;font-family:var(--f-dater);font-weight:900;font-size:11px;background:var(--slip)}
+.dot.s{color:var(--ink-started)}
+.dot.f{color:var(--ink-finished);background:var(--ink-finished);}
+.dot.f b{color:var(--slip)}
+.dot + .dot{transform:translate(3px,-3px) rotate(14deg)}
+.ramp{display:flex;align-items:center;gap:8px;margin-top:14px;font-family:var(--f-type);font-size:12px;flex-wrap:wrap}
+.ramp i{width:26px;height:18px;border:2px solid var(--type)}
+
+/* ---------- the pinned dater dial ---------- */
+.dial{
+  position:fixed;right:clamp(12px,2vw,28px);bottom:clamp(12px,2vw,28px);z-index:50;
+  width:132px;height:132px;border-radius:50%;background:var(--type);color:var(--paper);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:6px solid var(--paper);box-shadow:0 0 0 2px var(--type);
+  transition:opacity .3s, transform .3s;
+}
+.dial[hidden-ish]{opacity:0;transform:translateY(20px);pointer-events:none}
+.dial small{font-family:var(--f-type);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase}
+.dial b{font-family:var(--f-dater);font-weight:900;font-size:46px;line-height:.85}
+.dial span{font-family:var(--f-dater);font-weight:800;font-size:18px;letter-spacing:.08em;line-height:1}
+.dial::after{content:"";position:absolute;inset:6px;border-radius:50%;border:1.5px dashed rgba(244,241,234,.5)}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--type);color:var(--slip);font-family:var(--f-type);font-size:14px;padding:12px 18px;border-radius:4px;z-index:60;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+
+footer{margin-top:72px;border-top:var(--rule)}
+footer .wrap{padding-top:18px;padding-bottom:18px;font-family:var(--f-type);font-size:13px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* stamp landing */
+@keyframes thunk{0%{transform:rotate(var(--r)) scale(1.6);opacity:0}60%{transform:rotate(var(--r)) scale(.96);opacity:1}100%{transform:rotate(var(--r)) scale(1)}}
+.stamp.land{animation:thunk .32s cubic-bezier(.3,.6,.2,1) both}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){
+  .drawer.finished .drawer-body{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .drawer.third{grid-column:span 6}
+  .drawer.third.dnf{grid-column:span 12}
+  .year{grid-template-columns:1fr}
+}
+@media (max-width:860px){
+  .pockets{grid-template-columns:1fr}
+  .pockets{gap:36px}
+}
+@media (max-width:640px){
+  body{padding-bottom:110px}
+  .top .wrap{gap:8px;padding-top:6px;padding-bottom:6px}
+  .nav{margin-left:0;width:100%;overflow-x:auto;flex-wrap:nowrap}
+  .nav a{padding:0 9px;font-size:13px;white-space:nowrap}
+  .nav .long{display:none}
+  .legend{gap:6px 14px;font-size:12px}
+  .who{margin-left:auto}
+  .dater{grid-template-columns:.9fr 1.35fr 1.9fr}
+  .band b{font-size:clamp(50px,15.5vw,90px)}
+  .band small{font-size:8px;letter-spacing:.12em}
+  .slip{grid-template-columns:1fr}
+  .slip-stamp{border-right:none;border-bottom:1px dashed var(--type);min-width:0}
+  .card{padding-bottom:78px}
+  .card-top{grid-template-columns:78px 1fr}
+  .drawer.finished .drawer-body{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .drawer.third{grid-column:span 12}
+  .drawer.finished .rec.held{grid-column:span 2}
+  .months{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+  .month{padding:6px}
+  .dot{font-size:9px;border-width:2px}
+  .dial{width:96px;height:96px;border-width:4px}
+  .dial b{font-size:32px}.dial span{font-size:13px}.dial small{font-size:7.5px}
+  .tally b{font-size:52px}
+  .toast{bottom:122px;max-width:calc(100% - 32px)}
+  .stamp.big{font-size:26px}
+  .finish-stamp{right:10px;top:10px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+  .pocket.held .card{transform:none}
+  .rec.held{transform:none}
+}
+</style>
+</head>
+<body>
+
+<!-- rubber-stamp ink: uneven coverage, slightly bled edges -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="ink" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="7" result="speck"/>
+    <feColorMatrix in="speck" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -2.6 0 0 0 2.25" result="mask"/>
+    <feComposite in="SourceGraphic" in2="mask" operator="in" result="inked"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="1" seed="2" result="warp"/>
+    <feDisplacementMap in="inked" in2="warp" scale="2.2" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="mark" href="#">Alexandria</a>
+    <nav class="nav" aria-label="Main">
+      <a href="#" aria-current="page">Collection</a>
+      <a href="#year">Stats</a>
+      <a href="#year">Calendar</a>
+      <a href="#" class="add">+ Add<span class="long">&nbsp;a book</span></a>
+    </nav>
+    <span class="who">Signed in · owner</span>
+  </div>
+</header>
+
+<main>
+  <!-- ============ THE DATER ============ -->
+  <section class="hero wrap" aria-labelledby="today-h">
+    <div class="hero-head">
+      <div>
+        <div class="kicker">The roll · circulation record</div>
+        <h1 id="today-h" class="sr-only">Today, 14 November 2026</h1>
+      </div>
+      <p>Today's date on the dater. Every page you log and every book you start or finish below is stamped with it.</p>
+    </div>
+    <div class="dater" aria-hidden="true">
+      <div class="band"><b>14</b><small>Day</small></div>
+      <div class="band"><b>NOV</b><small>Month</small></div>
+      <div class="band"><b>2026</b><small>Year</small></div>
+    </div>
+    <div class="legend" aria-label="What the inks and card colours mean">
+      <span style="color:var(--ink-started)"><i></i><span style="color:var(--type)">Violet ink: started</span></span>
+      <span style="color:var(--ink-finished)"><i></i><span style="color:var(--type)">Red ink: finished</span></span>
+      <span style="color:var(--ink-returned)"><i></i>Black ink: returned unread</span>
+      <span><i class="chip" style="background:var(--stock-reading)"></i>Reading</span>
+      <span><i class="chip" style="background:var(--stock-finished)"></i>Finished</span>
+      <span><i class="chip" style="background:var(--stock-tbr)"></i>To read</span>
+      <span><i class="chip" style="background:var(--stock-paused)"></i>Paused</span>
+      <span><i class="chip" style="background:var(--stock-dnf)"></i>Did not finish</span>
+    </div>
+  </section>
+
+  <!-- ============ OUT ON LOAN: CURRENTLY READING ============ -->
+  <section class="wrap" aria-labelledby="out-h">
+    <div class="sec-head">
+      <h2 id="out-h">Out now</h2>
+      <span class="count">2 books reading</span>
+      <span class="aside">Pull a card to hold its record · Esc to return it</span>
+    </div>
+    <div class="pockets" id="pockets"></div>
+  </section>
+
+  <!-- ============ THE DRAWERS ============ -->
+  <section class="sec wrap" aria-labelledby="drawers-h">
+    <div class="sec-head">
+      <h2 id="drawers-h">The drawers</h2>
+      <span class="count">24 books · 15 finished · 4 to read · 2 paused · 1 did not finish</span>
+    </div>
+    <div class="drawers" id="drawers"></div>
+  </section>
+
+  <!-- ============ THE YEAR ============ -->
+  <section class="sec wrap" id="year" aria-labelledby="year-h">
+    <div class="sec-head">
+      <h2 id="year-h">2026 on the roll</h2>
+      <div class="yearsel" role="group" aria-label="Year">
+        <button type="button" aria-pressed="false">2025</button>
+        <button type="button" aria-pressed="true">2026</button>
+      </div>
+    </div>
+    <div class="year">
+      <div>
+        <div class="tally">
+          <div><b class="r">10</b><span>Finished</span></div>
+          <div><b class="v">15</b><span>Started</span></div>
+          <div><b>3,665</b><span>Pages finished</span></div>
+          <div><b>67%</b><span>Finished / started</span></div>
+        </div>
+        <div class="formats">
+          <div>Finished by format</div>
+          <div class="bar" role="img" aria-label="Paperback 6, audiobook 2, hardcover 1, ebook 1">
+            <span style="flex:6">Paperback 6</span><span style="flex:2">Audio 2</span><span style="flex:1">HC 1</span><span style="flex:1">eB 1</span>
+          </div>
+          <div>Average rating of books finished: <b>4.35 / 5</b> · Rayuela has no page count</div>
+        </div>
+      </div>
+      <div>
+        <div class="months" id="months"></div>
+        <div class="ramp" aria-hidden="true">
+          <span>Stamps per month</span>
+          <i style="background:var(--d0)"></i>0
+          <i style="background:var(--d1)"></i>1
+          <i style="background:var(--d2)"></i>2
+          <i style="background:var(--d3)"></i>3–4
+          <i style="background:var(--d4)"></i>5+
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Alexandria · one library, one SQLite file</span>
+    <span>Export CSV · Export JSON</span>
+  </div>
+</footer>
+
+<aside class="dial" id="dial" hidden-ish aria-label="Dater set to 14 November 2026">
+  <small>Stamps</small>
+  <b>14</b>
+  <span>NOV 26</span>
+</aside>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const TODAY = '14 NOV 2026';
+const cover = isbn => isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg` : null;
+const fmt = f => ({paperback:'Paperback',hardcover:'Hardcover',ebook:'Ebook',audiobook:'Audiobook'})[f] || 'Format not set';
+
+const reading = [
+  {id:'quijote', title:'Don Quixote', authors:'Miguel de Cervantes, Edith Grossman', isbn:'9780060934347',
+   pages:1056, page:422, format:'hardcover', started:'05 OCT 2026', days:40, year:'1605', cat:'Classics'},
+  {id:'steve-jobs', title:'Steve Jobs', authors:'Walter Isaacson', isbn:'9781451648539',
+   pages:656, page:262, format:'ebook', started:'31 OCT 2026', days:14, year:'2011', cat:'Biography'},
+];
+
+const drawers = [
+  {key:'finished', label:'Finished', n:15, books:[
+    {title:'The Hobbit', authors:'J.R.R. Tolkien', isbn:'9780547928227', pages:300, format:'hardcover', rating:4.5, started:'31 OCT 2026', finished:'09 NOV 2026', note:'Re-read before the films; still the coziest adventure there is.'},
+    {title:'Dune', authors:'Frank Herbert', isbn:'9780441013593', pages:688, format:'paperback', rating:5, started:'02 OCT 2026', finished:'26 OCT 2026', note:'Politics, ecology and prophecy braided together. Dense, rewarding.'},
+    {title:'Sapiens: A Brief History of Humankind', authors:'Yuval Noah Harari', isbn:'9780062316110', pages:464, format:'audiobook', rating:3.5, started:'23 AUG 2026', finished:'23 SEP 2026'},
+    {title:'Pride and Prejudice', authors:'Jane Austen', isbn:'9780141439518', pages:480, format:'paperback', rating:4.5, started:'31 AUG 2026', finished:'17 SEP 2026'},
+    {title:'Rayuela', authors:'Julio Cortázar', isbn:null, pages:null, format:'paperback', rating:4, started:'17 JUL 2026', finished:'16 AUG 2026', note:'Leída en el orden "salteado". Merece la pena.'},
+    {title:"L'Étranger", authors:'Albert Camus', isbn:'9782070360024', pages:186, format:'paperback', rating:4, started:'03 AUG 2026', finished:'09 AUG 2026', note:'Lu en français, lentement. La dernière page reste.'},
+  ]},
+  {key:'tbr', label:'To read', n:4, third:true, books:[
+    {title:'The Prince', authors:'Niccolò Machiavelli', isbn:'9780140449150', pages:140, format:'paperback', added:'11 NOV 2026'},
+    {title:'Fourth Wing', authors:'Rebecca Yarros', isbn:'9781649374042', pages:498, format:'ebook', added:'07 NOV 2026'},
+    {title:'Tractatus Logico-Philosophicus', authors:'Ludwig Wittgenstein', isbn:null, pages:null, format:null, added:'02 NOV 2026'},
+    {title:'The Guns of August', authors:'Barbara W. Tuchman', isbn:'9780345476098', pages:608, format:'paperback', added:'15 OCT 2026'},
+  ]},
+  {key:'paused', label:'Paused', n:2, third:true, books:[
+    {title:'Thinking, Fast and Slow', authors:'Daniel Kahneman', isbn:'9780374533557', pages:499, page:149, format:'paperback', started:'17 JUL 2026'},
+    {title:'The Name of the Wind', authors:'Patrick Rothfuss', isbn:'9780756404741', pages:662, page:198, format:'paperback', started:'28 APR 2026'},
+  ]},
+  {key:'dnf', label:'Did not finish', n:1, third:true, books:[
+    {title:'Crime and Punishment', authors:'Fyodor Dostoevsky', isbn:'9780143107637', pages:608, page:182, format:'ebook', started:'18 MAY 2026', returned:true, note:"Gave up at the second act; the fever-dream tone wasn't for this season."},
+  ]},
+];
+
+// 2026 events: [month 0-11, day, 's'|'f']
+const events = [
+  [1,15,'s'],[1,27,'f'],
+  [3,28,'s'],
+  [4,7,'s'],[4,8,'s'],[4,18,'s'],[4,22,'s'],[4,27,'f'],
+  [5,4,'f'],[5,17,'f'],
+  [6,17,'s'],[6,17,'s'],
+  [7,3,'s'],[7,23,'s'],[7,31,'s'],[7,9,'f'],[7,16,'f'],
+  [8,17,'f'],[8,23,'f'],
+  [9,2,'s'],[9,5,'s'],[9,31,'s'],[9,31,'s'],[9,26,'f'],
+  [10,9,'f'],
+];
+
+const rot = i => [-5,3,-2,6,-7,2,-3,4][i % 8];
+const stamp = (kind, date, size='sm', i=0) => {
+  const ev = {started:'Started', finished:'Finished', returned:'Returned unread'}[kind];
+  return `<span class="stamp ${kind} ${size}" style="--r:${rot(i)}deg"><span class="ev">${ev}</span>${date ? `<span class="dt">${date}</span>` : ''}</span>`;
+};
+const coverHTML = (b) => `<div class="cover">${b.isbn
+  ? `<img src="${cover(b.isbn)}" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'nocover',textContent:${JSON.stringify(b.title)}}))">`
+  : `<div class="nocover">${b.title}<br><br>No cover</div>`}</div>`;
+const num = n => n.toLocaleString('en-US');
+
+/* ---------- pockets ---------- */
+const pockets = document.getElementById('pockets');
+reading.forEach((b, i) => {
+  const pct = Math.round(b.page / b.pages * 100);
+  const el = document.createElement('article');
+  el.className = 'pocket';
+  el.dataset.record = '';
+  el.dataset.id = b.id;
+  el.setAttribute('aria-labelledby', `t-${b.id}`);
+  el.innerHTML = `
+    <div class="card">
+      <div class="card-top">
+        ${coverHTML(b)}
+        <div>
+          <h3 id="t-${b.id}">${b.title}</h3>
+          <p class="by">${b.authors}</p>
+          <p class="meta">${fmt(b.format)} · ${b.cat} · ${b.year}</p>
+        </div>
+      </div>
+      <div class="page-big">
+        <span class="now" data-now>${b.page}</span>
+        <span class="of">page <span data-now2>${num(b.page)}</span> of ${num(b.pages)}</span>
+      </div>
+      <div class="ruler" role="progressbar" aria-label="Progress in ${b.title}" aria-valuemin="0" aria-valuemax="${b.pages}" aria-valuenow="${b.page}" aria-valuetext="page ${b.page} of ${b.pages}">
+        <div class="fill" style="width:${pct}%"></div>
+        <span class="pct" data-pct>${pct}%</span>
+      </div>
+      <div class="slip">
+        <div class="slip-stamp">${stamp('started', b.started, 'med', i)}</div>
+        <form class="log" data-log>
+          <label for="pg-${b.id}">Log a page · stamps ${TODAY}</label>
+          <div class="log-row">
+            <div class="stepper">
+              <button type="button" data-step="-1" aria-label="One page back">−</button>
+              <input id="pg-${b.id}" type="number" inputmode="numeric" min="0" max="${b.pages}" value="${b.page + 10}">
+              <button type="button" data-step="1" aria-label="One page forward">+</button>
+            </div>
+            <button class="btn-stamp" type="submit">Stamp page</button>
+          </div>
+          <ul class="log-lines" data-lines aria-label="Recent entries">
+            <li><span>${b.started}</span><span>p. 0 · started</span></li>
+          </ul>
+        </form>
+      </div>
+      <div class="card-actions">
+        <button type="button" class="btn-line" data-hold aria-expanded="false">Pull card</button>
+        <button type="button" class="btn-line" data-finish>Finish · stamp red</button>
+        <button type="button" class="btn-line">Pause</button>
+      </div>
+      <div class="detail held-only">
+        <dl>
+          <dt>Days out</dt><dd>${b.days}</dd>
+          <dt>Pace</dt><dd>${(b.page / b.days).toFixed(1)} pages a day</dd>
+          <dt>Left</dt><dd>${num(b.pages - b.page)} pages · about ${Math.round((b.pages - b.page) / (b.page / b.days))} days at this pace</dd>
+        </dl>
+      </div>
+      <div class="finish-stamp" data-finish-slot></div>
+    </div>
+    <div class="pocket-sleeve" aria-hidden="true"><span>Alexandria</span><span>Book pocket · ${String(i + 1).padStart(2, '0')}</span></div>`;
+  pockets.appendChild(el);
+});
+
+/* ---------- drawers ---------- */
+const drawersEl = document.getElementById('drawers');
+let rid = 0;
+drawers.forEach(d => {
+  const sec = document.createElement('section');
+  sec.className = `drawer ${d.key}${d.third ? ' third' : ''}`;
+  sec.setAttribute('aria-labelledby', `dr-${d.key}`);
+  const row = d.third;
+  const recs = d.books.map(b => {
+    const id = `rec-${rid++}`;
+    let tag, st, det = [];
+    if (b.finished) {
+      tag = `<span class="rating" aria-label="Rated ${b.rating} out of 5">${b.rating.toFixed(1)} / 5</span>`;
+      st = stamp('finished', b.finished, 'sm', rid);
+      det = [['Started', b.started], ['Finished', b.finished], ['Pages', b.pages ? num(b.pages) : 'Not recorded'], ['Format', fmt(b.format)]];
+    } else if (b.returned) {
+      tag = `p. ${b.page} of ${b.pages}`;
+      st = stamp('returned', '', 'sm', rid);
+      det = [['Started', b.started], ['Stopped at', `page ${b.page} of ${b.pages}`], ['Format', fmt(b.format)]];
+    } else if (b.page) {
+      tag = `p. ${b.page} of ${b.pages}`;
+      st = stamp('started', b.started, 'sm', rid);
+      det = [['Started', b.started], ['Paused at', `page ${b.page} of ${b.pages}`], ['Format', fmt(b.format)]];
+    } else {
+      tag = `Added ${b.added}`;
+      st = '';
+      det = [['Added', b.added], ['Pages', b.pages ? num(b.pages) : 'Not recorded'], ['Format', fmt(b.format)]];
+    }
+    return `
+      <article class="rec${row ? ' row' : ''}" data-record id="${id}">
+        <button class="rec-btn" type="button" data-hold aria-expanded="false" aria-controls="${id}-d">
+          ${coverHTML(b)}
+          <span class="rec-body">
+            <span class="h4">${b.title}</span>
+            <span class="a">${b.authors}</span>
+            <span class="t">${tag}${b.format ? ` · ${fmt(b.format)}` : ''}</span>
+          </span>
+        </button>
+        ${st ? `<div class="stamp-wrap">${st}</div>` : ''}
+        <div class="detail held-only" id="${id}-d">
+          <dl>${det.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+          ${b.note ? `<p class="note"><span class="private">Private note · owner only</span>${b.note}</p>` : ''}
+        </div>
+      </article>`;
+  }).join('');
+  sec.innerHTML = `
+    <h3 class="drawer-tab" id="dr-${d.key}">${d.label} <span class="n" aria-label="${d.n} books">${d.n}</span></h3>
+    <div class="drawer-body">${recs}</div>
+    ${d.n > d.books.length ? `<div class="drawer-foot"><a href="#">All ${d.n} finished →</a></div>` : ''}`;
+  drawersEl.appendChild(sec);
+});
+
+/* ---------- months ---------- */
+const monthsEl = document.getElementById('months');
+const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const density = n => n === 0 ? 0 : n === 1 ? 1 : n === 2 ? 2 : n <= 4 ? 3 : 4;
+MN.forEach((m, mi) => {
+  const evs = events.filter(e => e[0] === mi);
+  const s = evs.filter(e => e[2] === 's').length, f = evs.length - s;
+  const first = new Date(2026, mi, 1).getDay(); // 0 Sun
+  const lead = (first + 6) % 7;                  // weeks start Monday
+  const len = new Date(2026, mi + 1, 0).getDate();
+  let cells = '';
+  for (let k = 0; k < lead; k++) cells += '<i class="x"></i>';
+  for (let d = 1; d <= len; d++) {
+    const here = evs.filter(e => e[1] === d);
+    const today = mi === 10 && d === 14;
+    cells += `<i class="${here.length ? 'x' : ''}${today ? ' today' : ''}">${
+      here.map(e => `<em class="dot ${e[2]}"><b>${d}</b></em>`).join('')}</i>`;
+  }
+  const label = `${m} 2026: ${s} started, ${f} finished`;
+  monthsEl.insertAdjacentHTML('beforeend', `
+    <div class="month" data-d="${density(evs.length)}" role="img" aria-label="${label}">
+      <h3><span>${m}</span><span>${evs.length ? `${s ? s + 'S' : ''}${s && f ? ' ' : ''}${f ? f + 'F' : ''}` : '—'}</span></h3>
+      <div class="days">${cells}</div>
+    </div>`);
+});
+
+/* ---------- hold one record at a time ---------- */
+let held = null;
+function release() {
+  if (!held) return;
+  held.classList.remove('held');
+  held.querySelectorAll('[data-hold]').forEach(b => { b.setAttribute('aria-expanded', 'false'); if (b.classList.contains('btn-line')) b.textContent = 'Pull card'; });
+  document.body.classList.remove('holding');
+  held = null;
+}
+function hold(rec) {
+  if (held === rec) { release(); return; }
+  release();
+  held = rec;
+  rec.classList.add('held');
+  document.body.classList.add('holding');
+  rec.querySelectorAll('[data-hold]').forEach(b => { b.setAttribute('aria-expanded', 'true'); if (b.classList.contains('btn-line')) b.textContent = 'Return card'; });
+}
+document.addEventListener('click', e => {
+  const h = e.target.closest('[data-hold]');
+  if (h) { hold(h.closest('[data-record]')); return; }
+  if (held && !e.target.closest('[data-record]')) release();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') release(); });
+
+/* ---------- logging a page ---------- */
+const toast = document.getElementById('toast');
+let tt;
+function say(msg) { toast.textContent = msg; toast.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => toast.classList.remove('on'), 2400); }
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function finish(card, b) {
+  const slot = card.querySelector('[data-finish-slot]');
+  if (slot.innerHTML) return;
+  slot.innerHTML = stamp('finished', TODAY, 'big', 3);
+  if (!reduce) slot.firstElementChild.classList.add('land');
+  say(`${b.title} finished · stamped red ${TODAY}`);
+}
+
+document.querySelectorAll('.pocket').forEach((p, i) => {
+  const b = reading[i];
+  const input = p.querySelector('input');
+  p.querySelectorAll('[data-step]').forEach(btn => btn.addEventListener('click', () => {
+    input.value = Math.max(0, Math.min(b.pages, (+input.value || 0) + +btn.dataset.step));
+  }));
+  p.querySelector('[data-log]').addEventListener('submit', e => {
+    e.preventDefault();
+    const v = Math.max(0, Math.min(b.pages, Math.round(+input.value || 0)));
+    b.page = v;
+    const pct = Math.round(v / b.pages * 100);
+    p.querySelector('[data-now]').textContent = v;
+    p.querySelector('[data-now2]').textContent = num(v);
+    p.querySelector('.fill').style.width = pct + '%';
+    p.querySelector('[data-pct]').textContent = pct + '%';
+    const bar = p.querySelector('.ruler');
+    bar.setAttribute('aria-valuenow', v); bar.setAttribute('aria-valuetext', `page ${v} of ${b.pages}`);
+    p.querySelector('[data-lines]').insertAdjacentHTML('afterbegin', `<li><span>${TODAY}</span><span>p. ${num(v)}</span></li>`);
+    input.value = Math.min(b.pages, v + 10);
+    if (v === b.pages) finish(p.querySelector('.card'), b);
+    else say(`${b.title}: page ${num(v)} of ${num(b.pages)} · ${TODAY}`);
+  });
+  p.querySelector('[data-finish]').addEventListener('click', () => finish(p.querySelector('.card'), b));
+});
+
+/* ---------- pinned dial appears once the dater scrolls away ---------- */
+const dial = document.getElementById('dial');
+new IntersectionObserver(([en]) => {
+  if (en.isIntersecting) dial.setAttribute('hidden-ish', ''); else dial.removeAttribute('hidden-ish');
+}).observe(document.querySelector('.dater'));
+</script>
+</body>
+</html>

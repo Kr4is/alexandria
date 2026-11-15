@@ -1,27 +1,29 @@
 {% extends 'base.html' %}
-{% from '_macros.html' import book_cover_img, book3d %}
+{% from '_macros.html' import cover, stamp, status_tag, stars with context %}
+
+{% block title %}{{ book.title }} · {{ config['APP_NAME'] }}{% endblock %}
 
 {% block content %}
 {% set m = book|book_metrics %}
 {% set links = book|external_links %}
-{% set status_labels = {
-    'reading':  'Currently Reading',
-    'finished': 'Completed Voyage',
-    'tbr':      'To Be Read',
-    'paused':   'Paused',
-    'dnf':      'Did Not Finish'
-} %}
-{% set started = book.date_started or book.date_added %}
+{% set owner = current_user.is_authenticated %}
+{% set status = book.status %}
+{% set call_no = 'MS-' ~ book.id %}
+{#- Started: the stamp uses date_started; older records only have date_added. -#}
+{% set started = book.date_started or (book.date_added if status != 'tbr' else None) %}
+{% set shelf_names = (book.shelves or '').split(',')|map('trim')|select|list %}
+{% set categories = book.categories|categories_list if book.categories else [] %}
+{% set has_pages = book.current_page and book.page_count %}
 
 {# Metric tiles: only the ones we can actually compute. #}
 {% set tiles = [] %}
 {% if m.days_reading is not none %}
-    {% set _ = tiles.append((m.days_reading, 'Days to finish' if book.status == 'finished' else 'Days with this book', '')) %}
+    {% set _ = tiles.append((m.days_reading, 'Days to finish' if status == 'finished' else 'Days out', '')) %}
 {% endif %}
 {% if m.pages_per_day %}
-    {% set _ = tiles.append((m.pages_per_day, 'Pages per day', '')) %}
+    {% set _ = tiles.append((m.pages_per_day, 'Pages a day', '')) %}
 {% endif %}
-{% if m.pages_left is not none and book.status != 'finished' %}
+{% if m.pages_left is not none and status != 'finished' %}
     {% set _ = tiles.append((m.pages_left, 'Pages left', '')) %}
 {% endif %}
 {% if m.vs_avg_pages is not none %}
@@ -34,475 +36,234 @@
     {% set _ = tiles.append((m.year_read, 'Year read', '')) %}
 {% endif %}
 
-<div class="max-w-5xl mx-auto">
-    <div class="mb-6 sm:mb-10">
-        <a href="{{ url_for('main.index') }}"
-            class="inline-flex items-center gap-3 min-h-[44px] text-xs uppercase tracking-[0.2em] font-bold text-vintage-ink/60 hover:text-vintage-ink transition-soft group">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform group-hover:-translate-x-1 flex-shrink-0"
-                fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Return to Study
-        </a>
-    </div>
+<p class="bk-back"><a href="{{ url_for('main.index') }}"><span aria-hidden="true">&larr;</span> Collection</a></p>
 
-    <article class="bd-card paper-texture relative overflow-hidden">
-        {# ── Card header strip ── #}
-        <header class="bd-strip">
-            <span class="bd-strip-title">Alexandria &middot; Catalogue Card</span>
-            <span class="bd-callno" title="Call number">MS-{{ book.id }}</span>
-        </header>
+<article class="bk stock-{{ status }}" aria-labelledby="bk-title">
+    <header class="bk-head">
+        <span class="kicker">Circulation record</span>
+        {{ status_tag(status, class='bk-tag') }}
+        <span class="bk-callno"><span class="sr-only">Call number </span>{{ call_no }}</span>
+    </header>
 
-        <div class="bd-body">
-            {# ── Left column: cover + shelf marks ── #}
-            <aside class="bd-aside">
-                <div class="bd-cover" data-tilt-host>
-                    {{ book3d(book, class='bd-book', loading='eager', fetchpriority='high', tilt=true, detail=true) }}
-                </div>
+    <div class="bk-body">
+        <div class="bk-cover">
+            {{ cover(book, alt='Cover of ' ~ book.title, loading='eager', fetchpriority='high') }}
+        </div>
 
-                <span class="bd-status bd-status-{{ book.status }}">{{ status_labels.get(book.status, book.status|capitalize) }}</span>
+        <div class="bk-info">
+            <h1 id="bk-title" class="bk-title">{{ book.title }}</h1>
+            <p class="bk-by">{% if book.authors %}by {{ book.authors }}{% else %}Author not recorded{% endif %}</p>
 
-                {% if book.categories %}
-                <ul class="bd-tags" aria-label="Classification">
-                    {% for cat in book.categories|categories_list %}
-                    <li>{{ cat }}</li>
-                    {% endfor %}
-                </ul>
-                {% endif %}
-            </aside>
+            <dl class="bk-ledger">
+                <div><dt>Call no.</dt><dd>{{ call_no }}</dd></div>
+                {% if book.published_year %}<div><dt>Published</dt><dd>{{ book.published_year }}</dd></div>{% endif %}
+                {% if book.language %}<div><dt>Language</dt><dd>{{ book.language|language_display }}</dd></div>{% endif %}
+                {% if book.page_count %}<div><dt>Pages</dt><dd>{{ '{:,}'.format(book.page_count) }}</dd></div>{% endif %}
+                {% if book.format %}<div><dt>Format</dt><dd>{{ book.format|capitalize }}</dd></div>{% endif %}
+                {% if book.isbn %}<div><dt>ISBN</dt><dd>{{ book.isbn }}</dd></div>{% endif %}
+                {% if book.personal_rating %}<div><dt>My rating</dt><dd>{{ stars(book.personal_rating) }}</dd></div>{% endif %}
+                {% if book.average_rating %}<div><dt>Public rating</dt><dd>{{ stars(book.average_rating|round(1)) }}</dd></div>{% endif %}
+            </dl>
 
-            {# ── Right column: the catalogue entry ── #}
-            <div class="bd-main">
-                <div class="bd-heading">
-                    <h2 class="font-serif-display bd-title">{{ book.title }}</h2>
-                    <p class="bd-author">by <span>{{ book.authors or 'Anonymous' }}</span></p>
-                </div>
-
-                <dl class="bd-fields">
-                    <div><dt>Call no.</dt><dd class="bd-mono">MS-{{ book.id }}</dd></div>
-                    {% if book.page_count %}<div><dt>Extent</dt><dd>{{ book.page_count }} pages</dd></div>{% endif %}
-                    {% if book.published_year %}<div><dt>Published</dt><dd>{{ book.published_year }}</dd></div>{% endif %}
-                    {% if book.language %}<div><dt>Language</dt><dd>{{ book.language|language_display }}</dd></div>{% endif %}
-                    {% if book.isbn %}<div><dt>ISBN</dt><dd class="bd-mono">{{ book.isbn }}</dd></div>{% endif %}
-                    {% if started %}<div><dt>Started</dt><dd>{{ started.strftime('%B %d, %Y') }}</dd></div>{% endif %}
-                    {% if book.date_finished %}<div><dt>Completed</dt><dd>{{ book.date_finished.strftime('%B %d, %Y') }}</dd></div>{% endif %}
-                    {% if book.format %}<div><dt>Format</dt><dd>{{ book.format|capitalize }}</dd></div>{% endif %}
-                    {% if book.shelves %}
-                    <div><dt>Shelves</dt><dd>
-                        {% for shelf in (book.shelves if book.shelves is iterable and book.shelves is not string else book.shelves.split(',')) %}
-                        {% set shelf_name = (shelf.name if shelf.name is defined else shelf)|trim %}
-                        {% if shelf_name %}<a class="bd-link" href="/shelf/{{ shelf_name|urlencode }}">{{ shelf_name }}</a>{% if not loop.last %}, {% endif %}{% endif %}
+            {% if categories or shelf_names %}
+            <div class="bk-filed">
+                {% if categories %}
+                <div class="bk-filed-row">
+                    <span class="label">Subjects</span>
+                    <ul class="bk-chips" aria-label="Subjects">
+                        {% for cat in categories %}
+                        <li><a href="{{ url_for('main.index', category=cat) }}">{{ cat }}</a></li>
                         {% endfor %}
-                    </dd></div>
-                    {% endif %}
-                    {% if book.average_rating %}
-                    <div><dt>Public rating</dt><dd>
-                        <span class="bd-stars" role="img" aria-label="{{ book.average_rating }} out of 5 stars">
-                            {% for n in [1,2,3,4,5] %}<span class="{{ 'on' if n <= book.average_rating else '' }}" aria-hidden="true">&#9733;</span>{% endfor %}
-                        </span>
-                        {{ "%.1f"|format(book.average_rating) }}<span class="bd-dim">/5</span>
-                    </dd></div>
-                    {% endif %}
-                    {% if book.personal_rating %}
-                    <div><dt>My rating</dt><dd>
-                        <span class="bd-stars bd-stars-mine" role="img" aria-label="{{ book.personal_rating }} out of 5 stars">
-                            {% for n in [1,2,3,4,5] %}<span class="{{ 'on' if n <= book.personal_rating else '' }}" aria-hidden="true">&#9733;</span>{% endfor %}
-                        </span>
-                        {{ "%.1f"|format(book.personal_rating) }}<span class="bd-dim">/5</span>
-                    </dd></div>
-                    {% endif %}
-                </dl>
+                    </ul>
+                </div>
+                {% endif %}
+                {% if shelf_names %}
+                <div class="bk-filed-row">
+                    <span class="label">Shelves</span>
+                    <ul class="bk-chips" aria-label="Shelves">
+                        {% for name in shelf_names %}
+                        <li><a href="{{ url_for('books.shelf', name=name) }}">{{ name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
 
-                {# ── Progress ── #}
-                {% if book.current_page and book.page_count %}
-                <section class="bd-progress" aria-label="Reading progress">
-                    <div class="bd-progress-head">
-                        <span>Page {{ book.current_page }} of {{ book.page_count }}</span>
-                        <strong>{{ m.progress_pct }}%</strong>
-                    </div>
-                    <div class="bd-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ m.progress_pct }}">
-                        <div style="width: {{ m.progress_pct }}%"></div>
-                    </div>
-                </section>
+            {% if (has_pages and status != 'finished') or (owner and status in ('reading', 'paused')) %}
+            <section class="bk-progress" data-record aria-label="Reading progress">
+                {% if book.page_count %}
+                <div class="page-big">
+                    <span class="now">{{ book.current_page or 0 }}</span>
+                    <span class="of">{% if status == 'dnf' %}stopped at page{% else %}page{% endif %} {{ book.current_page or 0 }} of {{ '{:,}'.format(book.page_count) }}</span>
+                </div>
+                {% set pct = m.progress_pct or 0 %}
+                <div class="ruler" role="progressbar" aria-label="Progress in {{ book.title }}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ pct }}" aria-valuetext="page {{ book.current_page or 0 }} of {{ book.page_count }}">
+                    <div class="fill" style="width: {{ pct }}%"></div>
+                    <span class="pct">{{ pct }}%</span>
+                </div>
                 {% endif %}
 
-                {% if current_user.is_authenticated and book.status in ('reading', 'paused') %}
-                <form action="/progress/{{ book.id }}" method="POST" class="bd-progress-form">
+                {% if owner and status in ('reading', 'paused') %}
+                <form action="{{ url_for('books.set_progress', book_id=book.id) }}" method="POST" class="bk-log js-submit-loading">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <label for="current_page">Update current page</label>
-                    <div>
-                        <input type="number" id="current_page" name="current_page" inputmode="numeric" min="0" step="1"
-                            {% if book.page_count %}max="{{ book.page_count }}"{% endif %}
-                            value="{{ book.current_page or '' }}" placeholder="e.g. 120" required>
-                        <button type="submit">Save</button>
+                    <label for="current_page" class="label">Log a page · stamps {{ now.strftime('%d %b %Y')|upper }}</label>
+                    <div class="log-row">
+                        <div class="stepper">
+                            <button type="button" data-step="-1" aria-label="One page back">&minus;</button>
+                            <input type="number" id="current_page" name="current_page" inputmode="numeric" min="0" step="1"
+                                {% if book.page_count %}max="{{ book.page_count }}"{% endif %}
+                                value="{{ book.current_page or '' }}" placeholder="0" required>
+                            <button type="button" data-step="1" aria-label="One page forward">+</button>
+                            <button type="button" data-step="10" aria-label="Ten pages forward" class="bk-step10">+10</button>
+                        </div>
+                        <button type="submit" class="btn-stamp">Stamp page</button>
                     </div>
                 </form>
                 {% endif %}
+            </section>
+            {% endif %}
+        </div>
+    </div>
 
-                {# ── Description ── #}
-                <section class="bd-section">
-                    <h3 class="bd-h">Summary</h3>
-                    {% set plain_desc = book.description|book_plaintext %}
-                    {% set paras = book.description|book_paragraphs %}
-                    {% if plain_desc %}
-                    <div id="book-desc-block" class="relative" data-collapsible="{{ 'true' if plain_desc|length > 300 else 'false' }}">
-                        <div id="book-desc-inner"
-                            class="transition-[max-height] duration-500 ease-out{% if plain_desc|length > 300 %} book-desc-collapsed{% endif %}">
-                            {% for p in paras %}
-                            <p class="bd-desc{% if loop.first %} book-dropcap{% endif %}">{{ p }}</p>
-                            {% endfor %}
-                        </div>
-                        {% if plain_desc|length > 300 %}
-                        <div id="book-desc-fade" class="bd-fade pointer-events-none absolute bottom-0 left-0 right-0 h-20"></div>
-                        <button type="button" id="book-desc-toggle" class="bd-toggle">Show more</button>
-                        {% endif %}
-                    </div>
-                    {% else %}
-                    <p class="bd-dim italic text-lg">No description has been recorded for this volume yet.</p>
-                    {% endif %}
-                </section>
-
-                {% if book.personal_notes %}
-                <section class="bd-section bd-notes">
-                    <h3 class="bd-h">Librarian's Notes</h3>
-                    <p class="whitespace-pre-line">{{ book.personal_notes }}</p>
-                </section>
+    {# ── The date slip: every event, stamped ── #}
+    <section class="bk-slip" aria-labelledby="bk-slip-h">
+        <h2 class="bk-slip-h label" id="bk-slip-h">Date slip · {{ call_no }}</h2>
+        <div class="bk-slip-body">
+            <div class="bk-stamps">
+                {% if started %}{{ stamp('started', started, 'big', rotate=-5, class='bk-stamp' if status in ('finished', 'dnf') else 'bk-stamp land') }}{% endif %}
+                {% if status == 'finished' and book.date_finished %}{{ stamp('finished', book.date_finished, 'big', rotate=3, class='bk-stamp land') }}{% endif %}
+                {% if status == 'dnf' %}{{ stamp('returned', None, 'big', rotate=-2, class='bk-stamp land') }}{% endif %}
+                {% if not started and status != 'dnf' and not (status == 'finished' and book.date_finished) %}
+                <p class="bk-unstamped">{% if status == 'tbr' %}Filed under to read. Not out yet.{% else %}No dates stamped yet.{% endif %}</p>
                 {% endif %}
             </div>
+            <ol class="bk-lines">
+                {% if book.date_added %}<li><span>{{ book.date_added.strftime('%d %b %Y')|upper }}</span><span>Added to the library</span></li>{% endif %}
+                {% if started %}<li><span>{{ started.strftime('%d %b %Y')|upper }}</span><span class="ink-started">Started</span></li>{% endif %}
+                {% if status == 'paused' %}<li><span>&mdash;</span><span>Paused{% if book.current_page %} at page {{ book.current_page }}{% endif %}</span></li>{% endif %}
+                {% if status == 'finished' and book.date_finished %}<li><span>{{ book.date_finished.strftime('%d %b %Y')|upper }}</span><span class="ink-finished">Finished{% if m.days_reading is not none %} · out {{ m.days_reading }} day{{ '' if m.days_reading == 1 else 's' }}{% endif %}</span></li>{% endif %}
+                {% if status == 'dnf' %}<li><span>&mdash;</span><span>Returned unread{% if book.current_page %} at page {{ book.current_page }}{% endif %}</span></li>{% endif %}
+                {% if status == 'reading' %}<li><span>{{ now.strftime('%d %b %Y')|upper }}</span><span>Out now</span></li>{% endif %}
+            </ol>
         </div>
+    </section>
 
-        {# ── Metrics ── #}
-        {% if tiles or m.my_rating or m.public_rating %}
-        <section class="bd-metrics" aria-labelledby="bd-metrics-h">
-            <h3 class="bd-h" id="bd-metrics-h">This book in numbers</h3>
-            <dl class="bd-tiles">
-                {% for value, label, sub in tiles %}
-                <div class="bd-tile">
-                    <dt>{{ label }}{% if sub %}<span> &middot; {{ sub }}</span>{% endif %}</dt>
-                    <dd>{{ value }}</dd>
-                </div>
-                {% endfor %}
-                {% if m.my_rating or m.public_rating %}
-                <div class="bd-tile">
-                    <dt>My rating vs. public{% if m.rating_delta is not none %}<span> &middot; {{ '%+.1f'|format(m.rating_delta) }}</span>{% endif %}</dt>
-                    <dd>
-                        {% if m.my_rating %}{{ '%.1f'|format(m.my_rating) }}{% else %}&ndash;{% endif %}
-                        <small>vs {% if m.public_rating %}{{ '%.1f'|format(m.public_rating) }}{% else %}&ndash;{% endif %}</small>
-                    </dd>
-                </div>
-                {% endif %}
-            </dl>
-        </section>
+    {# ── Owner desk: status, edit, withdraw ── #}
+    {% if owner %}
+    <div class="bk-desk" aria-label="Manage this book" role="group">
+        {% macro status_btn(value, text, cls='btn-line') %}
+        <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="js-submit-loading">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="status" value="{{ value }}">
+            <button type="submit" class="{{ cls }}">{{ text }}</button>
+        </form>
+        {% endmacro %}
+
+        {% if status == 'tbr' %}
+            {{ status_btn('reading', 'Check out · start reading', 'btn-stamp') }}
+        {% elif status == 'reading' %}
+            <button type="button" class="btn-stamp" data-confirm="finish"
+                data-action="{{ url_for('books.finish_book', book_id=book.id) }}" data-title="{{ book.title }}">Stamp finished</button>
+            {{ status_btn('paused', 'Pause') }}
+            {{ status_btn('dnf', 'Return unread') }}
+        {% elif status == 'paused' %}
+            {{ status_btn('reading', 'Resume reading', 'btn-stamp') }}
+            <button type="button" class="btn-line" data-confirm="finish"
+                data-action="{{ url_for('books.finish_book', book_id=book.id) }}" data-title="{{ book.title }}">Stamp finished</button>
+            {{ status_btn('dnf', 'Return unread') }}
+        {% elif status == 'dnf' %}
+            {{ status_btn('reading', 'Check out again', 'btn-stamp') }}
+            {{ status_btn('tbr', 'File under to read') }}
+        {% elif status == 'finished' %}
+            {{ status_btn('reading', 'Read again') }}
         {% endif %}
 
-        {# ── Elsewhere + share ── #}
-        <section class="bd-elsewhere" aria-labelledby="bd-else-h">
-            <div>
-                <h3 class="bd-h" id="bd-else-h">Find this book elsewhere</h3>
-                {% if links %}
-                <ul class="bd-links">
-                    {% for link in links %}
-                    <li>
-                        <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer" data-icon="{{ link.icon_hint }}">
-                            {{ link.label }}
-                            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                        </a>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="bd-dim italic">No catalogue references available for this volume.</p>
-                {% endif %}
-            </div>
-            <a href="/book/{{ book.id }}/share" class="bd-btn bd-btn-ghost bd-share">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
-                Share
-            </a>
-        </section>
+        <span class="bk-desk-end">
+            <a href="{{ url_for('books.edit_book', book_id=book.id) }}" class="btn-line">Edit record</a>
+            <button type="button" class="btn-line bk-withdraw" data-confirm="delete"
+                data-action="{{ url_for('books.delete_book', book_id=book.id) }}" data-title="{{ book.title }}">Withdraw</button>
+        </span>
+    </div>
+    {% endif %}
+</article>
 
-        {# ── Owner actions ── #}
-        {% if current_user.is_authenticated %}
-        <div class="bd-actions">
+{# ── Private notes (owner only) ── #}
+{% if owner and book.personal_notes %}
+<section class="sec" aria-labelledby="bk-notes-h">
+    <div class="sec-head"><h2 id="bk-notes-h">Notes</h2><span class="aside">Private · only you see these</span></div>
+    <p class="bk-notes">{{ book.personal_notes }}</p>
+</section>
+{% endif %}
 
-            {# ── TBR ── #}
-            {% if book.status == 'tbr' %}
-            <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="status" value="reading">
-                <button type="submit" class="bd-btn bd-btn-primary">Start Reading</button>
-            </form>
-            {% endif %}
+{# ── Description ── #}
+<section class="sec" aria-labelledby="bk-about-h">
+    <div class="sec-head"><h2 id="bk-about-h">About the book</h2></div>
+    {% set plain_desc = book.description|book_plaintext %}
+    {% if plain_desc %}
+    {% set long = plain_desc|length > 600 %}
+    <div class="bk-desc{% if long %} is-long{% endif %}" id="bk-desc" data-desc>
+        {% for p in book.description|book_paragraphs %}<p>{{ p }}</p>{% endfor %}
+    </div>
+    {% if long %}
+    <button type="button" class="btn-line bk-more" data-desc-toggle aria-controls="bk-desc" aria-expanded="false" hidden>Read the full description</button>
+    {% endif %}
+    {% else %}
+    <p class="bk-empty">No description on record for this book.</p>
+    {% endif %}
+</section>
 
-            {# ── READING ── #}
-            {% if book.status == 'reading' %}
-            <button type="button" class="bd-btn bd-btn-primary js-open-finish-modal"
-                data-finish-url="{{ url_for('books.finish_book', book_id=book.id) }}"
-                data-book-title="{{ book.title|e }}">
-                Close Chapter
-            </button>
-            <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="status" value="paused">
-                <button type="submit" class="bd-btn bd-btn-ghost">Pause</button>
-            </form>
-            <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="status" value="dnf">
-                <button type="submit" class="bd-btn bd-btn-ghost">Did Not Finish</button>
-            </form>
-            {% endif %}
-
-            {# ── PAUSED ── #}
-            {% if book.status == 'paused' %}
-            <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="status" value="reading">
-                <button type="submit" class="bd-btn bd-btn-primary">Resume Reading</button>
-            </form>
-            <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="status" value="finished">
-                <button type="submit" class="bd-btn bd-btn-outline">Mark as Finished</button>
-            </form>
-            <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="status" value="dnf">
-                <button type="submit" class="bd-btn bd-btn-ghost">Did Not Finish</button>
-            </form>
-            {% endif %}
-
-            {# ── DNF ── #}
-            {% if book.status == 'dnf' %}
-            <form action="{{ url_for('books.set_status', book_id=book.id) }}" method="POST" class="w-full sm:w-auto">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <input type="hidden" name="status" value="reading">
-                <button type="submit" class="bd-btn bd-btn-primary">Resume Reading</button>
-            </form>
-            {% endif %}
-
-            {# ── Always present ── #}
-            <a href="{{ url_for('books.edit_book', book_id=book.id) }}" class="bd-btn bd-btn-outline">Amend Entry</a>
-            <button type="button" class="bd-btn bd-btn-danger js-open-delete-modal"
-                data-delete-url="{{ url_for('books.delete_book', book_id=book.id) }}"
-                data-book-title="{{ book.title|e }}">
-                Discard Volume
-            </button>
+{# ── Metrics ── #}
+{% if tiles or m.my_rating or m.public_rating %}
+<section class="sec" aria-labelledby="bk-nums-h">
+    <div class="sec-head"><h2 id="bk-nums-h">This book in numbers</h2><span class="count">{{ call_no }}</span></div>
+    <dl class="bk-nums">
+        {% for value, label, sub in tiles %}
+        <div>
+            <dt>{{ label }}{% if sub %} · {{ sub }}{% endif %}</dt>
+            <dd>{{ value }}</dd>
+        </div>
+        {% endfor %}
+        {% if m.my_rating or m.public_rating %}
+        <div>
+            <dt>My rating vs. public{% if m.rating_delta is not none %} · {{ '%+.1f'|format(m.rating_delta) }}{% endif %}</dt>
+            <dd>{% if m.my_rating %}{{ '%.1f'|format(m.my_rating) }}{% else %}&ndash;{% endif %}<small> vs {% if m.public_rating %}{{ '%.1f'|format(m.public_rating) }}{% else %}&ndash;{% endif %}</small></dd>
         </div>
         {% endif %}
+    </dl>
+</section>
+{% endif %}
 
-        <footer class="bd-foot">
-            <span>&mdash; Alexandria Archives &mdash;</span>
-            <span class="bd-mono">MS-{{ book.id }}</span>
-        </footer>
-    </article>
-</div>
+{# ── Elsewhere + share ── #}
+<section class="sec" aria-labelledby="bk-else-h">
+    <div class="sec-head"><h2 id="bk-else-h">Elsewhere</h2></div>
+    <div class="bk-else">
+        {% if links %}
+        <ul class="bk-links">
+            {% for link in links %}
+            <li><a class="btn-line" href="{{ link.url }}" target="_blank" rel="noopener noreferrer" data-icon="{{ link.icon_hint }}">{{ link.label }}<span aria-hidden="true">&nearr;</span><span class="sr-only"> (opens in a new tab)</span></a></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="bk-empty">No catalogue references for this book.</p>
+        {% endif %}
+        <a href="{{ url_for('share.book_share', book_id=book.id) }}" class="btn-stamp bk-share">Share this record</a>
+    </div>
+</section>
 {% endblock %}
 
 {% block scripts %}
-<style>
-    .bd-card {
-        --bd-ink: var(--vintage-ink, #2a1d16);
-        --bd-paper: var(--vintage-paper, #f8f0e2);
-        --bd-gold: var(--vintage-gold, #b8832f);
-        --bd-accent: var(--vintage-accent, #6f2a24);
-        --bd-wood: var(--wood, #5a3a22);
-        --bd-moss: var(--moss, #4a5d3a);
-        --bd-rule: color-mix(in srgb, var(--bd-wood) 22%, transparent);
-        color: var(--bd-ink);
-        border: 1px solid var(--bd-gold);
-        outline: 1px solid var(--bd-rule);
-        outline-offset: -8px;
-        box-shadow: 0 18px 40px -18px rgba(59, 36, 21, .45);
-    }
-    .bd-strip {
-        display: flex; justify-content: space-between; align-items: center; gap: 1rem;
-        padding: .85rem 1.5rem; background: var(--wood-dark, #3b2415); color: var(--vintage-cream, #efe3cf);
-        font-size: .75rem; letter-spacing: .22em; text-transform: uppercase; font-weight: 700;
-    }
-    .bd-callno, .bd-mono { font-family: ui-monospace, 'Courier New', monospace; letter-spacing: .06em; }
-    .bd-callno { color: var(--brass-light, #dcae65); font-size: .875rem; }
-    .bd-body { display: flex; flex-direction: column; gap: 2rem; padding: 2rem 1.5rem; }
-    .bd-aside { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; }
-    .bd-cover { width: 100%; max-width: 240px; padding: .5rem 1.5rem 1.25rem .75rem; }
-    .bd-book { --ry: -20deg; width: 100%; }
-    .bd-status {
-        font-size: .75rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
-        padding: .4rem .8rem; border: 1px solid currentColor; color: var(--bd-wood);
-    }
-    .bd-status-reading { color: var(--bd-accent); }
-    .bd-status-finished { color: var(--bd-moss); }
-    .bd-status-dnf { color: var(--rust, #b4532a); }
-    .bd-tags { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: center; list-style: none; padding: 0; margin: 0; }
-    .bd-tags li {
-        font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; padding: .2rem .55rem;
-        color: var(--bd-accent); border: 1px solid color-mix(in srgb, var(--bd-accent) 35%, transparent);
-        background: color-mix(in srgb, var(--bd-accent) 6%, transparent);
-    }
-    .bd-main { min-width: 0; display: flex; flex-direction: column; gap: 1.75rem; }
-    .bd-heading { text-align: center; }
-    .bd-title { font-size: clamp(1.875rem, 5vw, 3.25rem); line-height: 1.1; font-weight: 700; margin: 0; overflow-wrap: anywhere; }
-    .bd-author { font-style: italic; font-size: clamp(1.1rem, 2.4vw, 1.5rem); margin: .6rem 0 0; color: color-mix(in srgb, var(--bd-ink) 75%, transparent); }
-    .bd-author span { color: var(--bd-accent); }
-
-    .bd-fields { margin: 0; border-top: 2px solid var(--bd-rule); }
-    .bd-fields > div {
-        display: grid; grid-template-columns: 7.5rem 1fr; gap: .75rem; align-items: baseline;
-        padding: .55rem 0; border-bottom: 1px solid var(--bd-rule);
-    }
-    .bd-fields dt, .bd-h, .bd-tile dt {
-        font-size: .75rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 700;
-        color: color-mix(in srgb, var(--bd-ink) 68%, transparent);
-    }
-    .bd-fields dd { margin: 0; font-size: 1.05rem; min-width: 0; overflow-wrap: anywhere; }
-    .bd-dim { color: color-mix(in srgb, var(--bd-ink) 62%, transparent); }
-    .bd-stars { color: color-mix(in srgb, var(--bd-ink) 25%, transparent); margin-right: .35rem; letter-spacing: .05em; }
-    .bd-stars .on { color: var(--bd-gold); }
-    .bd-stars-mine .on { color: var(--bd-accent); }
-    .bd-link { color: var(--bd-accent); text-decoration: underline; text-underline-offset: 3px; }
-
-    .bd-h { margin: 0 0 .75rem; padding-bottom: .4rem; border-bottom: 1px solid var(--bd-rule); }
-    .bd-desc { font-style: italic; font-size: 1.125rem; line-height: 1.7; margin: 0 0 1rem; color: color-mix(in srgb, var(--bd-ink) 88%, transparent); }
-    .bd-notes p { font-style: italic; font-size: 1.1rem; line-height: 1.7; margin: 0; padding-left: 1rem; border-left: 3px solid var(--bd-gold); }
-    .bd-fade { background: linear-gradient(to top, var(--bd-paper), transparent); }
-    .bd-toggle {
-        margin-top: .5rem; min-height: 44px; padding: 0 .25rem; font-size: .75rem; font-weight: 700;
-        letter-spacing: .18em; text-transform: uppercase; color: var(--bd-accent);
-        border-bottom: 1px solid color-mix(in srgb, var(--bd-accent) 40%, transparent);
-    }
-    .bd-toggle { position: relative; z-index: 1; }
-    .bd-callno { white-space: nowrap; }
-    .bd-toggle:hover { border-bottom-color: var(--bd-accent); }
-
-    .bd-progress-head { display: flex; justify-content: space-between; font-size: .9rem; margin-bottom: .4rem; }
-    .bd-bar { height: .7rem; background: var(--bd-rule); overflow: hidden; border-radius: 99px; }
-    .bd-bar > div { height: 100%; background: linear-gradient(90deg, var(--bd-gold), #e6b95c); border-radius: 99px; transition: width .6s ease-out; }
-    .bd-progress-form label { display: block; font-size: .75rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 700; margin-bottom: .4rem; color: color-mix(in srgb, var(--bd-ink) 68%, transparent); }
-    .bd-progress-form div { display: flex; gap: .5rem; }
-    .bd-progress-form input {
-        flex: 1; min-width: 0; min-height: 44px; padding: 0 .75rem; font-size: 1rem; background: #fffaf0;
-        border: 1px solid var(--bd-wood); color: var(--bd-ink);
-    }
-    .bd-progress-form button, .bd-btn {
-        min-height: 44px; padding: .6rem 1.5rem; font-size: .75rem; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
-        display: inline-flex; align-items: center; justify-content: center; gap: .5rem; cursor: pointer;
-        transition: background-color .25s, color .25s, border-color .25s;
-    }
-    .bd-progress-form button { background: var(--bd-wood); color: var(--vintage-cream, #efe3cf); }
-    .bd-progress-form button:hover { background: var(--wood-dark, #3b2415); }
-
-    .bd-metrics, .bd-elsewhere, .bd-actions, .bd-foot { margin: 0 1.5rem; }
-    .bd-metrics { padding: 1.75rem 0; border-top: 1px dashed var(--bd-rule); }
-    .bd-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: .75rem; margin: 0; }
-    .bd-tile { display: flex; flex-direction: column-reverse; padding: .9rem 1rem; border: 1px solid var(--bd-rule); background: color-mix(in srgb, var(--bd-gold) 7%, transparent); }
-    .bd-tile dd { margin: 0; font-family: 'Fraunces', serif; font-size: 1.75rem; line-height: 1.1; font-weight: 700; color: var(--bd-wood); }
-    .bd-tile dd small { font-size: .875rem; font-weight: 400; color: color-mix(in srgb, var(--bd-ink) 62%, transparent); }
-    .bd-tile dt { margin-top: .4rem; letter-spacing: .08em; }
-    .bd-tile dt span { text-transform: none; letter-spacing: 0; font-weight: 400; }
-
-    .bd-elsewhere { padding: 1.75rem 0; border-top: 1px dashed var(--bd-rule); display: flex; flex-direction: column; gap: 1.25rem; }
-    .bd-links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
-    .bd-links a {
-        display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; padding: 0 1rem; font-size: .95rem;
-        border: 1px solid var(--bd-rule); color: var(--bd-accent); background: color-mix(in srgb, var(--bd-paper) 70%, #fff);
-        transition: border-color .25s, background-color .25s;
-    }
-    .bd-links a:hover { border-color: var(--bd-accent); background: color-mix(in srgb, var(--bd-accent) 8%, var(--bd-paper)); }
-
-    .bd-actions { padding: 1.75rem 0; border-top: 1px solid var(--bd-rule); display: flex; flex-direction: column; gap: .75rem; }
-    .bd-actions form { width: 100%; }
-    .bd-btn { width: 100%; border: 1px solid transparent; }
-    .bd-btn-primary { background: var(--bd-accent); color: var(--vintage-cream, #efe3cf); box-shadow: 0 8px 18px -10px rgba(111, 42, 36, .8); }
-    .bd-btn-primary:hover { background: var(--wood-dark, #3b2415); }
-    .bd-btn-outline { border-color: var(--bd-accent); color: var(--bd-accent); }
-    .bd-btn-outline:hover { background: var(--bd-accent); color: var(--vintage-cream, #efe3cf); }
-    .bd-btn-ghost { border-color: var(--bd-rule); color: var(--bd-ink); }
-    .bd-btn-ghost:hover { background: color-mix(in srgb, var(--bd-ink) 6%, transparent); }
-    .bd-btn-danger { color: color-mix(in srgb, var(--bd-ink) 72%, transparent); }
-    .bd-btn-danger:hover { color: #8c1d18; border-color: #8c1d18; }
-    .bd-share { align-self: flex-start; width: auto; }
-    .bd-foot {
-        display: flex; flex-direction: column; gap: .25rem; padding: 1.25rem 0 1.75rem; border-top: 1px solid var(--bd-rule);
-        font-style: italic; font-size: .875rem; color: color-mix(in srgb, var(--bd-ink) 60%, transparent);
-    }
-
-    .book-dropcap::first-letter {
-        float: left; font-size: 3.5rem; line-height: .85; margin: .15rem .35rem 0 0; font-weight: 700;
-        font-family: 'Fraunces', 'Playfair Display', serif; color: var(--bd-accent);
-    }
-    .book-desc-collapsed { max-height: 14rem; overflow: hidden; }
-    #book-desc-inner.book-desc-expanded { max-height: none; overflow: visible; }
-
-    @media (min-width: 640px) {
-        .book-desc-collapsed { max-height: 18rem; }
-        .bd-body { padding: 2.5rem 2.5rem; }
-        .bd-strip { padding: .85rem 2.5rem; }
-        .bd-metrics, .bd-elsewhere, .bd-actions, .bd-foot { margin: 0 2.5rem; }
-        .bd-tiles { grid-template-columns: repeat(3, 1fr); }
-        .bd-actions { flex-direction: row; flex-wrap: wrap; align-items: center; }
-        .bd-actions form, .bd-btn { width: auto; }
-        .bd-foot { flex-direction: row; justify-content: space-between; }
-    }
-    @media (min-width: 1024px) {
-        .bd-body { flex-direction: row; gap: 3rem; padding: 3rem; }
-        .bd-aside { width: 17rem; flex-shrink: 0; align-items: stretch; }
-        .bd-cover { max-width: none; }
-        .bd-status { text-align: center; }
-        .bd-tags { justify-content: flex-start; }
-        .bd-heading { text-align: left; }
-        .bd-main { flex: 1; }
-        .bd-strip { padding: .85rem 3rem; }
-        .bd-metrics, .bd-elsewhere, .bd-actions, .bd-foot { margin: 0 3rem; }
-        .bd-tiles { grid-template-columns: repeat(4, 1fr); }
-        .bd-elsewhere { flex-direction: row; justify-content: space-between; align-items: flex-end; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-        .bd-bar > div, .bd-btn, .bd-links a { transition: none; }
-    }
-</style>
 <script>
     (function () {
-        var block = document.getElementById('book-desc-block');
-        if (block && block.getAttribute('data-collapsible') === 'true') {
-            var inner = document.getElementById('book-desc-inner');
-            var fade = document.getElementById('book-desc-fade');
-            var btn = document.getElementById('book-desc-toggle');
-            var expanded = false;
-            if (btn && inner) {
-                btn.addEventListener('click', function () {
-                    expanded = !expanded;
-                    if (expanded) {
-                        inner.classList.remove('book-desc-collapsed');
-                        inner.classList.add('book-desc-expanded');
-                        if (fade) fade.classList.add('hidden');
-                        btn.textContent = 'Show less';
-                    } else {
-                        inner.classList.add('book-desc-collapsed');
-                        inner.classList.remove('book-desc-expanded');
-                        if (fade) fade.classList.remove('hidden');
-                        btn.textContent = 'Show more';
-                    }
-                });
-            }
-        }
-
-        document.querySelectorAll('.js-open-finish-modal').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var url = btn.getAttribute('data-finish-url');
-                var title = btn.getAttribute('data-book-title') || '';
-                if (window.AlexandriaModal && url) window.AlexandriaModal.openFinish(url, title);
-            });
-        });
-
-        document.querySelectorAll('.js-open-delete-modal').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var url = btn.getAttribute('data-delete-url');
-                var title = btn.getAttribute('data-book-title') || '';
-                if (window.AlexandriaModal && url) window.AlexandriaModal.openDelete(url, title);
-            });
+        var desc = document.querySelector('[data-desc]');
+        var btn = document.querySelector('[data-desc-toggle]');
+        if (!desc || !btn) return;
+        desc.classList.add('folded');
+        btn.hidden = false;
+        btn.addEventListener('click', function () {
+            var open = desc.classList.toggle('folded') === false;
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            btn.textContent = open ? 'Show less' : 'Read the full description';
         });
     })();
 </script>

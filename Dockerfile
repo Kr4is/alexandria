@@ -1,4 +1,13 @@
 # Use a standard Python image
+# Front-end: compile static/src/app.css (Tailwind CLI) into static/dist/app.css
+FROM node:22-bookworm-slim AS assets
+WORKDIR /src
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY static ./static
+COPY templates ./templates
+RUN npm run build
+
 FROM python:3.15-slim-bookworm AS builder
 
 # Install uv via pip to avoid GHCR/registry authentication issues
@@ -26,6 +35,7 @@ COPY --from=builder /app/.venv /app/.venv
 
 # Copy the rest of the application
 COPY . .
+COPY --from=assets /src/static/dist ./static/dist
 
 # Place executables in the path
 ENV PATH="/app/.venv/bin:$PATH"

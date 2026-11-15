@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alexandria · The Book Spiral (mock)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --lime:#c6e000; --ink:#22262a; --steel:#a8b9c4; --red:#e3262f; --paper:#f4f6f5;
+  --ink-2:#4b545b; --ink-3:#5d666d; --line:#d5dbd8; --alu:#e7ebea;
+  --grot:"Archivo", system-ui, sans-serif;
+  --serif:"Newsreader", Georgia, serif;
+  --rise:4px; --slot:128px; --cover-w:100px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--grot);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+img{display:block}
+.wrap{max-width:1360px;margin:0 auto;padding:0 40px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid var(--ink);outline-offset:3px;box-shadow:0 0 0 7px var(--lime);border-radius:2px}
+.dark :focus-visible{outline-color:var(--lime);box-shadow:0 0 0 7px var(--ink)}
+.skip{position:absolute;left:12px;top:-60px;background:var(--lime);color:var(--ink);padding:12px 16px;font-weight:700;z-index:10}
+.skip:focus{top:12px}
+
+/* ---------- hero: steel-and-glass atrium ---------- */
+.dark{background:var(--ink);color:var(--paper)}
+.atrium{position:relative;overflow:hidden;
+  background:
+    repeating-linear-gradient(60deg, rgba(168,185,196,.07) 0 1px, transparent 1px 46px),
+    repeating-linear-gradient(-60deg, rgba(168,185,196,.07) 0 1px, transparent 1px 46px),
+    radial-gradient(1200px 500px at 12% 110%, rgba(198,224,0,.16), transparent 60%),
+    var(--ink)}
+.topbar{display:flex;align-items:center;gap:28px;height:68px}
+.mark{display:flex;align-items:center;gap:12px;text-decoration:none;font-weight:800;font-stretch:112%;letter-spacing:.02em;font-size:19px}
+.mark i{display:block;width:26px;height:26px;background:var(--lime);clip-path:polygon(0 100%,100% 0,100% 100%)}
+.nav{display:flex;gap:4px;margin-left:12px}
+.nav a{display:flex;align-items:center;min-height:44px;padding:0 14px;text-decoration:none;font-weight:600;font-size:15px;color:#cfd8dd;border-radius:2px}
+.nav a[aria-current]{color:var(--paper);box-shadow:inset 0 -3px 0 var(--lime)}
+.nav a:hover{color:var(--paper)}
+.top-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;min-width:44px;padding:0 18px;border:0;border-radius:2px;font:inherit;font-weight:700;font-size:15px;cursor:pointer;text-decoration:none}
+.btn-lime{background:var(--lime);color:var(--ink)}
+.btn-lime:hover{background:#d6f01a}
+.btn-ghost{background:transparent;color:inherit;box-shadow:inset 0 0 0 2px currentColor}
+.btn-ink{background:var(--ink);color:var(--paper)}
+.owner{display:flex;align-items:center;gap:10px;font-size:14px;color:#cfd8dd}
+.owner b{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:var(--steel);color:var(--ink);font-weight:800}
+
+.hero-head{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;padding:18px 0 0}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--steel)}
+.hero-head h1{margin:6px 0 0;font-family:var(--serif);font-weight:500;font-size:clamp(34px,3.6vw,50px);line-height:1.02;letter-spacing:-.01em}
+.hero-head h1 em{font-style:italic;color:var(--lime)}
+.legend{display:flex;flex-wrap:wrap;gap:6px;list-style:none;margin:0;padding:0}
+.legend a{display:flex;align-items:center;gap:8px;min-height:44px;padding:0 12px;text-decoration:none;font-size:14px;font-weight:600;color:#dfe5e8;background:rgba(244,246,245,.06);border-radius:2px}
+.legend a:hover{background:rgba(244,246,245,.12)}
+.legend s{display:block;width:14px;height:14px;text-decoration:none}
+
+/* ---------- the ramp ---------- */
+.ramp-scroll{overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:var(--steel) transparent;padding-top:0;margin-top:-28px;padding-bottom:6px;-webkit-overflow-scrolling:touch}
+.ramp{display:flex;align-items:flex-end;list-style:none;margin:0;padding:0 0 0 40px;width:max-content}
+.ramp li{width:var(--slot);flex:none;position:relative}
+.slot-link{display:block;text-decoration:none;color:inherit;padding:0 14px 12px}
+.slot-link .cv{width:var(--cover-w);height:calc(var(--cover-w)*1.5);transition:transform .25s ease, box-shadow .25s ease;
+  box-shadow:0 1px 0 rgba(255,255,255,.08), 6px 10px 18px rgba(0,0,0,.45)}
+.slot-link:hover .cv{transform:translateY(-6px)}
+.floor{position:relative;height:calc(84px + var(--i)*var(--rise));background:var(--fc);color:var(--ink);overflow:hidden}
+.floor::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:rgba(0,0,0,.18)}
+.floor .num{position:absolute;left:10px;top:20px;font-weight:900;font-stretch:72%;font-size:58px;line-height:1;letter-spacing:-.02em;opacity:.92}
+.floor .fl{position:absolute;left:12px;top:7px;font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
+.floor.f-reading{--fc:var(--lime)}
+.floor.f-paused{--fc:var(--paper);background-image:repeating-linear-gradient(-45deg, rgba(34,38,42,.14) 0 6px, transparent 6px 14px)}
+.floor.f-tbr{--fc:var(--paper)}
+.floor.f-finished{--fc:var(--steel)}
+.floor.f-dnf{--fc:var(--red)}
+.floor-band.f-reading{--fc:var(--lime)}
+.ramp li.is-reading .cv{box-shadow:0 0 0 3px var(--lime), 0 0 46px 6px rgba(198,224,0,.5), 6px 10px 18px rgba(0,0,0,.45)}
+.ramp li.is-reading .slot-link::after{content:"Reading";position:absolute;top:-24px;left:14px;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--lime)}
+.ramp-end{width:40px;flex:none}
+
+/* covers & placeholders */
+.cv{background:#3a4046;object-fit:cover;border-radius:1px 3px 3px 1px}
+.ph{display:flex;flex-direction:column;justify-content:space-between;padding:10px 9px;background:linear-gradient(90deg,rgba(0,0,0,.18) 0 5px,transparent 5px),#5b6670;color:var(--paper)}
+.ph b{font-family:var(--serif);font-weight:500;font-size:15px;line-height:1.15}
+.ph span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+
+/* ---------- reading desk ---------- */
+.desk{padding:26px 0 44px}
+.desk-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:16px}
+.desk-head h2{margin:0;font-size:15px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--lime)}
+.desk-head p{margin:0;color:#c3ccd1;font-size:14px}
+.desk-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.rcard{display:grid;grid-template-columns:118px 1fr;gap:22px;padding:20px;background:rgba(244,246,245,.05);border:1px solid rgba(168,185,196,.22);border-left:6px solid var(--lime)}
+.rcard .cv{width:118px;height:177px;box-shadow:6px 10px 18px rgba(0,0,0,.4)}
+.rcard h3{margin:0;font-family:var(--serif);font-weight:500;font-size:26px;line-height:1.1}
+.rcard h3 a{text-decoration:none}
+.rcard h3 a:hover{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.by{margin:4px 0 0;color:#c3ccd1;font-size:14px}
+.prog{margin:16px 0 12px}
+.prog-line{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:15px}
+.prog-line strong{font-weight:800;font-size:22px;font-stretch:90%}
+.prog-line .pct{color:var(--lime);font-weight:800}
+.bar{position:relative;height:12px;margin-top:8px;background:rgba(168,185,196,.22)}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--lime);transition:width .35s ease}
+.bar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),rgba(34,38,42,.55) calc(10% - 1px) 10%)}
+.meta{margin:8px 0 0;font-size:13px;color:#b5bfc5}
+.log{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.log label{font-size:13px;font-weight:700;color:#dfe5e8;width:100%}
+.log input{width:104px;min-height:44px;padding:0 12px;border:2px solid var(--steel);border-radius:2px;background:var(--paper);color:var(--ink);font:inherit;font-weight:700;font-size:17px}
+.chip{min-height:44px;padding:0 12px;background:rgba(244,246,245,.08);color:var(--paper);border:1px solid rgba(168,185,196,.4);border-radius:2px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+.chip:hover{background:rgba(244,246,245,.16)}
+.status-row{display:flex;gap:14px;margin-top:10px}
+.status-row button{min-height:44px;background:none;border:0;padding:0 2px;color:#c3ccd1;font:inherit;font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:4px;cursor:pointer}
+.status-row button:hover{color:var(--paper)}
+.live{min-height:22px;margin:6px 0 0;font-size:14px;color:var(--lime)}
+
+/* ---------- floors (collection) ---------- */
+.floors{padding:56px 0 24px}
+.floors-intro{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:28px}
+.floors-intro h2{margin:0;font-family:var(--serif);font-weight:500;font-size:clamp(30px,3vw,42px);line-height:1.05}
+.floors-intro p{margin:6px 0 0;color:var(--ink-2);max-width:56ch}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.tools .btn{background:var(--alu);color:var(--ink);font-weight:600}
+.tools .btn[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+
+.floor-sec{margin-top:44px;scroll-margin-top:16px}
+.floor-band{display:flex;align-items:stretch;min-height:84px;background:var(--fc);color:var(--ink);position:relative}
+.floor-band .big{display:flex;align-items:center;padding:0 22px;font-weight:900;font-stretch:68%;font-size:84px;line-height:.8;letter-spacing:-.03em;background:rgba(34,38,42,.07)}
+.floor-band .lbl{display:flex;flex-direction:column;justify-content:center;padding:12px 22px}
+.floor-band h3{margin:0;font-size:26px;font-weight:800;font-stretch:108%;letter-spacing:-.005em;text-transform:uppercase}
+.floor-band p{margin:2px 0 0;font-size:14px;font-weight:600;color:rgba(34,38,42,.82)}
+.floor-band .cnt{margin-left:auto;display:flex;align-items:center;padding:0 24px;font-weight:800;font-size:15px}
+.f-finished.floor-band{--fc:var(--steel)}
+.f-tbr.floor-band{--fc:#fff;box-shadow:inset 0 0 0 2px var(--ink)}
+.f-paused.floor-band{background-color:#fff;background-image:repeating-linear-gradient(-45deg, rgba(34,38,42,.12) 0 6px, transparent 6px 14px);box-shadow:inset 0 0 0 2px var(--ink)}
+.f-dnf.floor-band{--fc:var(--red)}
+
+.shelf{list-style:none;margin:0;padding:24px 0 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:30px 24px}
+.book a.cvl{display:block;position:relative;text-decoration:none}
+.book .cv{width:100%;aspect-ratio:2/3;height:auto;box-shadow:4px 8px 16px rgba(34,38,42,.22);transition:transform .2s ease}
+.book a.cvl:hover .cv{transform:translateY(-4px)}
+.book .callno{position:absolute;left:-6px;bottom:-10px;background:var(--fc,var(--ink));color:var(--ink);font-weight:900;font-stretch:72%;font-size:22px;line-height:1;padding:5px 7px 4px}
+.book h4{margin:18px 0 0;font-family:var(--serif);font-weight:500;font-size:18px;line-height:1.2}
+.book h4 a{text-decoration:none}
+.book h4 a:hover{text-decoration:underline;text-underline-offset:3px}
+.book .au{margin:2px 0 0;font-size:14px;color:var(--ink-2)}
+.book .row{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:6px;font-size:13px;color:var(--ink-3)}
+.book .stars{color:var(--ink);font-weight:800}
+.book .note{margin:8px 0 0;padding-left:10px;border-left:3px solid var(--fc,var(--steel));font-family:var(--serif);font-style:italic;font-size:15px;line-height:1.35;color:var(--ink-2)}
+.minibar{height:5px;margin-top:8px;background:var(--line)}
+.minibar i{display:block;height:100%;background:var(--ink)}
+.private{font-family:var(--grot);font-style:normal;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);display:block;margin-top:2px}
+
+/* ---------- numbers & calendar ---------- */
+.numbers{margin-top:72px;padding:56px 0 64px}
+.num-head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+.num-head h2{margin:0;font-family:var(--serif);font-weight:500;font-size:clamp(30px,3vw,42px)}
+.num-head .links{display:flex;gap:10px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin:28px 0 40px;border-top:2px solid var(--steel)}
+.kpi{padding:18px 24px 6px 0}
+.kpi + .kpi{padding-left:24px;border-left:1px solid rgba(168,185,196,.25)}
+.kpi .v{font-weight:900;font-stretch:72%;font-size:76px;line-height:.95;letter-spacing:-.02em}
+.kpi .v.lime{color:var(--lime)}
+.kpi .k{margin-top:6px;font-size:14px;color:#c3ccd1}
+.fmt{display:flex;height:14px;margin-top:14px}
+.fmt span{display:block;height:100%}
+.fmt-key{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:13px;color:#c3ccd1}
+.fmt-key b{display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:0}
+
+.cal-title{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:12px}
+.cal-title h3{margin:0;font-size:15px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--steel)}
+.cal-title p{margin:0;font-size:13px;color:#c3ccd1}
+.cal-title p b{display:inline-block;width:10px;height:10px;margin:0 6px 0 14px}
+.cal{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;list-style:none;margin:0;padding:0}
+.mo{min-height:150px;padding:10px 8px;background:rgba(244,246,245,.04);border-top:4px solid rgba(168,185,196,.3);display:flex;flex-direction:column;gap:6px}
+.mo.now{border-top-color:var(--lime);background:rgba(198,224,0,.07)}
+.mo.future{opacity:.55}
+.mo .mn{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#dfe5e8}
+.ev{display:flex;align-items:center;gap:6px;font-size:12px;line-height:1.2;color:#dfe5e8;text-decoration:none;min-height:28px}
+.ev img,.ev .dot{width:20px;height:30px;flex:none;object-fit:cover}
+.ev.fin img{box-shadow:0 0 0 2px var(--steel)}
+.ev.start img{box-shadow:0 0 0 2px var(--lime)}
+.ev .dot{background:#5b6670}
+.ev span{overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.foot{padding:28px 0 40px;font-size:14px;color:var(--ink-2);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+/* ---------- responsive ---------- */
+@media (max-width:1100px){
+  .desk-grid{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .kpi:nth-child(3){border-left:0;padding-left:0}
+  .cal{grid-template-columns:repeat(6,1fr)}
+}
+@media (max-width:760px){
+  :root{--slot:104px;--cover-w:80px;--rise:3px}
+  .wrap{padding:0 18px}
+  .nav,.owner span,.hide-sm,.legend,.desk-head p{display:none}
+  .topbar{gap:12px}
+  .top-right .btn-lime{padding:0 14px}
+  .hero-head{flex-direction:column;align-items:flex-start;padding-top:18px}
+  .legend{flex-wrap:nowrap;overflow-x:auto;max-width:100%}
+  .legend a{white-space:nowrap}
+  .ramp{padding-left:18px}
+  .slot-link{padding:0 12px 10px}
+  .floor{height:calc(64px + var(--i)*var(--rise))}
+  .floor .num{font-size:40px;left:8px;top:16px}
+  .floor .fl{font-size:9px;left:8px;top:5px;letter-spacing:.1em}
+  .rcard{grid-template-columns:84px 1fr;gap:14px;padding:16px}
+  .rcard .cv{width:84px;height:126px}
+  .rcard h3{font-size:21px}
+  .rcard .log,.rcard .status-row,.rcard .live{grid-column:1 / -1}
+  .floors-intro{flex-direction:column;align-items:flex-start}
+  .floor-band .big{font-size:56px;padding:0 14px}
+  .floor-band h3{font-size:19px}
+  .floor-band .lbl{padding:10px 14px}
+  .floor-band .cnt{padding:0 14px}
+  .shelf{grid-template-columns:repeat(2,1fr);gap:26px 16px}
+  .kpi .v{font-size:56px}
+  .kpi{padding-right:12px}
+  .kpi + .kpi{padding-left:12px}
+  .cal{grid-template-columns:repeat(3,1fr)}
+  .mo{min-height:110px}
+}
+/* mobile reading-card internals */
+.rbody{min-width:0}
+@media (max-width:760px){
+  .rcard{grid-template-areas:"cv head" "rest rest"}
+  .rcard > img,.rcard > .ph{grid-area:cv}
+  .rbody{display:contents}
+  .rhead{grid-area:head}
+  .rrest{grid-area:rest}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition:none!important;animation:none!important}
+  .slot-link:hover .cv,.book a.cvl:hover .cv{transform:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#desk">Skip to what you're reading</a>
+
+<header class="atrium dark">
+  <div class="wrap topbar">
+    <a class="mark" href="#"><i aria-hidden="true"></i>ALEXANDRIA</a>
+    <nav class="nav" aria-label="Main">
+      <a href="#" aria-current="page">Library</a>
+      <a href="#numbers">Stats</a>
+      <a href="#calendar">Calendar</a>
+    </nav>
+    <div class="top-right">
+      <a class="btn btn-lime" href="#" style="white-space:nowrap">+ Add<span class="hide-sm">&nbsp;a book</span></a>
+      <div class="owner" title="Signed in as the owner"><b aria-hidden="true">A</b><span>Your library</span></div>
+    </div>
+  </div>
+
+  <div class="wrap hero-head">
+    <div>
+      <div class="eyebrow">Saturday 14 November · 24 books on 5 floors</div>
+      <h1>Two books open,<br><em>422 pages</em> into Don Quixote.</h1>
+    </div>
+    <ul class="legend" aria-label="Jump to a floor">
+      <li><a href="#floor-reading"><s style="background:var(--lime)"></s>Reading 2</a></li>
+      <li><a href="#floor-paused"><s style="background:var(--paper);background-image:repeating-linear-gradient(-45deg,#22262a 0 2px,transparent 2px 5px)"></s>Paused 2</a></li>
+      <li><a href="#floor-tbr"><s style="background:var(--paper)"></s>To read 4</a></li>
+      <li><a href="#floor-finished"><s style="background:var(--steel)"></s>Finished 15</a></li>
+      <li><a href="#floor-dnf"><s style="background:var(--red)"></s>Did not finish 1</a></li>
+    </ul>
+  </div>
+
+  <div class="ramp-scroll" tabindex="0" aria-label="The whole library as one ramp, scroll sideways">
+    <ol class="ramp" id="ramp"></ol>
+  </div>
+
+  <section class="wrap desk" id="desk" aria-labelledby="desk-h">
+    <div class="desk-head">
+      <h2 id="desk-h">Where you left off</h2>
+      <p>Type a page and press Enter. That's the whole job.</p>
+    </div>
+    <div class="desk-grid" id="deskGrid"></div>
+  </section>
+</header>
+
+<main>
+  <section class="wrap floors" aria-labelledby="floors-h">
+    <div class="floors-intro">
+      <div>
+        <h2 id="floors-h">The stacks, floor by floor</h2>
+        <p>Every book keeps its call number from the ramp. Finished books are ordered newest first; your notes stay on this side of the login.</p>
+      </div>
+      <div class="tools" role="group" aria-label="Sort">
+        <button class="btn" aria-pressed="true">By floor</button>
+        <button class="btn" aria-pressed="false">Shelves</button>
+        <button class="btn" aria-pressed="false">Search</button>
+      </div>
+    </div>
+    <div id="floors"></div>
+  </section>
+
+  <section class="numbers dark" id="numbers" aria-labelledby="num-h">
+    <div class="wrap">
+      <div class="num-head">
+        <div>
+          <div class="eyebrow">2026 so far</div>
+          <h2 id="num-h">Ten books down, a long one in progress</h2>
+        </div>
+        <div class="links">
+          <a class="btn btn-ghost" href="#">All stats</a>
+          <a class="btn btn-ghost" href="#">Calendar</a>
+        </div>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><div class="v lime">10</div><div class="k">books finished</div></div>
+        <div class="kpi"><div class="v">3,665</div><div class="k">pages in finished books</div></div>
+        <div class="kpi"><div class="v">4.4</div><div class="k">average rating you gave</div></div>
+        <div class="kpi">
+          <div class="v">7</div><div class="k">on paper: 6 paperback, 1 hardcover</div>
+          <div class="fmt" role="img" aria-label="Formats: 6 paperback, 2 audiobook, 1 hardcover, 1 ebook">
+            <span style="flex:6;background:var(--steel)"></span><span style="flex:2;background:var(--lime)"></span><span style="flex:1;background:var(--paper)"></span><span style="flex:1;background:var(--red)"></span>
+          </div>
+          <div class="fmt-key" aria-hidden="true"><span><b style="background:var(--steel)"></b>Paperback</span><span><b style="background:var(--lime)"></b>Audio</span><span><b style="background:var(--paper)"></b>Hardcover</span><span><b style="background:var(--red)"></b>Ebook</span></div>
+        </div>
+      </div>
+
+      <div id="calendar">
+        <div class="cal-title">
+          <h3>Calendar 2026</h3>
+          <p><b style="background:var(--steel)"></b>Finished<b style="background:var(--lime)"></b>Started</p>
+        </div>
+        <ol class="cal" id="cal"></ol>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <span>Alexandria · self-hosted, one SQLite file</span>
+  <span>Export CSV · JSON · <a href="#">Public view</a></span>
+</footer>
+
+<script>
+const OL = i => `https://covers.openlibrary.org/b/isbn/${i}-L.jpg?default=false`;
+// From scripts/seed_demo.py; "today" = 2026-11-14.
+const BOOKS = [
+  // reading
+  {f:'reading', t:'Don Quixote', a:'Miguel de Cervantes, Edith Grossman', i:'9780060934347', p:1056, cur:422, fmt:'Hardcover', started:'2026-10-05'},
+  {f:'reading', t:'Steve Jobs', a:'Walter Isaacson', i:'9781451648539', p:656, cur:262, fmt:'Ebook', started:'2026-10-31'},
+  // paused
+  {f:'paused', t:'Thinking, Fast and Slow', a:'Daniel Kahneman', i:'9780374533557', p:499, cur:149, fmt:'Paperback', started:'2026-07-17'},
+  {f:'paused', t:'The Name of the Wind', a:'Patrick Rothfuss', i:'9780756404741', p:662, cur:198, fmt:'Paperback', started:'2026-04-28'},
+  // to read (newest added first)
+  {f:'tbr', t:'The Prince', a:'Niccolò Machiavelli', i:'9780140449150', p:140, fmt:'Paperback', added:'11 Nov'},
+  {f:'tbr', t:'Fourth Wing', a:'Rebecca Yarros', i:'9781649374042', p:498, fmt:'Ebook', added:'7 Nov'},
+  {f:'tbr', t:'Tractatus Logico-Philosophicus', a:'Ludwig Wittgenstein', i:null, p:null, fmt:null, added:'2 Nov'},
+  {f:'tbr', t:'The Guns of August', a:'Barbara W. Tuchman', i:'9780345476098', p:608, fmt:'Paperback', added:'15 Oct'},
+  // finished, newest first
+  {f:'finished', t:'The Hobbit', a:'J.R.R. Tolkien', i:'9780547928227', p:300, r:4.5, fmt:'Hardcover', done:'2026-11-09', n:'Re-read before the films; still the coziest adventure there is.'},
+  {f:'finished', t:'Dune', a:'Frank Herbert', i:'9780441013593', p:688, r:5, fmt:'Paperback', done:'2026-10-26', n:'Politics, ecology and prophecy braided together. Dense, rewarding.'},
+  {f:'finished', t:'Sapiens: A Brief History of Humankind', a:'Yuval Noah Harari', i:'9780062316110', p:464, r:3.5, fmt:'Audiobook', done:'2026-09-23'},
+  {f:'finished', t:'Pride and Prejudice', a:'Jane Austen', i:'9780141439518', p:480, r:4.5, fmt:'Paperback', done:'2026-09-17'},
+  {f:'finished', t:'Rayuela', a:'Julio Cortázar', i:null, p:null, r:4, fmt:'Paperback', done:'2026-08-16', n:'Leída en el orden "salteado". Merece la pena.'},
+  {f:'finished', t:"L'Étranger", a:'Albert Camus', i:'9782070360024', p:186, r:4, fmt:'Paperback', done:'2026-08-09', n:'Lu en français, lentement. La dernière page reste.'},
+  {f:'finished', t:'Cien años de soledad', a:'Gabriel García Márquez', i:'9780307474728', p:471, r:5, fmt:'Paperback', done:'2026-06-17', n:'Los nombres se repiten y aun así nunca me perdí. Magia pura.'},
+  {f:'finished', t:'Cosmos', a:'Carl Sagan', i:'9780345539434', p:396, r:4, fmt:'Ebook', done:'2026-06-04'},
+  {f:'finished', t:"Man's Search for Meaning", a:'Viktor E. Frankl', i:'9780807014295', p:184, r:5, fmt:'Paperback', done:'2026-05-27', n:'Read in two sittings. Underlined half of it.'},
+  {f:'finished', t:'Project Hail Mary', a:'Andy Weir', i:'9780593135204', p:496, r:4, fmt:'Audiobook', done:'2026-02-27'},
+  {f:'finished', t:'Good Omens', a:'Terry Pratchett, Neil Gaiman', i:'9780060853983', p:400, r:3.5, fmt:'Paperback', done:'2025-12-09'},
+  {f:'finished', t:'The Left Hand of Darkness', a:'Ursula K. Le Guin', i:'9780441478125', p:304, r:4, fmt:'Paperback', done:'2025-09-30'},
+  {f:'finished', t:'Born a Crime', a:'Trevor Noah', i:'9780399588174', p:304, r:4.5, fmt:'Audiobook', done:'2025-05-03', n:"Hearing it in the author's own voice is the way."},
+  {f:'finished', t:'La Peste', a:'Albert Camus', i:'9782070360420', p:336, r:3, fmt:'Paperback', done:'2025-02-02'},
+  {f:'finished', t:'A Brief History of Time', a:'Stephen Hawking', i:'9780553380163', p:212, r:2.5, fmt:'Paperback', done:'2024-11-04', n:'Lost me around black-hole thermodynamics; will retry someday.'},
+  // did not finish
+  {f:'dnf', t:'Crime and Punishment', a:'Fyodor Dostoevsky', i:'9780143107637', p:608, cur:182, fmt:'Ebook', started:'2026-05-18', n:"Gave up at the second act; the fever-dream tone wasn't for this season."},
+];
+BOOKS.forEach((b,k)=>b.no=String(k+1).padStart(2,'0'));
+
+const FLOORS = {
+  reading:{n:'1', name:'Reading', sub:'Open on the desk'},
+  paused:{n:'2', name:'Paused', sub:'Bookmark still in'},
+  tbr:{n:'3', name:'To read', sub:'The wish list'},
+  finished:{n:'4', name:'Finished', sub:'Newest first, with your ratings'},
+  dnf:{n:'5', name:'Did not finish', sub:'Set down, on purpose'},
+};
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmtDate = d => { const [y,m,dd]=d.split('-').map(Number); return `${dd} ${MON[m-1]} ${y}`; };
+const surname = a => a.split(',')[0].trim().split(' ').pop();
+
+function cover(b, cls='cv', w, h){
+  const ph = `<div class="${cls} ph" role="img" aria-label="No cover: ${esc(b.t)}"><b>${esc(b.t)}</b><span>${esc(surname(b.a))}</span></div>`;
+  if(!b.i) return ph;
+  return `<img class="${cls}" src="${OL(b.i)}" alt="" width="${w||112}" height="${h||168}" data-ph="${esc(ph)}" onerror="this.outerHTML=this.dataset.ph">`;
+}
+
+// ---- the ramp
+document.getElementById('ramp').innerHTML = BOOKS.map((b,k)=>{
+  const first = k===0 || BOOKS[k-1].f!==b.f;
+  return `<li class="${b.f==='reading'?'is-reading':''}" style="--i:${k}">
+    <a class="slot-link" href="#bk-${b.no}" aria-label="${b.no}. ${esc(b.t)} by ${esc(b.a)}, ${FLOORS[b.f].name}">${cover(b)}</a>
+    <div class="floor f-${b.f}" aria-hidden="true"><span class="num">${b.no}</span>${first?`<span class="fl">${FLOORS[b.f].name}</span>`:''}</div>
+  </li>`;
+}).join('') + '<li class="ramp-end" aria-hidden="true"></li>';
+
+// ---- reading desk
+const reading = BOOKS.filter(b=>b.f==='reading');
+document.getElementById('deskGrid').innerHTML = reading.map((b,k)=>`
+  <article class="rcard" aria-labelledby="rt${k}">
+    ${cover(b,'cv',118,177)}
+    <div class="rbody">
+      <div class="rhead">
+        <h3 id="rt${k}"><a href="#bk-${b.no}">${esc(b.t)}</a></h3>
+        <p class="by">${esc(b.a)}</p>
+        <p class="meta">No. ${b.no} · ${b.fmt} · since ${fmtDate(b.started).replace(' 2026','')}</p>
+      </div>
+      <div class="rrest">
+        <div class="prog">
+          <div class="prog-line"><span>Page <strong data-cur>${b.cur}</strong> of ${b.p.toLocaleString('en')}</span><span class="pct" data-pct>${Math.round(b.cur/b.p*100)}%</span></div>
+          <div class="bar" aria-hidden="true"><i data-bar style="width:${b.cur/b.p*100}%"></i></div>
+        </div>
+        <form class="log" data-k="${k}">
+          <label for="pg${k}">Log a page</label>
+          <input id="pg${k}" type="number" inputmode="numeric" min="0" max="${b.p}" value="${b.cur}">
+          <button class="btn btn-lime" type="submit">Save</button>
+          <button class="chip" type="button" data-add="10">+10</button>
+          <button class="chip" type="button" data-add="25">+25</button>
+        </form>
+        <p class="live" role="status" aria-live="polite" data-live></p>
+        <div class="status-row"><button type="button">Finished it</button><button type="button">Pause</button><button type="button">Stop reading</button></div>
+      </div>
+    </div>
+  </article>`).join('');
+
+document.querySelectorAll('.rcard').forEach((card,k)=>{
+  const b = reading[k], form = card.querySelector('form'), input = form.querySelector('input');
+  const set = v => {
+    v = Math.max(0, Math.min(b.p, v|0));
+    const diff = v - b.cur; b.cur = v; input.value = v;
+    card.querySelector('[data-cur]').textContent = v;
+    card.querySelector('[data-pct]').textContent = Math.round(v/b.p*100)+'%';
+    card.querySelector('[data-bar]').style.width = (v/b.p*100)+'%';
+    card.querySelector('[data-live]').textContent = v===b.p ? 'Last page. Mark it finished?' :
+      (diff>0 ? `Saved. +${diff} pages today, ${b.p-v} to go.` : `Saved at page ${v}.`);
+  };
+  form.addEventListener('submit', e=>{e.preventDefault(); set(+input.value);});
+  form.querySelectorAll('[data-add]').forEach(btn=>btn.addEventListener('click',()=>set(b.cur + +btn.dataset.add)));
+});
+
+// ---- floors
+const stars = r => `<span class="stars" aria-label="Rated ${r} of 5">★ ${r % 1 ? r.toFixed(1) : r}</span>`;
+document.getElementById('floors').innerHTML = Object.entries(FLOORS).map(([key,F])=>{
+  const list = BOOKS.filter(b=>b.f===key);
+  return `<section class="floor-sec" id="floor-${key}" aria-labelledby="fh-${key}">
+    <div class="floor-band f-${key}">
+      <span class="big" aria-hidden="true">${F.n}</span>
+      <div class="lbl"><h3 id="fh-${key}">${F.name}</h3><p>${F.sub}</p></div>
+      <span class="cnt">${list.length} ${list.length===1?'book':'books'}</span>
+    </div>
+    <ol class="shelf">${list.map(b=>{
+      let row = [], extra = '';
+      if(b.f==='finished'){ row.push(stars(b.r)); row.push(`<span>${fmtDate(b.done)}</span>`); }
+      if(b.cur!=null && b.f!=='finished'){ row.push(`<span>p. ${b.cur} of ${b.p}</span>`); extra = `<div class="minibar" aria-hidden="true"><i style="width:${b.cur/b.p*100}%"></i></div>`; }
+      if(b.f==='tbr') row.push(`<span>Added ${b.added}</span>`);
+      if(b.fmt) row.push(`<span>${b.fmt}</span>`);
+      if(b.p && b.f!=='reading' && b.f!=='paused' && b.f!=='dnf') row.push(`<span>${b.p} pp</span>`);
+      const note = b.n ? `<p class="note"><span class="private">Your note · private</span>${esc(b.n)}</p>` : '';
+      return `<li class="book f-${b.f}" id="bk-${b.no}" style="--fc:var(--${({reading:'lime',paused:'paper',tbr:'paper',finished:'steel',dnf:'red'})[b.f]})">
+        <a class="cvl" href="#" tabindex="-1" aria-hidden="true">${cover(b,'cv',150,225)}<span class="callno" style="${b.f==='tbr'||b.f==='paused'?'box-shadow:inset 0 0 0 2px #22262a':''}">${b.no}</span></a>
+        <h4><a href="#">${esc(b.t)}</a></h4>
+        <p class="au">${esc(b.a)}</p>
+        <div class="row">${row.join('<span aria-hidden="true">·</span>')}</div>${extra}${note}
+      </li>`;}).join('')}</ol>
+  </section>`;
+}).join('');
+
+// ---- calendar 2026
+const ev = Array.from({length:12},()=>[]);
+BOOKS.forEach(b=>{
+  if(b.done && b.done.startsWith('2026')) ev[+b.done.slice(5,7)-1].push({b,kind:'fin',d:+b.done.slice(8)});
+  if(b.started && b.started.startsWith('2026')) ev[+b.started.slice(5,7)-1].push({b,kind:'start',d:+b.started.slice(8)});
+});
+document.getElementById('cal').innerHTML = ev.map((list,m)=>{
+  list.sort((x,y)=>x.d-y.d);
+  const cls = m===10 ? 'now' : m>10 ? 'future' : '';
+  return `<li class="mo ${cls}"><span class="mn">${MON[m]}${m===10?' · now':''}</span>${list.map(e=>
+    `<a class="ev ${e.kind}" href="#bk-${e.b.no}">${e.b.i?`<img src="https://covers.openlibrary.org/b/isbn/${e.b.i}-S.jpg" alt="" loading="lazy" width="20" height="30">`:'<i class="dot"></i>'}<span><span class="sr">${e.kind==='fin'?'Finished':'Started'} ${e.d} ${MON[m]}: </span>${esc(e.b.t)}</span></a>`).join('')}</li>`;
+}).join('');
+</script>
+</body>
+</html>

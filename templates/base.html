@@ -1,570 +1,64 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full scroll-smooth" style="scroll-padding-top: 6rem;">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#3b2415">
+    <meta name="theme-color" content="#f4f1ea">
     <meta name="color-scheme" content="light">
-    <title>{% block title %}{{ config['APP_NAME'] }} - Personal Library{% endblock %}</title>
+    <title>{% block title %}{{ config['APP_NAME'] }}{% endblock %}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        /* Colours read the CSS variables below (as "r g b" channels) so palette
-           changes flow everywhere and opacity utilities such as bg-vintage-ink/10 keep working. */
-        (function () {
-            var c = function (n) { return 'rgb(var(--' + n + '-rgb) / <alpha-value>)'; };
-            tailwind.config = {
-                theme: {
-                    extend: {
-                        colors: {
-                            'vintage-cream': c('vintage-cream'),
-                            'vintage-paper': c('vintage-paper'),
-                            'vintage-ink': c('vintage-ink'),
-                            'vintage-gold': c('vintage-gold'),
-                            'vintage-accent': c('vintage-accent'),
-                            'moss': c('moss'),
-                            'wood': c('wood'),
-                            'wood-dark': c('wood-dark'),
-                            'leather': c('leather'),
-                            'rust': c('rust')
-                        },
-                        fontFamily: {
-                            display: ['Fraunces', 'Georgia', 'serif'],
-                            serif: ['"EB Garamond"', 'Georgia', 'serif']
-                        }
-                    }
-                }
-            };
-        })();
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..800&family=EB+Garamond:ital,wght@0,400..700;1,400..600&display=swap"
-        rel="stylesheet">
-    <style>
-        :root {
-            --vintage-cream: #efe3cf;
-            --vintage-paper: #f8f0e2;
-            --vintage-ink: #2a1d16;
-            --vintage-gold: #b8832f;
-            --vintage-accent: #6f2a24;
-            --moss: #4a5d3a;
-            --wood: #5a3a22;
-            --wood-dark: #3b2415;
-            --leather: #8a5a36;
-            --rust: #b4532a;
-
-            /* "r g b" channels of the tokens above, for Tailwind opacity utilities */
-            --vintage-cream-rgb: 239 227 207;
-            --vintage-paper-rgb: 248 240 226;
-            --vintage-ink-rgb: 42 29 22;
-            --vintage-gold-rgb: 184 131 47;
-            --vintage-accent-rgb: 111 42 36;
-            --moss-rgb: 74 93 58;
-            --wood-rgb: 90 58 34;
-            --wood-dark-rgb: 59 36 21;
-            --leather-rgb: 138 90 54;
-            --rust-rgb: 180 83 42;
-
-            /* brass tuned for text/rules on dark wood (AA on --wood-dark) */
-            --brass-light: #dcae65;
-            --transition-speed: 0.3s;
-
-            /* paper grain, drawn inline instead of fetched from a third party */
-            --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .36 0 0 0 0 .22 0 0 0 0 .1 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-        }
-
-        body {
-            font-family: 'EB Garamond', Georgia, serif;
-            font-size: 1.125rem;
-            background-color: var(--vintage-cream);
-            background-image:
-                radial-gradient(ellipse 120% 900px at 50% -10%, rgba(255, 248, 232, 0.65), transparent 60%),
-                var(--grain);
-            background-repeat: no-repeat, repeat;
-            color: var(--vintage-ink);
-            line-height: 1.6;
-        }
-
-        h1,
-        h2,
-        h3,
-        h4,
-        .font-serif-display {
-            font-family: 'Fraunces', Georgia, serif;
-            font-weight: 650;
-            letter-spacing: -0.015em;
-            font-optical-sizing: auto;
-        }
-
-        ::selection {
-            background: var(--vintage-gold);
-            color: var(--wood-dark);
-        }
-
-        html {
-            accent-color: var(--vintage-accent);
-            caret-color: var(--vintage-accent);
-            scrollbar-color: var(--leather) var(--vintage-cream);
-        }
-
-        :focus-visible {
-            outline: 2px solid var(--vintage-accent);
-            outline-offset: 3px;
-        }
-
-        .alx-dark :focus-visible {
-            outline-color: var(--brass-light);
-        }
-
-        .alx-skip {
-            position: absolute;
-            left: 1rem;
-            top: -4rem;
-            z-index: 300;
-            padding: 0.75rem 1.25rem;
-            min-height: 44px;
-            background: var(--vintage-accent);
-            color: var(--vintage-paper);
-            font-size: 1rem;
-            transition: top 0.15s ease;
-        }
-
-        .alx-skip:focus {
-            top: 0.75rem;
-        }
-
-        /* ---------- shared surfaces ---------- */
-        .paper-texture {
-            background-color: var(--vintage-paper);
-            background-image: var(--grain);
-            box-shadow: 0 10px 30px -12px rgba(59, 36, 21, 0.28);
-            border: 1px solid rgba(90, 58, 34, 0.12);
-        }
-
-        .vintage-border {
-            border: 1px solid var(--vintage-gold);
-            padding: 2px;
-            outline: 1px solid var(--vintage-gold);
-            outline-offset: 4px;
-        }
-
-        .transition-soft {
-            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .book-cover-img {
-            image-rendering: auto;
-        }
-
-        .modal-open {
-            overflow: hidden;
-        }
-
-        /* ---------- nav: the bookcase top ---------- */
-        .alx-nav {
-            background-color: var(--wood-dark);
-            background-image: var(--grain);
-            color: var(--vintage-cream);
-            border-bottom: 1px solid var(--vintage-gold);
-            box-shadow: 0 3px 0 var(--wood-dark), 0 4px 0 rgba(184, 131, 47, 0.55), 0 10px 24px -10px rgba(59, 36, 21, 0.55);
-        }
-
-        .alx-wordmark {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
-            min-height: 44px;
-            color: var(--vintage-cream);
-            text-decoration: none;
-        }
-
-        .alx-wordmark svg {
-            width: 2rem;
-            height: 2rem;
-            flex: none;
-            color: var(--brass-light);
-            transition: transform 0.5s ease;
-        }
-
-        .alx-wordmark:hover svg {
-            transform: rotate(-8deg);
-        }
-
-        .alx-wordmark .eyebrow {
-            display: block;
-            font-style: italic;
-            font-size: 0.8125rem;
-            line-height: 1;
-            letter-spacing: 0.14em;
-            color: var(--brass-light);
-        }
-
-        .alx-wordmark .name {
-            display: block;
-            font-family: 'Fraunces', Georgia, serif;
-            font-weight: 700;
-            font-size: 1.5rem;
-            line-height: 1.1;
-            letter-spacing: -0.01em;
-        }
-
-        .nav-link {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            min-height: 44px;
-            padding: 0 0.125rem;
-            text-transform: uppercase;
-            letter-spacing: 0.16em;
-            font-size: 0.8125rem;
-            font-weight: 500;
-            color: inherit;
-            text-decoration: none;
-            transition: color var(--transition-speed) ease;
-        }
-
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 1px;
-            bottom: 8px;
-            left: 0;
-            background-color: currentColor;
-            transition: width var(--transition-speed) ease;
-        }
-
-        .nav-link:hover::after,
-        .nav-link[aria-current="page"]::after {
-            width: 100%;
-        }
-
-        .alx-nav .nav-link:hover,
-        .alx-nav .nav-link[aria-current="page"] {
-            color: var(--brass-light);
-        }
-
-        .alx-logout {
-            min-height: 44px;
-            padding: 0 0.25rem;
-            display: inline-flex;
-            align-items: center;
-            background: transparent;
-            border: 0;
-            cursor: pointer;
-            font: inherit;
-            font-size: 0.8125rem;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            color: rgba(239, 227, 207, 0.75);
-            transition: color var(--transition-speed) ease;
-        }
-
-        .alx-logout:hover {
-            color: #fff;
-        }
-
-        .alx-menu-toggle {
-            min-width: 44px;
-            min-height: 44px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid rgba(220, 174, 101, 0.5);
-            border-radius: 2px;
-            background: transparent;
-            color: var(--vintage-cream);
-            cursor: pointer;
-        }
-
-        .alx-menu-toggle:hover {
-            background: rgba(239, 227, 207, 0.1);
-        }
-
-        .alx-mobile-link {
-            display: flex;
-            align-items: center;
-            min-height: 48px;
-            padding: 0 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.16em;
-            font-size: 0.875rem;
-            color: var(--vintage-cream);
-            border-bottom: 1px solid rgba(220, 174, 101, 0.2);
-            text-decoration: none;
-        }
-
-        .alx-mobile-link:hover,
-        .alx-mobile-link[aria-current="page"] {
-            color: var(--brass-light);
-        }
-
-        /* ---------- flash messages: a slip of paper tucked in the book ---------- */
-        .flash-dismiss {
-            --flash: var(--vintage-gold);
-            position: relative;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            padding: 0.9rem 3rem 0.9rem 1.1rem;
-            background: var(--vintage-paper);
-            background-image: var(--grain);
-            border: 1px solid rgba(90, 58, 34, 0.15);
-            border-left: 4px solid var(--flash);
-            border-radius: 2px;
-            box-shadow: 0 6px 18px -10px rgba(59, 36, 21, 0.35);
-            color: var(--vintage-ink);
-            font-size: 1.0625rem;
-            animation: flash-in 0.35s ease-out;
-        }
-
-        .flash-dismiss[data-category="success"] { --flash: var(--moss); }
-        .flash-dismiss[data-category="error"] { --flash: var(--vintage-accent); background-color: #fbeee6; }
-        .flash-dismiss[data-category="warning"] { --flash: var(--rust); }
-
-        .flash-close {
-            position: absolute;
-            top: 0.25rem;
-            right: 0.25rem;
-            min-width: 44px;
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            border: 0;
-            cursor: pointer;
-            font-size: 1.5rem;
-            line-height: 1;
-            color: var(--vintage-ink);
-            opacity: 0.6;
-        }
-
-        .flash-close:hover {
-            opacity: 1;
-        }
-
-        @keyframes flash-in {
-            from { opacity: 0; transform: translateY(-0.5rem); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .flash-leave {
-            animation: flash-out 0.35s ease-in forwards;
-        }
-
-        @keyframes flash-out {
-            to { opacity: 0; transform: translateY(-0.25rem); }
-        }
-
-        /* ---------- buttons (modals) ---------- */
-        .alx-btn {
-            min-height: 44px;
-            padding: 0.6rem 1.5rem;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font: inherit;
-            font-size: 0.8125rem;
-            font-weight: 700;
-            letter-spacing: 0.16em;
-            text-transform: uppercase;
-            border: 1px solid transparent;
-            border-radius: 2px;
-            cursor: pointer;
-            transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
-        }
-
-        .alx-btn-ghost {
-            background: transparent;
-            color: var(--vintage-ink);
-            border-color: rgba(42, 29, 22, 0.35);
-        }
-
-        .alx-btn-ghost:hover {
-            background: rgba(42, 29, 22, 0.07);
-        }
-
-        .alx-btn-primary {
-            background: var(--vintage-accent);
-            color: var(--vintage-paper);
-        }
-
-        .alx-btn-primary:hover {
-            background: var(--wood-dark);
-        }
-
-        .alx-btn-danger {
-            background: #9a3f1e;
-            color: #fff8ee;
-        }
-
-        .alx-btn-danger:hover {
-            background: var(--wood-dark);
-        }
-
-        /* ---------- modals ---------- */
-        .alx-modal-backdrop {
-            background: rgba(42, 25, 14, 0.55);
-            backdrop-filter: blur(3px);
-        }
-
-        .alx-modal-panel {
-            animation: modal-in 0.22s ease-out;
-        }
-
-        @keyframes modal-in {
-            from { opacity: 0; transform: translateY(0.5rem) scale(0.985); }
-            to { opacity: 1; transform: none; }
-        }
-
-        .alx-modal-close {
-            min-width: 44px;
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: transparent;
-            border: 0;
-            cursor: pointer;
-            font-size: 1.5rem;
-            line-height: 1;
-            color: var(--vintage-ink);
-            opacity: 0.6;
-        }
-
-        .alx-modal-close:hover {
-            opacity: 1;
-        }
-
-        /* ---------- footer: the bookcase base ---------- */
-        .alx-footer {
-            background-color: var(--wood-dark);
-            background-image: var(--grain);
-            color: rgba(239, 227, 207, 0.85);
-            border-top: 1px solid var(--vintage-gold);
-            box-shadow: inset 0 4px 0 var(--wood-dark), inset 0 5px 0 rgba(184, 131, 47, 0.45);
-        }
-
-        .alx-footer a {
-            color: var(--brass-light);
-        }
-
-        @media (max-width: 639px) {
-            h1 {
-                font-size: 1.5rem;
-            }
-        }
-
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--vintage-cream);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--leather);
-            border-radius: 10px;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            html {
-                scroll-behavior: auto !important;
-            }
-
-            *,
-            *::before,
-            *::after {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-                scroll-behavior: auto !important;
-            }
-        }
-    </style>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/books3d.css') }}">
-    <script src="{{ url_for('static', filename='js/books3d.js') }}"></script>
+    <link rel="preload" href="{{ url_for('static', filename='fonts/BigShouldersDisplay-700-900.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ url_for('static', filename='fonts/Archivo-400-800.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dist/app.css') }}">
+    <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
     {% block head %}{% endblock %}
 </head>
 
-<body class="h-full flex flex-col min-h-screen antialiased">
-    <a href="#main" class="alx-skip">Skip to content</a>
-    {% set ep = request.endpoint or '' %}
-    <nav class="alx-nav alx-dark sticky top-0 z-50 py-2" aria-label="Main">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 flex justify-between items-center gap-3">
-            <a href="{{ url_for('main.index') }}" class="alx-wordmark min-w-0">
-                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true">
-                    <circle cx="16" cy="16" r="14.5" />
-                    <circle cx="16" cy="16" r="12" stroke-width=".6" />
-                    <path d="M16 11.5c-2-1.5-4.5-2-7-1.6v10c2.5-.4 5 .1 7 1.6 2-1.5 4.5-2 7-1.6v-10c-2.5-.4-5 .1-7 1.6z" />
-                    <path d="M16 11.5v10" />
-                </svg>
-                <span class="min-w-0">
-                    <span class="eyebrow">Ex libris</span>
-                    <span class="name font-serif-display truncate">{{ config['APP_NAME'] }}</span>
-                </span>
-            </a>
+{% set ep = request.endpoint or '' %}
+<body class="{% block body_class %}{% endblock %}">
+    <a href="#main" class="skip-link">Skip to content</a>
 
-            <div class="hidden sm:flex items-center gap-4 md:gap-8">
-                <div class="flex gap-4 md:gap-8">
-                    <a href="{{ url_for('main.index') }}" class="nav-link" {% if ep == 'main.index' %}aria-current="page"{% endif %}>Collection</a>
-                    <a href="{{ url_for('main.stats') }}" class="nav-link" {% if ep == 'main.stats' %}aria-current="page"{% endif %}>Stats</a>
-                    <a href="{{ url_for('main.calendar') }}" class="nav-link" {% if ep == 'main.calendar' %}aria-current="page"{% endif %}>Calendar</a>
-                    {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('books.search') }}" class="nav-link" {% if ep == 'books.search' %}aria-current="page"{% endif %}>Search</a>
-                    {% else %}
-                    <a href="{{ url_for('auth.login') }}" class="nav-link" {% if ep == 'auth.login' %}aria-current="page"{% endif %}>Login</a>
-                    {% endif %}
-                </div>
+    {#- Rubber-stamp ink: uneven coverage, slightly bled edges. Used by .stamp and .dot. -#}
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <filter id="ink" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="7" result="speck" />
+            <feColorMatrix in="speck" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -2.6 0 0 0 2.25" result="mask" />
+            <feComposite in="SourceGraphic" in2="mask" operator="in" result="inked" />
+            <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="1" seed="2" result="warp" />
+            <feDisplacementMap in="inked" in2="warp" scale="2.2" xChannelSelector="R" yChannelSelector="G" />
+        </filter>
+    </svg>
+
+    <header class="top">
+        <div class="wrap">
+            <a class="mark" href="{{ url_for('main.index') }}">{{ config['APP_NAME'] }}</a>
+            <nav class="nav" aria-label="Main">
+                <a href="{{ url_for('main.index') }}" {% if ep == 'main.index' %}aria-current="page"{% endif %}>Collection</a>
+                <a href="{{ url_for('main.stats') }}" {% if ep == 'main.stats' %}aria-current="page"{% endif %}>Stats</a>
+                <a href="{{ url_for('main.calendar') }}" {% if ep == 'main.calendar' %}aria-current="page"{% endif %}>Calendar</a>
                 {% if current_user.is_authenticated %}
-                <div class="h-4 w-px" style="background: rgba(220, 174, 101, 0.4)"></div>
-                <form method="POST" action="{{ url_for('auth.logout') }}" class="inline">
+                <a href="{{ url_for('books.search') }}" class="add" {% if ep == 'books.search' %}aria-current="page"{% endif %}>+ Add<span class="long">&nbsp;a book</span></a>
+                <form method="POST" action="{{ url_for('auth.logout') }}" class="contents">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="alx-logout">Logout</button>
-                </form>
-                {% endif %}
-            </div>
-
-            <button type="button" id="mobile-nav-toggle" class="alx-menu-toggle sm:hidden"
-                aria-expanded="false" aria-controls="mobile-nav-panel" aria-label="Open menu">
-                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-            </button>
-        </div>
-
-        <div id="mobile-nav-panel" class="hidden sm:hidden" style="border-top: 1px solid rgba(220, 174, 101, 0.3)">
-            <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col">
-                <a href="{{ url_for('main.index') }}" class="alx-mobile-link" {% if ep == 'main.index' %}aria-current="page"{% endif %}>Collection</a>
-                <a href="{{ url_for('main.stats') }}" class="alx-mobile-link" {% if ep == 'main.stats' %}aria-current="page"{% endif %}>Stats</a>
-                <a href="{{ url_for('main.calendar') }}" class="alx-mobile-link" {% if ep == 'main.calendar' %}aria-current="page"{% endif %}>Calendar</a>
-                {% if current_user.is_authenticated %}
-                <a href="{{ url_for('books.search') }}" class="alx-mobile-link" {% if ep == 'books.search' %}aria-current="page"{% endif %}>Search</a>
-                <form method="POST" action="{{ url_for('auth.logout') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="alx-mobile-link w-full text-left cursor-pointer" style="font: inherit; font-size: 0.875rem; letter-spacing: 0.16em; text-transform: uppercase; background: transparent; border-width: 0 0 1px;">Logout</button>
+                    <button type="submit">Log out</button>
                 </form>
                 {% else %}
-                <a href="{{ url_for('auth.login') }}" class="alx-mobile-link" {% if ep == 'auth.login' %}aria-current="page"{% endif %}>Login</a>
+                <a href="{{ url_for('auth.login') }}" {% if ep == 'auth.login' %}aria-current="page"{% endif %}>Log in</a>
                 {% endif %}
-            </div>
+            </nav>
         </div>
-    </nav>
+    </header>
 
-    <main id="main" class="flex-grow max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-12 w-full">
+    <main id="main" class="{% block main_class %}wrap pt-6 pb-10{% endblock %}">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        <div class="max-w-4xl mx-auto space-y-3 mb-6" id="flash-container" role="status" aria-live="polite">
+        <div class="flashes flex flex-col gap-2 mb-6" role="status" aria-live="polite">
             {% for category, message in messages %}
-            <div class="flash-dismiss" data-category="{{ category }}">
-                <span class="flex-1">{{ message }}</span>
-                <button type="button" class="flash-close" aria-label="Dismiss notification">&times;</button>
+            <div class="flash" data-category="{{ category }}">
+                <span>{{ message }}</span>
+                <button type="button" class="flash-close" aria-label="Dismiss">&times;</button>
             </div>
             {% endfor %}
         </div>
@@ -574,202 +68,58 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="alx-footer alx-dark mt-8 py-10 text-center">
-        <div class="max-w-6xl mx-auto px-6 space-y-4">
-            <svg class="mx-auto" width="64" height="12" viewBox="0 0 64 12" fill="none" stroke="#dcae65" stroke-width="1" aria-hidden="true">
-                <path d="M0 6h24M40 6h24" />
-                <path d="M32 1l5 5-5 5-5-5z" fill="#dcae65" stroke="none" />
-            </svg>
-            <p class="font-serif-display text-xl" style="color: var(--vintage-cream)">{{ config['APP_NAME'] }}</p>
-            <p class="text-sm italic tracking-wide">
-                A personal library, catalogued by hand in {{ now.year }}.
-            </p>
+    <footer class="foot">
+        <div class="wrap">
+            <span>{{ config['APP_NAME'] }} · a personal library</span>
+            <span>Circulation record, {{ now.year }}</span>
         </div>
     </footer>
 
+    {% if current_user.is_authenticated %}
+    {#- Today's date on the dial: the date every action will stamp. Hidden while a big dater is on screen. -#}
+    <div class="dial" data-dial aria-hidden="true">
+        <small>Stamping</small>
+        <b>{{ now.strftime('%d') }}</b>
+        <span>{{ now.strftime('%b %Y')|upper }}</span>
+    </div>
+    {% endif %}
+
+    <div class="toast" role="status" aria-live="polite" data-toast></div>
+
     <!-- Finish book confirmation -->
-    <div id="modal-finish" class="fixed inset-0 z-[200] hidden" aria-hidden="true">
-        <div class="alx-modal-backdrop absolute inset-0 modal-backdrop-close" data-modal-backdrop></div>
-        <div class="relative flex min-h-full items-center justify-center p-4 pointer-events-none">
-            <div class="alx-modal-panel paper-texture vintage-border max-w-md w-full p-8 shadow-2xl pointer-events-auto relative"
-                role="dialog" aria-modal="true" aria-labelledby="modal-finish-title" tabindex="-1" data-modal-panel>
-                <button type="button" class="alx-modal-close modal-close-btn absolute top-3 right-3"
-                    aria-label="Close">&times;</button>
-                <h3 id="modal-finish-title" class="font-serif-display text-2xl text-vintage-ink mb-2 pr-10">Close this
-                    chapter?</h3>
-                <p class="text-base italic mb-6" style="color: rgba(42, 29, 22, 0.8)" id="modal-finish-body">Mark this volume as completed.</p>
-                <form id="modal-finish-form" method="POST" action="" class="js-submit-loading">
-                    <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
-                        <button type="button" class="alx-btn alx-btn-ghost modal-close-btn">Cancel</button>
-                        <button type="submit" class="alx-btn alx-btn-primary">Confirm</button>
-                    </div>
-                </form>
-            </div>
+    <div id="modal-finish" class="modal" hidden>
+        <div class="modal-backdrop" data-modal-close></div>
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-finish-title" tabindex="-1">
+            <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+            <h2 id="modal-finish-title">Stamp it finished?</h2>
+            <p class="mono text-sm mb-6" id="modal-finish-body">The book will be stamped finished with today's date.</p>
+            <form id="modal-finish-form" method="POST" action="" class="js-submit-loading">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="flex flex-wrap gap-3 justify-end">
+                    <button type="button" class="btn-line" data-modal-close>Cancel</button>
+                    <button type="submit" class="btn-stamp">Stamp finished</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <!-- Delete book confirmation -->
-    <div id="modal-delete" class="fixed inset-0 z-[200] hidden" aria-hidden="true">
-        <div class="alx-modal-backdrop absolute inset-0 modal-backdrop-close" data-modal-backdrop></div>
-        <div class="relative flex min-h-full items-center justify-center p-4 pointer-events-none">
-            <div class="alx-modal-panel paper-texture vintage-border max-w-md w-full p-8 shadow-2xl pointer-events-auto relative"
-                role="dialog" aria-modal="true" aria-labelledby="modal-delete-title" tabindex="-1" data-modal-panel>
-                <button type="button" class="alx-modal-close modal-close-btn absolute top-3 right-3"
-                    aria-label="Close">&times;</button>
-                <h3 id="modal-delete-title" class="font-serif-display text-2xl text-vintage-ink mb-2 pr-10">Remove from
-                    archives?</h3>
-                <p class="text-base italic mb-6" style="color: rgba(42, 29, 22, 0.8)" id="modal-delete-body">This cannot be undone.</p>
-                <form id="modal-delete-form" method="POST" action="" class="js-submit-loading">
-                    <div class="flex flex-col sm:flex-row gap-3 sm:justify-end">
-                        <button type="button" class="alx-btn alx-btn-ghost modal-close-btn">Cancel</button>
-                        <button type="submit" class="alx-btn alx-btn-danger">Remove</button>
-                    </div>
-                </form>
-            </div>
+    <div id="modal-delete" class="modal" hidden>
+        <div class="modal-backdrop" data-modal-close></div>
+        <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-delete-title" tabindex="-1">
+            <button type="button" class="modal-close" data-modal-close aria-label="Close">&times;</button>
+            <h2 id="modal-delete-title">Withdraw this book?</h2>
+            <p class="mono text-sm mb-6" id="modal-delete-body">Its record will be removed. This cannot be undone.</p>
+            <form id="modal-delete-form" method="POST" action="" class="js-submit-loading">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="flex flex-wrap gap-3 justify-end">
+                    <button type="button" class="btn-line" data-modal-close>Cancel</button>
+                    <button type="submit" class="btn-stamp danger">Withdraw</button>
+                </div>
+            </form>
         </div>
     </div>
 
-    <script>
-        (function () {
-            var toggle = document.getElementById('mobile-nav-toggle');
-            var panel = document.getElementById('mobile-nav-panel');
-            if (toggle && panel) {
-                toggle.addEventListener('click', function () {
-                    panel.classList.toggle('hidden');
-                    var open = !panel.classList.contains('hidden');
-                    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-                    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-                });
-            }
-
-            function dismissFlash(el) {
-                el.classList.add('flash-leave');
-                setTimeout(function () { el.remove(); }, 350);
-            }
-
-            document.querySelectorAll('.flash-close').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    var row = btn.closest('.flash-dismiss');
-                    if (row) dismissFlash(row);
-                });
-            });
-
-            document.querySelectorAll('.flash-dismiss').forEach(function (row) {
-                var delay = row.getAttribute('data-category') === 'error' ? 9000 : 4500;
-                setTimeout(function () { if (row.parentNode) dismissFlash(row); }, delay);
-            });
-
-            document.querySelectorAll('form.js-submit-loading').forEach(function (form) {
-                form.addEventListener('submit', function () {
-                    var btn = form.querySelector('[type="submit"]');
-                    if (btn && !btn.disabled) {
-                        btn.disabled = true;
-                        btn.classList.add('opacity-60', 'cursor-wait');
-                    }
-                });
-            });
-
-            var lastFocus = null;
-
-            function getFocusable(root) {
-                return root.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])');
-            }
-
-            function openModal(id) {
-                var modal = document.getElementById(id);
-                if (!modal) return;
-                lastFocus = document.activeElement;
-                modal.classList.remove('hidden');
-                document.body.classList.add('modal-open');
-                modal.setAttribute('aria-hidden', 'false');
-                var panel = modal.querySelector('[data-modal-panel]');
-                var focusables = panel ? getFocusable(panel) : [];
-                if (focusables.length) focusables[0].focus();
-                function onKey(e) {
-                    if (e.key === 'Escape') {
-                        e.preventDefault();
-                        closeModal(modal);
-                    }
-                    if (e.key === 'Tab' && panel) {
-                        var list = getFocusable(panel);
-                        if (!list.length) return;
-                        var first = list[0];
-                        var last = list[list.length - 1];
-                        if (e.shiftKey && document.activeElement === first) {
-                            e.preventDefault();
-                            last.focus();
-                        } else if (!e.shiftKey && document.activeElement === last) {
-                            e.preventDefault();
-                            first.focus();
-                        }
-                    }
-                }
-                modal._onKey = onKey;
-                document.addEventListener('keydown', onKey);
-            }
-
-            function closeModal(modal) {
-                if (!modal || modal.classList.contains('hidden')) return;
-                modal.classList.add('hidden');
-                document.body.classList.remove('modal-open');
-                modal.setAttribute('aria-hidden', 'true');
-                if (modal._onKey) {
-                    document.removeEventListener('keydown', modal._onKey);
-                    modal._onKey = null;
-                }
-                if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
-            }
-
-            document.querySelectorAll('[data-modal-backdrop], .modal-backdrop-close').forEach(function (el) {
-                el.addEventListener('click', function (e) {
-                    if (e.target !== el) return;
-                    closeModal(el.closest('[id^="modal-"]'));
-                });
-            });
-
-            document.querySelectorAll('.modal-close-btn').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    closeModal(btn.closest('[id^="modal-"]'));
-                });
-            });
-
-            function _injectCsrf(form) {
-                var meta = document.querySelector('meta[name="csrf-token"]');
-                if (!meta) return;
-                var existing = form.querySelector('input[name="csrf_token"]');
-                if (!existing) {
-                    var input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'csrf_token';
-                    input.value = meta.content;
-                    form.appendChild(input);
-                } else {
-                    existing.value = meta.content;
-                }
-            }
-
-            window.AlexandriaModal = {
-                openFinish: function (actionUrl, bookTitle) {
-                    var form = document.getElementById('modal-finish-form');
-                    var body = document.getElementById('modal-finish-body');
-                    if (form) { form.action = actionUrl; _injectCsrf(form); }
-                    if (body) body.textContent = bookTitle ? ('“' + bookTitle + '” will be marked as completed.') : 'Mark this volume as completed.';
-                    openModal('modal-finish');
-                },
-                openDelete: function (actionUrl, bookTitle) {
-                    var form = document.getElementById('modal-delete-form');
-                    var body = document.getElementById('modal-delete-body');
-                    if (form) { form.action = actionUrl; _injectCsrf(form); }
-                    if (body) body.textContent = bookTitle ? ('“' + bookTitle + '” will be removed from your collection.') : 'This cannot be undone.';
-                    openModal('modal-delete');
-                },
-                close: function (id) {
-                    var modal = id ? document.getElementById(id) : document.querySelector('[id^="modal-"]:not(.hidden)');
-                    if (modal) closeModal(modal);
-                }
-            };
-        })();
-    </script>
     {% block scripts %}{% endblock %}
 </body>
 

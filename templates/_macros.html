@@ -1,37 +1,95 @@
+{#- Shared pieces of the Circulation Record look (see docs/DESIGN.md).
+    Import with: {% from '_macros.html' import cover, stamp, rec, status_tag, stars, dater with context %} -#}
+
+{% set STATUS_LABELS = {'reading': 'Reading', 'finished': 'Finished', 'tbr': 'To read', 'paused': 'Paused', 'dnf': 'Did not finish'} %}
+
 {#- A cover that silently fails over: 1x1 pixels and Google's 128x170
     "image not available" card count as missing. The fallback provider is
-    tried once; after that the <img> is removed so whatever placeholder sits
-    behind it (title-on-leather, initial, etc.) shows through. -#}
-{% macro book_cover_img(book, alt='', class='book-cover-img w-full h-full object-cover', loading='lazy', decoding='async', fetchpriority='') %}
+    tried once; after that the <img> is removed so the typed placeholder
+    behind it shows through. -#}
+{% macro cover_img(book, alt='', loading='lazy', fetchpriority='') %}
 {% set src = book|cover_for %}
 {% set fallback = book|cover_fallback_for %}
 {% if src %}
-<img src="{{ src }}" alt="{{ alt or book.title }}" class="{{ class }}" loading="{{ loading }}" decoding="{{ decoding }}" referrerpolicy="no-referrer"{% if fetchpriority %} fetchpriority="{{ fetchpriority }}"{% endif %}{% if fallback %} data-fallback="{{ fallback }}"{% endif %} onload="var w=this.naturalWidth,h=this.naturalHeight;if(w<=1||(w===128&&h===170&&this.currentSrc.indexOf('books.google')>-1)){this.onerror();}" onerror="var f=this.dataset.fallback;if(f){this.dataset.fallback='';this.src=f;}else{this.onload=this.onerror=null;this.remove();}">
+<img src="{{ src }}" alt="{{ alt }}" loading="{{ loading }}" decoding="async" referrerpolicy="no-referrer"{% if fetchpriority %} fetchpriority="{{ fetchpriority }}"{% endif %}{% if fallback %} data-fallback="{{ fallback }}"{% endif %} onload="var w=this.naturalWidth,h=this.naturalHeight;if(w<=1||(w===128&&h===170&&this.currentSrc.indexOf('books.google')>-1)){this.onerror();}" onerror="var f=this.dataset.fallback;if(f){this.dataset.fallback='';this.src=f;}else{this.onload=this.onerror=null;this.remove();}">
 {% endif %}
 {% endmacro %}
 
-{#- Binding colour for a book without (or behind) its cover. Stable per book. -#}
-{% macro binding_color(book) -%}
-{{ ['#6f2a24', '#4a5d3a', '#8a5a36', '#2f3e4e', '#4e2f43', '#3b2415', '#9c4622', '#5d4a1f'][book.id % 8] }}
-{%- endmacro %}
+{#- The cover frame: 2:3, ruled, with a typed index-card placeholder behind
+    the image. Size it from outside (width on the element or its parent). -#}
+{% macro cover(book, class='', alt='', loading='lazy', fetchpriority='') %}
+<div class="cover {{ class }}">
+    <span class="nocover" aria-hidden="true">{{ book.title }}{% if book.authors %}<br>— {{ book.authors }}{% endif %}</span>
+    {{ cover_img(book, alt=alt, loading=loading, fetchpriority=fetchpriority) }}
+</div>
+{% endmacro %}
 
-{#- A book as a 3D object (static/css/books3d.css). Size it from outside: give
-    the element a width or a height. Thickness follows the page count.
-    `detail=True` marks the catalogue-card copy that view transitions land on. -#}
-{% macro book3d(book, class='', loading='lazy', fetchpriority='', tilt=false, detail=false, flag='') %}
-{% set pc = [book.page_count or 320, 1200]|min %}
-<span class="b3d {{ class }}" style="--c: {{ binding_color(book) }}; --t: {{ '%.3f'|format(0.035 + pc / 1000 * 0.13) }}"
-    {%- if detail %} data-book-detail-cover{% else %} data-book-cover="{{ book.id }}"{% endif %}{% if tilt %} data-tilt{% endif %}>
-    <span class="b3d-obj">
-        <span class="b3d-face b3d-back"></span>
-        <span class="b3d-face b3d-spine"></span>
-        <span class="b3d-face b3d-top"></span>
-        <span class="b3d-face b3d-pages"></span>
-        <span class="b3d-face b3d-front">
-            <span class="b3d-ph" aria-hidden="true">{{ book.title }}</span>
-            {% if book|cover_for %}{{ book_cover_img(book, alt='', class='b3d-img', loading=loading, fetchpriority=fetchpriority) }}{% endif %}
-            {% if flag %}<span class="b3d-flag">{{ flag }}</span>{% endif %}
-        </span>
-    </span>
+{#- An ink stamp. kind: started (violet) | finished (red) | returned (black).
+    `date` is a datetime or None; size: xs | sm | med | big. -#}
+{% macro stamp(kind, date=None, size='sm', label=None, rotate=None, class='') %}
+{% set ev = label or {'started': 'Started', 'finished': 'Finished', 'returned': 'Returned unread'}[kind] %}
+<span class="stamp {{ kind }} {{ size }} {{ class }}"{% if rotate is not none %} style="--r: {{ rotate }}deg"{% endif %}>
+    <span class="ev">{{ ev }}</span>
+    {% if date %}<span class="dt">{{ date.strftime('%d %b %Y')|upper }}</span>{% endif %}
 </span>
+{% endmacro %}
+
+{% macro status_tag(status, class='') %}
+<span class="status-tag stock-{{ status }} {{ class }}">{{ STATUS_LABELS.get(status, status) }}</span>
+{% endmacro %}
+
+{#- Rating as figures, never as decorative stars: "4.5 / 5". -#}
+{% macro stars(value) %}
+{% if value %}<span class="rating">{{ '%g'|format(value) }}<span aria-hidden="true"> / 5</span><span class="sr-only"> out of 5</span></span>{% endif %}
+{% endmacro %}
+
+{#- One book as an index card linking to its record.
+    layout: 'card' (cover on top) or 'row' (cover on the left). -#}
+{% macro rec(book, layout='card', show_stamp=true, loading='lazy') %}
+<article class="rec {{ 'row' if layout == 'row' else '' }}" data-book="{{ book.id }}">
+    <a class="rec-link" href="{{ url_for('main.book_detail', book_id=book.id) }}">
+        {{ cover(book, loading=loading) }}
+        <div class="rec-body">
+            <h3 class="h4">{{ book.title }}</h3>
+            {% if book.authors %}<p class="a m-0">{{ book.authors }}</p>{% endif %}
+            <p class="t m-0">
+                {%- if book.page_count %}{{ book.page_count }} pp{% endif -%}
+                {%- if book.page_count and book.personal_rating %} · {% endif -%}
+                {%- if book.personal_rating %}{{ '%g'|format(book.personal_rating) }} / 5{% endif -%}
+            </p>
+        </div>
+    </a>
+    {% if show_stamp %}
+        {% if book.status == 'finished' and book.date_finished %}
+        <div class="stamp-wrap">{{ stamp('finished', book.date_finished, 'xs') }}</div>
+        {% elif book.status == 'dnf' %}
+        <div class="stamp-wrap">{{ stamp('returned', None, 'xs') }}</div>
+        {% elif book.status in ('reading', 'paused') and book.date_started %}
+        <div class="stamp-wrap">{{ stamp('started', book.date_started, 'xs') }}</div>
+        {% endif %}
+    {% endif %}
+</article>
+{% endmacro %}
+
+{#- The rubber-band dater. `d` is a date/datetime. -#}
+{% macro dater(d, class='') %}
+<div class="dater {{ class }}" aria-hidden="true" data-dater>
+    <div class="band"><b>{{ d.strftime('%d') }}</b><small>Day</small></div>
+    <div class="band"><b>{{ d.strftime('%b')|upper }}</b><small>Month</small></div>
+    <div class="band"><b>{{ d.strftime('%Y') }}</b><small>Year</small></div>
+</div>
+{% endmacro %}
+
+{#- Key to the inks and card stocks. -#}
+{% macro legend(class='') %}
+<div class="legend {{ class }}" aria-label="What the inks and card colours mean">
+    <span class="ink-started"><i></i><span class="text-type">Violet ink: started</span></span>
+    <span class="ink-finished"><i></i><span class="text-type">Red ink: finished</span></span>
+    <span><i></i>Black ink: returned unread</span>
+    <span><i class="chip stock-reading"></i>Reading</span>
+    <span><i class="chip stock-finished"></i>Finished</span>
+    <span><i class="chip stock-tbr"></i>To read</span>
+    <span><i class="chip stock-paused"></i>Paused</span>
+    <span><i class="chip stock-dnf"></i>Did not finish</span>
+</div>
 {% endmacro %}
