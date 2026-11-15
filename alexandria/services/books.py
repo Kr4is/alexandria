@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from alexandria.constants import BookStatus
 from alexandria.extensions import db
 from alexandria.models import Book
+from alexandria.services.covers import improve_cover
 
 
 def get_reading_and_finished_lists():
@@ -181,6 +182,7 @@ def add_book_from_api_details(details: dict, status: str = BookStatus.READING) -
     )
     db.session.add(new_book)
     db.session.commit()
+    improve_cover(new_book)
     return new_book
 
 
