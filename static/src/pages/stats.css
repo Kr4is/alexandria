@@ -134,6 +134,17 @@
     .st-register td { height: 28px; }
   }
   @media (max-width: 640px) {
+    /* The bar is too narrow to name its stretches: tonal fills, and the key beneath
+       carries a matching swatch for each (same index, same density). */
+    .st-share .segbar > span { font-size: 0; padding: 0; min-width: 6px; }
+    .st-share .segbar > span[data-i="0"], .st-share .st-key > span[data-i="0"]::before { background: var(--color-d0); }
+    .st-share .segbar > span[data-i="1"], .st-share .st-key > span[data-i="1"]::before { background: var(--color-d1); }
+    .st-share .segbar > span[data-i="2"], .st-share .st-key > span[data-i="2"]::before { background: var(--color-d2); }
+    .st-share .segbar > span[data-i="3"], .st-share .st-key > span[data-i="3"]::before { background: var(--color-d3); }
+    .st-share .segbar > span[data-i="4"], .st-share .st-key > span[data-i="4"]::before { background: var(--color-d4); }
+    .st-share .st-key > span::before {
+      content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 6px; vertical-align: -1px; border: 2px solid var(--color-type);
+    }
     .st-figs { grid-template-columns: 1fr 1fr; }
     .st-figs dd b { font-size: 36px; }
   }
