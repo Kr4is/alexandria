@@ -435,8 +435,8 @@
 }
 @media (max-width: 640px) {
   .top .wrap { gap: 8px; padding-top: 6px; padding-bottom: 6px; }
-  .nav { margin-left: 0; width: 100%; overflow-x: auto; flex-wrap: nowrap; }
-  .nav a, .nav button { padding: 0 9px; font-size: 13px; white-space: nowrap; }
+  .nav { margin-left: 0; width: 100%; gap: 2px; flex-wrap: wrap; }
+  .nav a, .nav button { padding: 0 7px; font-size: 12.5px; letter-spacing: .02em; white-space: nowrap; }
   .nav .long { display: none; }
   .who { margin-left: auto; }
   .legend { gap: 6px 14px; font-size: 12px; }
@@ -452,12 +452,13 @@
   .months { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
   .month { padding: 6px; }
   .dot { font-size: 9px; border-width: 2px; }
-  .dial { width: 96px; height: 96px; border-width: 4px; }
-  .dial b { font-size: 32px; }
-  .dial span { font-size: 13px; }
-  .dial small { font-size: 7.5px; }
+  .dial { width: 64px; height: 64px; border-width: 3px; right: 12px; bottom: 12px; }
+  .dial::after { inset: 4px; }
+  .dial b { font-size: 24px; }
+  .dial span { font-size: 10px; letter-spacing: .04em; }
+  .dial small { display: none; }
   .tally b { font-size: 52px; }
-  .toast { bottom: 122px; max-width: calc(100% - 32px); }
+  .toast { bottom: 90px; max-width: calc(100% - 32px); }
   .stamp.big { font-size: 26px; }
   .finish-stamp { right: 10px; top: 10px; }
 }
