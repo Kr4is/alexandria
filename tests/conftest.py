@@ -8,6 +8,12 @@ from alexandria.extensions import db
 from alexandria.models import Book
 
 
+@pytest.fixture(autouse=True)
+def no_cover_lookups(monkeypatch):
+    """Adding a book looks up covers on the network; tests never do."""
+    monkeypatch.setattr('alexandria.services.books.improve_cover', lambda book: False)
+
+
 @pytest.fixture
 def app(tmp_path, monkeypatch):
     monkeypatch.setenv('DATABASE_URL', f'sqlite:///{tmp_path}/test.db')

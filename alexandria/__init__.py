@@ -6,6 +6,7 @@ from flask import Flask
 
 from alexandria.blueprints import api, auth, books, main, share
 from alexandria.bootstrap import refresh_library_metadata, run_startup_bootstrap
+from alexandria.cli import register_cli
 from alexandria.config import configure_app
 from alexandria.extensions import csrf, db, limiter, login_manager, migrate
 from alexandria.filters import register_template_filters
@@ -53,6 +54,8 @@ def create_app() -> Flask:
     def refresh_metadata_cmd():
         """Refresh library book metadata from the Google Books API."""
         refresh_library_metadata()
+
+    register_cli(app)
 
     with app.app_context():
         run_startup_bootstrap(root)

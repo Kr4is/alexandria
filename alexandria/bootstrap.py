@@ -42,7 +42,8 @@ def refresh_library_metadata() -> None:
                     book.title = details['title']
                     book.authors = details['authors']
                     book.isbn = details.get('isbn')
-                    book.thumbnail = details['thumbnail']
+                    # keep a cover that was repaired by hand or by `flask covers repair`
+                    book.thumbnail = book.thumbnail or details['thumbnail']
                     book.description = details['description']
                     book.page_count = details['page_count']
                     book.categories = details['categories']
