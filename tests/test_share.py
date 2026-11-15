@@ -126,7 +126,8 @@ def test_card_falls_back_when_network_fails(client, finished_book, monkeypatch):
 @pytest.mark.parametrize('size', [(1, 1), (60, 90)])
 def test_card_ignores_placeholder_cover(client, finished_book, monkeypatch, size):
     monkeypatch.setattr(share_card.requests, 'get', lambda *a, **k: _response(_png(size)))
-    assert share_card.fetch_cover(SimpleNamespace(cover_url='https://x/y.png', cover_fallback_url=None)) is None
+    book = SimpleNamespace(id=1, remote_cover_url='https://x/y.png', cover_fallback_url=None)
+    assert share_card.fetch_cover(book) is None
     assert client.get(f'/book/{finished_book}/card.png').status_code == 200
 
 

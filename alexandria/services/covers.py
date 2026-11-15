@@ -9,12 +9,13 @@ import io
 import json
 import re
 import unicodedata
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import requests
 from loguru import logger
 from PIL import Image
 
+from alexandria.services import cover_store
 from alexandria.utils.covers import resolve_cover_fallback_url, resolve_cover_url
 
 TIMEOUT = (5, 10)  # repair runs unattended: be patient. Adding a book passes a shorter one.
@@ -32,6 +33,7 @@ class CoverMatch:
     url: str
     source: str  # current | fallback | search
     matched_title: str | None = None
+    data: bytes | None = field(default=None, repr=False)  # the validated image
 
 
 def _get(url: str, params: dict | None = None, timeout=TIMEOUT) -> bytes | None:
@@ -81,10 +83,16 @@ def is_real_cover(data: bytes | None, url: str = '') -> bool:
     return not ('books.google' in url and size == GOOGLE_PLACEHOLDER_SIZE)
 
 
-def validate(url: str | None, timeout=TIMEOUT) -> bool:
+def fetch_valid(url: str | None, timeout=TIMEOUT) -> bytes | None:
+    """The image bytes if ``url`` serves a real cover, else None."""
     if not url:
-        return False
-    return is_real_cover(_get(url, timeout=timeout), url)
+        return None
+    data = _get(url, timeout=timeout)
+    return data if is_real_cover(data, url) else None
+
+
+def validate(url: str | None, timeout=TIMEOUT) -> bool:
+    return fetch_valid(url, timeout) is not None
 
 
 # --- title / author matching ------------------------------------------------
@@ -132,24 +140,27 @@ def _search_open_library(book, timeout) -> CoverMatch | None:
         if not doc.get('cover_i') or not _same_book(book, doc):
             continue
         url = OPEN_LIBRARY_COVER_ID.format(cover_id=doc['cover_i'])
-        if validate(url, timeout=timeout):
-            return CoverMatch(url, 'search', doc.get('title'))
+        data = fetch_valid(url, timeout=timeout)
+        if data:
+            return CoverMatch(url, 'search', doc.get('title'), data)
     return None
 
 
 def find_cover(book, search: bool = True, timeout=TIMEOUT) -> CoverMatch | None:
     """First cover that validates: stored, other provider, then an Open Library title search."""
     current = resolve_cover_url(book.thumbnail, book.google_books_id, book.isbn)
-    if validate(current, timeout=timeout):
-        return CoverMatch(current, 'current')
+    data = fetch_valid(current, timeout=timeout)
+    if data:
+        return CoverMatch(current, 'current', data=data)
     fallback = resolve_cover_fallback_url(book.thumbnail, book.google_books_id, book.isbn)
-    if validate(fallback, timeout=timeout):
-        return CoverMatch(fallback, 'fallback')
+    data = fetch_valid(fallback, timeout=timeout)
+    if data:
+        return CoverMatch(fallback, 'fallback', data=data)
     return _search_open_library(book, timeout) if search else None
 
 
 def improve_cover(book) -> bool:
-    """Used when a book is added: store a working cover URL if the default one fails.
+    """Used when a book is added: keep a working cover on disk, and store its URL if it differs.
 
     Never raises; a failure leaves the book exactly as it was.
     """
@@ -157,10 +168,13 @@ def improve_cover(book) -> bool:
 
     try:
         match = find_cover(book, timeout=(1.5, 2.5))
-        if match and match.source != 'current':
+        if not match:
+            return False
+        if match.source != 'current':
             book.thumbnail = match.url
             db.session.commit()
-            return True
+        cover_store.save(book.id, match.data)
+        return True
     except Exception as exc:  # noqa: BLE001 - adding a book must not depend on covers
         db.session.rollback()
         logger.warning('cover lookup failed for {}: {}', book.title, exc)

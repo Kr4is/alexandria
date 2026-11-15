@@ -5,6 +5,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from alexandria.constants import BookStatus
 from alexandria.extensions import db
+from alexandria.services import cover_store
 from alexandria.utils.covers import resolve_cover_fallback_url, resolve_cover_url
 
 
@@ -45,6 +46,13 @@ class Book(db.Model):
 
     @property
     def cover_url(self):
+        """What templates show: the local copy if there is one, else the provider URL."""
+        local = cover_store.local_url(self.id) if self.id else None
+        return local or self.remote_cover_url
+
+    @property
+    def remote_cover_url(self):
+        """Always an absolute provider URL: for the API, exports and server-side fetches."""
         return resolve_cover_url(
             thumbnail=self.thumbnail,
             google_books_id=self.google_books_id,
@@ -64,7 +72,7 @@ class Book(db.Model):
             'id': self.id,
             'title': self.title,
             'authors': self.authors,
-            'thumbnail': self.cover_url,
+            'thumbnail': self.remote_cover_url,
             'description': self.description,
             'page_count': self.page_count,
             'categories': self.categories,

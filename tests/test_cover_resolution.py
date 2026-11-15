@@ -149,20 +149,32 @@ def cli_library(app, monkeypatch):
     return app
 
 
-def test_repair_is_a_dry_run_by_default(cli_library):
+def test_repair_is_a_dry_run_by_default(cli_library, tmp_path):
     result = cli_library.test_cli_runner().invoke(args=['covers', 'repair'])
     assert result.exit_code == 0, result.output
     assert 'Outcomes Over Output: search' in result.output
     assert 'Nothing Anywhere: no cover found' in result.output
-    assert '1 fine, 1 to change, 1 without a cover' in result.output
+    assert '0 already stored, 1 to store, 1 to change, 1 without a cover' in result.output
     assert 'Dry run' in result.output
     with cli_library.app_context():
         assert Book.query.filter_by(title='Outcomes Over Output').one().thumbnail == OL.format('9781393721772')
+    assert not (tmp_path / 'covers').exists()
 
 
-def test_repair_apply_saves_only_the_changes(cli_library):
+def test_repair_apply_stores_covers_and_changes_only_what_needs_it(cli_library, tmp_path):
     result = cli_library.test_cli_runner().invoke(args=['covers', 'repair', '--apply'])
-    assert 'Saved 1 covers.' in result.output
+    assert 'Changed 1 URLs, stored 2 covers.' in result.output
     with cli_library.app_context():
-        assert Book.query.filter_by(title='Outcomes Over Output').one().thumbnail.endswith('15265474-L.jpg')
-        assert Book.query.filter_by(title='Fine Book').one().thumbnail is None
+        seiden = Book.query.filter_by(title='Outcomes Over Output').one()
+        fine = Book.query.filter_by(title='Fine Book').one()
+        assert seiden.thumbnail.endswith('15265474-L.jpg')
+        assert fine.thumbnail is None  # its URL worked: only the file is added
+        assert (tmp_path / 'covers' / f'{seiden.id}.jpg').is_file()
+        assert (tmp_path / 'covers' / f'{fine.id}.jpg').is_file()
+
+
+def test_repair_skips_books_that_already_have_a_stored_cover(cli_library):
+    runner = cli_library.test_cli_runner()
+    runner.invoke(args=['covers', 'repair', '--apply'])
+    again = runner.invoke(args=['covers', 'repair'])
+    assert '2 already stored, 0 to store, 0 to change, 1 without a cover' in again.output
