@@ -193,5 +193,8 @@
         }
     }
 
+    /* Horizontal strips of years open on the latest one, which is the biggest. */
+    document.querySelectorAll('.st-piles').forEach(function (el) { el.scrollLeft = el.scrollWidth; });
+
     window.Alexandria = { toast: toast, hold: hold, release: release };
 })();
