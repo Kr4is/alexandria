@@ -17,6 +17,7 @@ def no_cover_lookups(monkeypatch):
 @pytest.fixture
 def app(tmp_path, monkeypatch):
     monkeypatch.setenv('DATABASE_URL', f'sqlite:///{tmp_path}/test.db')
+    monkeypatch.setenv('COVERS_DIR', str(tmp_path / 'covers'))
     monkeypatch.setenv('SECRET_KEY', 'test-secret')
     monkeypatch.setenv('LIBRARIAN_USERNAME', 'admin')
     monkeypatch.setenv('LIBRARIAN_PASSWORD', 'testpass')

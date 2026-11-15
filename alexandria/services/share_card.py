@@ -12,6 +12,8 @@ import requests
 from loguru import logger
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+from alexandria.services import cover_store
+
 FONT_DIR = Path(__file__).resolve().parent.parent.parent / 'static' / 'fonts'
 CARD_VERSION = '1'
 WIDTH, HEIGHT = 1200, 630
@@ -131,19 +133,30 @@ def _download(url: str) -> bytes | None:
     return data
 
 
+def _usable(data: bytes | None) -> Image.Image | None:
+    if not data:
+        return None
+    img = Image.open(io.BytesIO(data))  # lazy: size is known before decoding
+    if img.width * img.height > COVER_MAX_PIXELS or min(img.size) < COVER_MIN_SIDE:
+        return None
+    return img.convert('RGB')
+
+
 def fetch_cover(book) -> Image.Image | None:
-    """Download the cover server-side; None on any failure (offline, 404, 1x1 or tiny placeholder)."""
-    for url in (book.cover_url, book.cover_fallback_url):
+    """The stored cover if there is one, else download it; None on any failure."""
+    try:
+        img = _usable(cover_store.read(book.id))
+        if img:
+            return img
+    except Exception as exc:  # noqa: BLE001
+        logger.debug('stored cover unreadable for book {}: {}', book.id, exc)
+    for url in (book.remote_cover_url, book.cover_fallback_url):
         if not url:
             continue
         try:
-            data = _download(url)
-            if not data:
-                continue
-            img = Image.open(io.BytesIO(data))  # lazy: size is known before decoding
-            if img.width * img.height > COVER_MAX_PIXELS or min(img.size) < COVER_MIN_SIDE:
-                continue
-            return img.convert('RGB')
+            img = _usable(_download(url))
+            if img:
+                return img
         except Exception as exc:  # noqa: BLE001 - a bad cover must never break the card
             logger.debug('share card cover fetch failed for {}: {}', url, exc)
     return None

@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from alexandria.constants import BookStatus
 from alexandria.extensions import db
 from alexandria.models import Book
+from alexandria.services import cover_store
 from alexandria.services.covers import improve_cover
 
 
@@ -369,5 +370,7 @@ def _apply_reading_fields(book: Book, form, old_page, old_started, flashes) -> N
 
 
 def delete_book(book: Book) -> None:
+    book_id = book.id
     db.session.delete(book)
     db.session.commit()
+    cover_store.delete(book_id)

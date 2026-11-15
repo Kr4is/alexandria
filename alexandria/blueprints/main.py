@@ -2,10 +2,11 @@ import csv
 import io
 import json
 
-from flask import Blueprint, Response, redirect, render_template, request, url_for
+from flask import Blueprint, Response, abort, redirect, render_template, request, send_file, url_for
 from flask_login import current_user
 
 from alexandria.models import Book
+from alexandria.services import cover_store
 from alexandria.services.books import (
     filter_books,
     get_book_or_404,
@@ -19,6 +20,15 @@ bp = Blueprint('main', __name__)
 
 # Personal fields only the librarian sees in exports.
 PRIVATE_EXPORT_FIELDS = ('personal_notes', 'shelves', 'current_page')
+
+
+@bp.route('/cover/<int:book_id>')
+def cover_file(book_id):
+    """The stored cover. The ?v=<mtime> in the URL makes it safe to cache for a year."""
+    path = cover_store.path_for(book_id)
+    if not path.is_file():
+        abort(404)
+    return send_file(path, mimetype='image/jpeg', max_age=31536000, conditional=True)
 
 
 @bp.route('/')

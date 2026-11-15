@@ -189,6 +189,7 @@ cp .env.example .env
 | `GOOGLE_BOOKS_API_KEY` | Optional API key for Google Books (avoids shared anonymous quota / HTTP 429) | _(unset)_ |
 | `GOOGLE_BOOKS_CACHE_TTL_SECONDS` | In-memory cache TTL for search and volume lookups (0 disables caching) | `3600` |
 | `REFRESH_LIBRARY_METADATA_ON_STARTUP` | Refresh all library metadata from Google Books on startup (1 API call per book) | `false` |
+| `COVERS_DIR` | Where covers are stored once downloaded and served from `/cover/<id>`; keep it on the persistent volume | `instance/covers` |
 | `DATABASE_URL` | SQLite database URI | `sqlite:///instance/alexandria.db` |
 | `READING_API_TOKEN` | Optional bearer token for the public JSON API. Unset leaves the API open | _(unset)_ |
 | `FLASK_ENV` | Set to `production` to mark session cookies as `Secure` (serve over HTTPS) | _(unset)_ |
@@ -197,6 +198,17 @@ cp .env.example .env
 > `docker-compose.yml` forwards only the variables listed in its `environment:`
 > section. Make sure `READING_API_TOKEN` and `FLASK_ENV` are listed there if you
 > rely on them in Docker.
+
+### Covers
+
+New books get their cover downloaded and stored in `COVERS_DIR`. For an existing
+library, run `flask covers repair` to see what would be stored or fixed (nothing
+is saved), then `flask covers repair --apply`. It stores working covers and, for
+books whose cover does not load, looks for another edition on Open Library by
+exact title and author surname.
+
+A stored cover always wins and `repair` skips it. To replace one, delete
+`<COVERS_DIR>/<id>.jpg` and run `flask covers repair --apply` again.
 
 ## API
 

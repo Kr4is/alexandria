@@ -15,6 +15,9 @@ def configure_app(app, root: Path) -> None:
 
     app.config['WTF_CSRF_ENABLED'] = True
 
+    # Covers downloaded once and served from /cover/<id>; keep it on the persistent volume.
+    app.config['COVERS_DIR'] = _resolve_covers_dir(app, root)
+
     # Optional shared-secret bearer token for the public reading-activity API.
     # Left unset (the default), the endpoint stays fully open, matching the
     # existing /export.<fmt> route's no-auth posture.
@@ -31,3 +34,12 @@ def _resolve_database_uri(root: Path) -> str:
     if db_url:
         return db_url
     return f"sqlite:///{root / 'instance' / 'alexandria.db'}"
+
+
+def _resolve_covers_dir(app, root: Path) -> str:
+    """``COVERS_DIR`` as an absolute path: a relative one is taken from the project root."""
+    configured = os.getenv('COVERS_DIR')
+    if not configured:
+        return str(Path(app.instance_path) / 'covers')
+    path = Path(configured)
+    return str(path if path.is_absolute() else root / path)
