@@ -10,6 +10,7 @@ from alexandria.cli import register_cli
 from alexandria.config import configure_app
 from alexandria.extensions import csrf, db, limiter, login_manager, migrate
 from alexandria.filters import register_template_filters
+from alexandria.services import cover_backfill
 
 
 def create_app() -> Flask:
@@ -56,6 +57,11 @@ def create_app() -> Flask:
         refresh_library_metadata()
 
     register_cli(app)
+
+    if app.config['STORE_COVERS_ON_STARTUP']:
+        @app.before_request
+        def _start_cover_backfill():
+            cover_backfill.start_once(app)
 
     with app.app_context():
         run_startup_bootstrap(root)
