@@ -23,3 +23,9 @@ jobs:
         run: uv run ruff check .
       - name: Test
         run: uv run pytest --cov=alexandria --cov-report=term-missing
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Build CSS
+        run: npm ci && npm run build

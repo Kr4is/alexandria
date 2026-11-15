@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My library · Alexandria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --ink:#14161a; --ink-2:#4a505b; --ink-3:#6b7280;
+  --line:#e3e6eb; --surface:#eef0f3; --surface-2:#f6f7f9;
+  --accent:#3b5bdb; --accent-ink:#2f4ac0; --accent-soft:#e8edfc;
+  --reading:#3b5bdb; --finished:#2b8a3e; --tbr:#5c6370; --paused:#a65400; --dnf:#c92a2a;
+  --star:#e67700;
+  --r-sm:8px; --r:12px; --r-lg:16px;
+  --shadow:0 1px 2px rgba(20,22,26,.06),0 2px 8px rgba(20,22,26,.04);
+  --shadow-cover:0 1px 2px rgba(20,22,26,.12),0 6px 16px -6px rgba(20,22,26,.25);
+  --font:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+img{display:block;max-width:100%}
+button,input,select{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{max-width:1200px;margin:0 auto;padding:0 32px}
+
+/* ---------- top bar ---------- */
+.topbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;gap:24px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-.01em;text-decoration:none;min-height:44px}
+.brand-mark{width:28px;height:28px;border-radius:8px;background:var(--accent);display:grid;place-items:center}
+.nav{display:flex;gap:4px}
+.nav a{display:flex;align-items:center;min-height:44px;padding:0 12px;border-radius:8px;text-decoration:none;color:var(--ink-2);font-weight:500}
+.nav a:hover{background:var(--surface-2);color:var(--ink)}
+.nav a[aria-current="page"]{color:var(--ink);background:var(--surface)}
+.search{flex:1;max-width:380px;margin-left:auto;position:relative}
+.search input{width:100%;height:40px;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:0 12px 0 36px}
+.search input:focus{outline:2px solid var(--accent);outline-offset:-1px;background:#fff}
+.search svg{position:absolute;left:11px;top:11px;color:var(--ink-3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--line);background:#fff;font-weight:600;cursor:pointer;white-space:nowrap;text-decoration:none}
+.btn:hover{background:var(--surface-2)}
+.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-ink)}
+.btn-sm{min-height:36px;padding:0 12px;font-size:14px}
+.avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#3b5bdb,#7048e8);color:#fff;display:grid;place-items:center;font-weight:600;flex:none}
+
+/* ---------- profile header ---------- */
+.profile{padding:40px 0 32px;border-bottom:1px solid var(--line)}
+.profile .wrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap}
+.profile .avatar{width:80px;height:80px;font-size:30px}
+.profile h1{margin:0;font-size:30px;line-height:1.15;letter-spacing:-.02em}
+.profile p{margin:4px 0 0;color:var(--ink-3)}
+.profile-stats{display:flex;gap:32px;margin-left:auto}
+.profile-stats div{display:flex;flex-direction:column}
+.profile-stats b{font-size:24px;font-weight:600;letter-spacing:-.02em}
+.profile-stats span{font-size:13px;color:var(--ink-3)}
+.profile-actions{display:flex;gap:8px}
+
+section{padding:40px 0}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.section-head h2{margin:0;font-size:22px;letter-spacing:-.015em}
+.section-head p{margin:2px 0 0;color:var(--ink-3);font-size:14px}
+
+/* ---------- currently reading ---------- */
+.reading-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.rcard{display:grid;grid-template-columns:112px 1fr;gap:20px;padding:20px;border:1px solid var(--line);border-radius:var(--r-lg);background:#fff;box-shadow:var(--shadow)}
+.rcard .cover,.rcard .ph{width:112px;border-radius:6px}
+.rcard>div:first-child{grid-row:span 2}
+.rcard .logform{grid-column:2;margin-top:0}
+.rcard .saved{margin-top:0}
+.rcard h3{margin:0;font-size:18px;line-height:1.3;letter-spacing:-.01em}
+.rcard .by{color:var(--ink-3);margin:2px 0 10px;font-size:14px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13px;color:var(--ink-3)}
+.progress-row{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 6px;font-size:14px}
+.progress-row b{font-weight:600}
+.progress-row .pct{color:var(--accent-ink);font-weight:600}
+.bar{height:8px;background:var(--surface);border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.logform{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;align-items:center}
+.stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;height:44px}
+.stepper button{width:40px;height:44px;border:0;background:var(--surface-2);cursor:pointer;font-size:18px;font-weight:500}
+.stepper button:hover{background:var(--surface)}
+.stepper input{width:72px;height:44px;border:0;text-align:center;font-weight:600;-moz-appearance:textfield}
+.stepper input::-webkit-inner-spin-button{display:none}
+.stepper input:focus{outline:2px solid var(--accent);outline-offset:-2px}
+.logform .of{color:var(--ink-3);font-size:14px}
+.saved{font-size:13px;color:var(--finished);font-weight:500;min-height:20px;margin-top:6px}
+
+/* ---------- collection ---------- */
+.toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:24px}
+.tabs{display:flex;gap:4px;padding:4px;background:var(--surface);border-radius:12px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.tabs button{display:flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border:0;background:transparent;border-radius:9px;font-weight:500;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+.tabs .n{font-size:12px;color:var(--ink-3);background:rgba(20,22,26,.06);padding:1px 7px;border-radius:99px}
+.tabs button[aria-pressed="true"] .n{background:var(--accent-soft);color:var(--accent-ink)}
+.toolbar .right{margin-left:auto;display:flex;gap:8px}
+.field{height:44px;border:1px solid var(--line);border-radius:10px;padding:0 12px;background:#fff}
+.field:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:32px 24px}
+.book{display:flex;flex-direction:column;min-width:0;text-decoration:none;border-radius:10px}
+.book .cw{position:relative;margin-bottom:12px}
+.cover{aspect-ratio:2/3;width:100%;object-fit:cover;border-radius:6px;background:var(--surface);box-shadow:var(--shadow-cover)}
+.book:hover .cover{transform:translateY(-3px);box-shadow:0 2px 4px rgba(20,22,26,.12),0 14px 24px -8px rgba(20,22,26,.3)}
+.cover{transition:transform .2s ease,box-shadow .2s ease}
+.ph{aspect-ratio:2/3;border-radius:6px;display:flex;flex-direction:column;justify-content:space-between;padding:14px;color:#fff;box-shadow:var(--shadow-cover);font-weight:600;line-height:1.25;font-size:15px}
+.book .ph{padding-top:40px}
+.ph small{font-weight:400;opacity:.8;font-size:12px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 8px;border-radius:99px;background:#fff;color:var(--ink)}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--c)}
+.book .chip{position:absolute;left:8px;top:8px;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+.book h3{margin:0;font-size:14px;font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.book .au{font-size:13px;color:var(--ink-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.book .foot{margin-top:6px;font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:8px}
+.mini{flex:1;height:4px;background:var(--surface);border-radius:99px;overflow:hidden}
+.mini i{display:block;height:100%;background:var(--c,var(--accent))}
+.stars{position:relative;display:inline-block;font-size:13px;letter-spacing:1px;line-height:1;color:#d5d9e0}
+.stars::after{content:"★★★★★";position:absolute;left:0;top:0;width:var(--w);overflow:hidden;color:var(--star);white-space:nowrap}
+.empty{padding:48px;text-align:center;color:var(--ink-3);border:1px dashed var(--line);border-radius:var(--r);grid-column:1/-1}
+
+/* ---------- stats ---------- */
+.stats-band{background:var(--surface-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.years{display:flex;gap:4px;padding:4px;background:var(--surface);border-radius:12px}
+.years button{min-height:40px;min-width:64px;border:0;background:transparent;border-radius:9px;font-weight:600;color:var(--ink-2);cursor:pointer}
+.years button[aria-pressed="true"]{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow)}
+.kpi .label{font-size:13px;color:var(--ink-3);font-weight:500}
+.kpi .value{font-size:34px;font-weight:600;letter-spacing:-.03em;line-height:1.1;margin-top:8px}
+.kpi .sub{font-size:13px;color:var(--ink-3);margin-top:6px}
+.kpi .delta{font-weight:600;color:var(--ink-2)}
+.dash{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+.card h3{margin:0;font-size:15px;font-weight:600}
+.card .hint{font-size:13px;color:var(--ink-3);margin:2px 0 16px}
+.chart{position:relative;height:320px;display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;padding-left:24px;border-bottom:1px solid var(--line)}
+.gridlines{position:absolute;inset:0 0 0 24px;pointer-events:none}
+.gridlines span{position:absolute;left:0;right:0;border-top:1px dashed var(--line)}
+.gridlines em{position:absolute;left:-24px;transform:translateY(-50%);font-style:normal;font-size:11px;color:var(--ink-3);width:18px;text-align:right}
+.col{height:100%;display:flex;align-items:end;justify-content:center;background:none;border:0;padding:0;cursor:default;position:relative}
+.col i{display:block;width:min(28px,70%);background:var(--accent);border-radius:4px 4px 0 0;transition:height .4s cubic-bezier(.2,.8,.2,1)}
+.col:hover i,.col:focus-visible i{background:var(--accent-ink)}
+.col[data-zero] i{height:0}
+.months{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;padding-left:24px;margin-top:6px;font-size:11px;color:var(--ink-3);text-align:center}
+.tip{position:absolute;z-index:5;pointer-events:none;background:var(--ink);color:#fff;font-size:12px;line-height:1.45;padding:8px 10px;border-radius:8px;width:max-content;max-width:220px;opacity:0;transform:translate(-50%,-100%) translateY(-8px);transition:opacity .12s}
+.tip.on{opacity:1}
+.tip b{display:block;font-size:12px}
+.hbars{display:flex;flex-direction:column;gap:12px}
+.hbar .t{display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px}
+.hbar .t span:last-child{color:var(--ink-3)}
+.hbar .track{height:8px;background:var(--surface);border-radius:99px;overflow:hidden}
+.hbar .track i{display:block;height:100%;background:var(--accent);border-radius:99px}
+details.table{margin-top:14px;font-size:13px}
+details.table summary{cursor:pointer;color:var(--accent-ink);font-weight:500;min-height:32px;display:inline-flex;align-items:center}
+details.table table{border-collapse:collapse;width:100%;margin-top:8px}
+details.table td,details.table th{padding:4px 8px;border-bottom:1px solid var(--line);text-align:left}
+.dash2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+.finished-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.finished-list li{display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;padding:6px 0}
+.finished-list img,.finished-list .phs{width:36px;aspect-ratio:2/3;border-radius:3px;object-fit:cover;background:var(--surface)}
+.finished-list .tt{font-size:14px;font-weight:500;line-height:1.3}
+.finished-list .dd{font-size:12px;color:var(--ink-3)}
+
+/* ---------- calendar ---------- */
+.cal-legend{display:flex;gap:16px;font-size:13px;color:var(--ink-2);align-items:center}
+.cal-legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.dot.f{background:var(--accent)}
+.dot.s{border:2px solid var(--accent)}
+.cal{display:grid;grid-template-columns:repeat(4,1fr);gap:28px 32px}
+.month h4{margin:0 0 8px;font-size:13px;font-weight:600;display:flex;justify-content:space-between}
+.month h4 span{color:var(--ink-3);font-weight:500}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.days .dw{font-size:10px;color:var(--ink-3);text-align:center;padding-bottom:2px}
+.day{aspect-ratio:1;display:grid;place-items:center;font-size:11px;color:var(--ink-3);border-radius:50%;border:0;background:none;padding:0;position:relative}
+.day.s{box-shadow:inset 0 0 0 2px var(--accent);color:var(--accent-ink);font-weight:600}
+.day.f{background:var(--accent);color:#fff;font-weight:600}
+.day.f.s{box-shadow:inset 0 0 0 2px #fff,0 0 0 2px var(--accent)}
+.day.today{outline:1px dashed var(--ink-3);outline-offset:1px}
+button.day{cursor:pointer}
+.day.future{opacity:.45}
+
+footer{padding:32px 0 48px;color:var(--ink-3);font-size:13px;border-top:1px solid var(--line)}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;font-weight:500;opacity:0;transition:.2s;pointer-events:none;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- responsive ---------- */
+@media (max-width:1080px){
+  .nav{display:none}
+  .reading-grid{grid-template-columns:1fr}
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .dash,.dash2{grid-template-columns:1fr}
+  .cal{grid-template-columns:repeat(3,1fr)}
+  .profile-stats{margin-left:0;width:100%}
+}
+@media (max-width:640px){
+  .wrap{padding:0 16px}
+  .topbar .wrap{gap:12px}
+  .brand>span:last-child{display:none}
+  .search{max-width:none}
+  .topbar .btn-primary .lbl{display:none}
+  .topbar .btn-primary{width:44px;padding:0}
+  .topbar .avatar{display:none}
+  .profile{padding:24px 0}
+  .profile .avatar{width:56px;height:56px;font-size:22px}
+  .profile h1{font-size:24px}
+  .profile-stats{gap:0;justify-content:space-between}
+  .profile-stats b{font-size:20px}
+  .profile-actions{width:100%}
+  .profile-actions .btn{flex:1}
+  section{padding:28px 0}
+  .rcard{grid-template-columns:84px 1fr;gap:14px;padding:16px}
+  .rcard .cover,.rcard .ph{width:84px}
+  .rcard>div:first-child{grid-row:auto}
+  .rcard .logform{grid-column:1/-1}
+  .logform .btn-primary{flex:1}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 16px}
+  .toolbar .right{margin-left:0;width:100%}
+  .toolbar .right>*{flex:1;min-width:0}
+  .kpis{gap:10px}
+  .kpi{padding:16px}
+  .kpi .value{font-size:26px}
+  .chart{height:160px;gap:3px}
+  .months{gap:3px;font-size:10px}
+  .cal{grid-template-columns:repeat(2,1fr);gap:20px 16px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Alexandria, home">
+      <span class="brand-mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h14v15H6a2 2 0 0 0-2 2Zm0 0A2 2 0 0 0 6 22h14"/></svg></span>
+      <span>Alexandria</span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#collection" aria-current="page">Library</a>
+      <a href="#stats">Stats</a>
+      <a href="#calendar">Calendar</a>
+    </nav>
+    <form class="search" role="search" onsubmit="event.preventDefault();toast('Searching Google Books for “'+this.q.value+'”…')">
+      <label class="sr-only" for="q">Search Google Books to add a book</label>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" name="q" type="search" placeholder="Find a book to add…" autocomplete="off">
+    </form>
+    <a class="btn btn-primary" href="#" aria-label="Add a book"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span class="lbl">Add book</span></a>
+    <span class="avatar" aria-label="Signed in as the owner" role="img">A</span>
+  </div>
+</header>
+
+<main id="top">
+  <div class="profile">
+    <div class="wrap">
+      <span class="avatar" aria-hidden="true">A</span>
+      <div>
+        <h1>My library</h1>
+        <p id="since"></p>
+      </div>
+      <div class="profile-stats" id="pstats"></div>
+      <div class="profile-actions">
+        <a class="btn" href="#">View as visitor</a>
+        <a class="btn" href="#">Export</a>
+      </div>
+    </div>
+  </div>
+
+  <section aria-labelledby="h-reading">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <h2 id="h-reading">Currently reading</h2>
+          <p>Log where you are. It saves straight away.</p>
+        </div>
+      </div>
+      <div class="reading-grid" id="reading"></div>
+    </div>
+  </section>
+
+  <section id="collection" aria-labelledby="h-coll" style="padding-top:8px">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <h2 id="h-coll">Collection</h2>
+          <p id="coll-sub"></p>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="tabs" id="tabs" role="group" aria-label="Filter by status"></div>
+        <div class="right">
+          <label class="sr-only" for="filter">Filter by title or author</label>
+          <input class="field" id="filter" type="search" placeholder="Filter title or author">
+          <label class="sr-only" for="sort">Sort</label>
+          <select class="field" id="sort">
+            <option value="added">Recently added</option>
+            <option value="title">Title A–Z</option>
+            <option value="author">Author A–Z</option>
+            <option value="rating">My rating</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid" id="grid" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <div class="stats-band">
+    <section id="stats" aria-labelledby="h-stats">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2 id="h-stats">Reading stats</h2>
+            <p id="stats-sub"></p>
+          </div>
+          <div class="years" id="years" role="group" aria-label="Year"></div>
+        </div>
+        <div class="kpis" id="kpis"></div>
+        <div class="dash">
+          <div class="card">
+            <h3>Books finished per month</h3>
+            <p class="hint" id="month-hint"></p>
+            <div class="chart" id="chart"><div class="gridlines" id="gl"></div></div>
+            <div class="months" aria-hidden="true"><span>J</span><span>F</span><span>M</span><span>A</span><span>M</span><span>J</span><span>J</span><span>A</span><span>S</span><span>O</span><span>N</span><span>D</span></div>
+            <details class="table"><summary>Show as table</summary><table id="mtable"></table></details>
+          </div>
+          <div class="card">
+            <h3>Format</h3>
+            <p class="hint">Finished books by how you read them</p>
+            <div class="hbars" id="formats"></div>
+            <h3 style="margin-top:24px">Genres</h3>
+            <p class="hint">Finished books by category</p>
+            <div class="hbars" id="genres"></div>
+          </div>
+        </div>
+        <div class="dash2">
+          <div class="card">
+            <h3>Finished this year</h3>
+            <p class="hint">Most recent first</p>
+            <ul class="finished-list" id="flist"></ul>
+          </div>
+          <div class="card">
+            <h3>Longest and shortest</h3>
+            <p class="hint">By page count, finished books</p>
+            <div class="hbars" id="extremes"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="calendar" aria-labelledby="h-cal" style="padding-top:8px">
+      <div class="wrap">
+        <div class="card">
+          <div class="section-head" style="margin-bottom:24px">
+            <div>
+              <h2 id="h-cal" style="font-size:18px">Reading calendar</h2>
+              <p id="cal-sub"></p>
+            </div>
+            <div class="cal-legend"><span><i class="dot s"></i>Started</span><span><i class="dot f"></i>Finished</span></div>
+          </div>
+          <div class="cal" id="cal"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Alexandria · self-hosted, your data in one SQLite file</span>
+    <span>JSON API · CSV export</span>
+  </div>
+</footer>
+
+<div class="tip" id="tip" role="status"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* Demo library from scripts/seed_demo.py, relative to today (2026-11-14). */
+const NOW = Date.UTC(2026,10,14,12);
+const DAY = 864e5;
+const F='finished',R='reading',P='paused',D='dnf',T='tbr';
+// slug,title,authors,isbn,pages,category,status,rating,days_ago,read_days,format
+const CATALOG = [
+ ['hobbit','The Hobbit','J.R.R. Tolkien','9780547928227',300,'Fantasy',F,4.5,5,9,'hardcover'],
+ ['dune','Dune','Frank Herbert','9780441013593',688,'Science Fiction',F,5,19,24,'paperback'],
+ ['sapiens','Sapiens: A Brief History of Humankind','Yuval Noah Harari','9780062316110',464,'History',F,3.5,52,31,'audiobook'],
+ ['pride','Pride and Prejudice','Jane Austen','9780141439518',480,'Classics',F,4.5,58,17,'paperback'],
+ ['etranger',"L'Étranger",'Albert Camus','9782070360024',186,'Philosophy',F,4.0,97,6,'paperback'],
+ ['cien-anos','Cien años de soledad','Gabriel García Márquez','9780307474728',471,'Fiction',F,5,150,40,'paperback'],
+ ['cosmos','Cosmos','Carl Sagan','9780345539434',396,'Science',F,4.0,163,28,'ebook'],
+ ['frankl',"Man's Search for Meaning",'Viktor E. Frankl','9780807014295',184,'Philosophy',F,5,171,5,'paperback'],
+ ['hail-mary','Project Hail Mary','Andy Weir','9780593135204',496,'Science Fiction',F,4.0,260,12,'audiobook'],
+ ['good-omens','Good Omens','Terry Pratchett, Neil Gaiman','9780060853983',400,'Fantasy',F,3.5,340,21,'paperback'],
+ ['left-hand','The Left Hand of Darkness','Ursula K. Le Guin','9780441478125',304,'Science Fiction',F,4.0,410,35,'paperback'],
+ ['born-a-crime','Born a Crime','Trevor Noah','9780399588174',304,'Biography',F,4.5,560,8,'audiobook'],
+ ['peste','La Peste','Albert Camus','9782070360420',336,'Fiction',F,3.0,650,26,'paperback'],
+ ['brief-history','A Brief History of Time','Stephen Hawking','9780553380163',212,'Science',F,2.5,740,45,'paperback'],
+ ['rayuela','Rayuela','Julio Cortázar',null,null,'Fiction',F,4.0,90,30,'paperback'],
+ ['quijote','Don Quixote','Miguel de Cervantes, Edith Grossman','9780060934347',1056,'Classics',R,null,40,30,'hardcover'],
+ ['steve-jobs','Steve Jobs','Walter Isaacson','9781451648539',656,'Biography',R,null,14,10,'ebook'],
+ ['thinking','Thinking, Fast and Slow','Daniel Kahneman','9780374533557',499,'Science',P,null,120,30,'paperback'],
+ ['name-of-the-wind','The Name of the Wind','Patrick Rothfuss','9780756404741',662,'Fantasy',P,null,200,60,'paperback'],
+ ['crime-punishment','Crime and Punishment','Fyodor Dostoevsky','9780143107637',608,'Classics',D,null,180,20,'ebook'],
+ ['guns-of-august','The Guns of August','Barbara W. Tuchman','9780345476098',608,'History',T,null,30,null,'paperback'],
+ ['tractatus','Tractatus Logico-Philosophicus','Ludwig Wittgenstein',null,null,'Philosophy',T,null,12,null,null],
+ ['fourth-wing','Fourth Wing','Rebecca Yarros','9781649374042',498,'Fantasy',T,null,7,null,'ebook'],
+ ['prince','The Prince','Niccolò Machiavelli','9780140449150',140,'Philosophy',T,null,3,null,'paperback'],
+];
+const books = CATALOG.map(([slug,title,authors,isbn,pages,cat,status,rating,ago,rd,fmt])=>{
+  const when = NOW - ago*DAY, fin = status===F;
+  const b = {slug,title,authors,isbn,pages,cat,status,rating,fmt,
+    cover: isbn ? `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg?default=false` : null,
+    finished: fin ? when : null,
+    added: fin ? when - (rd+12+ago%40)*DAY : when};
+  if (pages) b.page = status===R ? Math.floor(pages*.4) : (status===P||status===D) ? Math.floor(pages*.3) : fin ? pages : 0;
+  if (rd && status!==T) b.started = fin ? when - rd*DAY : when;
+  return b;
+});
+
+const STATUS = {
+  all:{label:'All'}, reading:{label:'Reading',c:'var(--reading)'}, finished:{label:'Finished',c:'var(--finished)'},
+  tbr:{label:'To read',c:'var(--tbr)'}, paused:{label:'Paused',c:'var(--paused)'}, dnf:{label:'Did not finish',c:'var(--dnf)'}
+};
+const FMT = {paperback:'Paperback',hardcover:'Hardcover',ebook:'Ebook',audiobook:'Audiobook'};
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const d = t => new Date(t);
+const fmtDate = (t,opt={day:'numeric',month:'short',year:'numeric'}) => d(t).toLocaleDateString('en-GB',{...opt,timeZone:'UTC'});
+const yr = t => d(t).getUTCFullYear();
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const $ = id => document.getElementById(id);
+const PH = ['#3b5bdb','#1c7ed6','#5f3dc4','#0b7285','#2b8a3e','#495057'];
+
+function coverHTML(b, cls='cover'){
+  const ph = `<div class="ph" style="background:${PH[b.title.length%PH.length]}" role="img" aria-label="No cover: ${esc(b.title)}"><span>${esc(b.title)}</span><small>${esc(b.authors)}</small></div>`;
+  if (!b.cover) return ph;
+  return `<img class="${cls}" src="${b.cover}" alt="Cover of ${esc(b.title)}" loading="lazy" onerror="this.outerHTML=this.nextElementSibling.innerHTML"><template>${ph}</template>`;
+}
+function stars(r){ return `<span class="stars" style="--w:${r/5*100}%" role="img" aria-label="Rated ${r} out of 5">★★★★★</span>`; }
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toast.h); toast.h=setTimeout(()=>t.classList.remove('on'),2600); }
+
+/* ---------- profile ---------- */
+const count = s => books.filter(b=>b.status===s).length;
+const thisYear = books.filter(b=>b.finished && yr(b.finished)===2026);
+const firstAdded = Math.min(...books.map(b=>b.added));
+$('since').textContent = `Keeping a library since ${fmtDate(firstAdded,{month:'long',year:'numeric'})} · ${books.length} books`;
+$('pstats').innerHTML = [
+  [count(F),'Read'],[count(R),'Reading'],[count(T),'To read'],[thisYear.length,'Finished in 2026']
+].map(([n,l])=>`<div><b>${n}</b><span>${l}</span></div>`).join('');
+
+/* ---------- currently reading ---------- */
+function renderReading(){
+  $('reading').innerHTML = books.filter(b=>b.status===R).map(b=>{
+    const pct = Math.round(b.page/b.pages*100), days = Math.round((NOW-b.started)/DAY);
+    return `<article class="rcard" data-slug="${b.slug}">
+      <div>${coverHTML(b)}</div>
+      <div>
+        <h3>${esc(b.title)}</h3>
+        <div class="by">${esc(b.authors)}</div>
+        <div class="meta"><span>${FMT[b.fmt]}</span><span>Started ${fmtDate(b.started,{day:'numeric',month:'short'})}</span><span>${days} days in</span></div>
+        <div class="progress-row"><span id="of-${b.slug}">Page <b class="cur">${b.page}</b> of ${b.pages}</span><span class="pct">${pct}%</span></div>
+        <div class="bar" role="progressbar" aria-label="Progress in ${esc(b.title)}" aria-valuemin="0" aria-valuemax="${b.pages}" aria-valuenow="${b.page}"><i style="width:${pct}%"></i></div>
+      </div>
+      <form class="logform" novalidate>
+        <div class="stepper">
+          <button type="button" data-step="-10" aria-label="Back 10 pages">−</button>
+          <label class="sr-only" for="pg-${b.slug}">Current page in ${esc(b.title)}</label>
+          <input id="pg-${b.slug}" aria-describedby="of-${b.slug}" type="number" inputmode="numeric" min="0" max="${b.pages}" value="${b.page}">
+          <button type="button" data-step="10" aria-label="Forward 10 pages">+</button>
+        </div>
+        <button class="btn btn-primary" type="submit">Log page</button>
+        <button class="btn" type="button" data-finish>Finished</button>
+        <div class="saved" aria-live="polite" style="flex-basis:100%"></div>
+      </form>
+    </article>`;
+  }).join('');
+}
+renderReading();
+$('reading').addEventListener('click', e=>{
+  const card = e.target.closest('.rcard'); if(!card) return;
+  const b = books.find(x=>x.slug===card.dataset.slug), input = card.querySelector('input');
+  if (e.target.dataset.step){ input.value = Math.max(0,Math.min(b.pages,(+input.value||0)+ +e.target.dataset.step)); }
+  if (e.target.hasAttribute('data-finish')){ input.value=b.pages; logPage(card,b,b.pages,true); }
+});
+$('reading').addEventListener('submit', e=>{
+  e.preventDefault(); const card=e.target.closest('.rcard'); const b=books.find(x=>x.slug===card.dataset.slug);
+  logPage(card,b,Math.max(0,Math.min(b.pages,parseInt(card.querySelector('input').value,10)||0)));
+});
+function logPage(card,b,p,finish){
+  const delta = p-b.page; b.page=p; const pct=Math.round(p/b.pages*100);
+  card.querySelector('.cur').textContent=p; card.querySelector('.pct').textContent=pct+'%';
+  card.querySelector('.bar i').style.width=pct+'%'; card.querySelector('.bar').setAttribute('aria-valuenow',p);
+  card.querySelector('input').value=p;
+  const msg = finish||p===b.pages ? `Finished ${b.title}. Rate it from the book page.` : `Saved page ${p} of ${b.pages}${delta>0?` · +${delta} pages`:''}`;
+  card.querySelector('.saved').textContent = msg; toast(msg);
+}
+
+/* ---------- collection ---------- */
+let filter='all';
+const order=['all',R,F,T,P,D];
+$('coll-sub').textContent = `${books.length} books · ${books.reduce((s,b)=>s+(b.status===F&&b.pages||0),0).toLocaleString('en')} pages read`;
+$('tabs').innerHTML = order.map(s=>`<button type="button" data-s="${s}" aria-pressed="${s==='all'}">${STATUS[s].label}<span class="n">${s==='all'?books.length:count(s)}</span></button>`).join('');
+$('tabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;filter=b.dataset.s;[...$('tabs').children].forEach(x=>x.setAttribute('aria-pressed',x===b));renderGrid();});
+$('filter').addEventListener('input',renderGrid); $('sort').addEventListener('change',renderGrid);
+function renderGrid(){
+  const q=$('filter').value.trim().toLowerCase(), s=$('sort').value;
+  let list = books.filter(b=>(filter==='all'||b.status===filter)&&(!q||(b.title+' '+b.authors).toLowerCase().includes(q)));
+  list.sort(s==='title'?(a,b)=>a.title.localeCompare(b.title):s==='author'?(a,b)=>a.authors.localeCompare(b.authors):s==='rating'?(a,b)=>(b.rating||0)-(a.rating||0):(a,b)=>b.added-a.added);
+  $('grid').innerHTML = list.length ? list.map(b=>{
+    const st=STATUS[b.status]; let foot='';
+    if (b.status===F) foot = b.rating ? `${stars(b.rating)}<span>${b.rating}</span>` : '';
+    else if (b.pages && b.page) foot = `<span class="mini" style="--c:${st.c}"><i style="width:${Math.round(b.page/b.pages*100)}%"></i></span><span>${Math.round(b.page/b.pages*100)}%</span>`;
+    else if (b.status===T) foot = `<span>Added ${fmtDate(b.added,{day:'numeric',month:'short'})}</span>`;
+    return `<a class="book" href="#" aria-label="${esc(b.title)} by ${esc(b.authors)}, ${st.label}${b.rating?`, rated ${b.rating}`:''}">
+      <div class="cw">${coverHTML(b)}${filter==='all'?`<span class="chip" style="--c:${st.c}" aria-hidden="true">${st.label}</span>`:''}</div>
+      <h3>${esc(b.title)}</h3><div class="au">${esc(b.authors)}</div><div class="foot">${foot}</div></a>`;
+  }).join('') : `<div class="empty">No books match “${esc(q)}”.</div>`;
+}
+renderGrid();
+
+/* ---------- stats ---------- */
+const YEARS=[2026,2025,2024]; let year=2026;
+$('years').innerHTML = YEARS.map(y=>`<button type="button" aria-pressed="${y===year}" data-y="${y}">${y}</button>`).join('');
+$('years').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;year=+b.dataset.y;[...$('years').children].forEach(x=>x.setAttribute('aria-pressed',x===b));renderStats();});
+function statsFor(y){
+  const fin = books.filter(b=>b.finished&&yr(b.finished)===y).sort((a,b)=>b.finished-a.finished);
+  const started = books.filter(b=>b.started&&yr(b.started)===y);
+  const rated = fin.filter(b=>b.rating);
+  return {fin, started,
+    pages: fin.reduce((s,b)=>s+(b.pages||0),0),
+    avg: rated.length ? rated.reduce((s,b)=>s+b.rating,0)/rated.length : null,
+    completion: started.length ? started.filter(b=>b.status===F).length/started.length : null};
+}
+function bars(el,rows,max){
+  el.innerHTML = rows.map(([l,v,note])=>`<div class="hbar"><div class="t"><span>${esc(l)}</span><span>${note??v}</span></div><div class="track"><i style="width:${max?v/max*100:0}%"></i></div></div>`).join('') || '<p class="hint">Nothing finished yet.</p>';
+}
+function renderStats(){
+  const s=statsFor(year), prev=statsFor(year-1);
+  const partial = year===2026 ? ' so far' : '';
+  $('stats-sub').textContent = year===2026 ? `1 January to ${fmtDate(NOW,{day:'numeric',month:'long'})} 2026` : `Full year ${year}`;
+  const diff=(a,b,u='')=>{ if(!prev.fin.length&&!prev.started.length) return `<span class="sub">No data for ${year-1}</span>`; const n=a-b; return `<div class="sub"><span class="delta">${n>0?'+':n<0?'−':'±'}${Math.abs(n).toLocaleString('en')}${u}</span> vs ${year-1}</div>`; };
+  $('kpis').innerHTML = `
+    <div class="card kpi"><div class="label">Books finished${partial}</div><div class="value">${s.fin.length}</div>${diff(s.fin.length,prev.fin.length)}</div>
+    <div class="card kpi"><div class="label">Pages read</div><div class="value">${s.pages.toLocaleString('en')}</div>${diff(s.pages,prev.pages)}</div>
+    <div class="card kpi"><div class="label">Average rating</div><div class="value">${s.avg?s.avg.toFixed(1):'–'}</div><div class="sub">${s.avg?stars(Math.round(s.avg*2)/2)+' across '+s.fin.filter(b=>b.rating).length+' rated':'No ratings'}</div></div>
+    <div class="card kpi"><div class="label">Completion</div><div class="value">${s.completion==null?'–':Math.round(s.completion*100)+'%'}</div><div class="sub">${s.started.filter(b=>b.status===F).length} of ${s.started.length} books started in ${year} finished</div></div>`;
+  // monthly chart
+  const m = Array.from({length:12},()=>[]); s.fin.forEach(b=>m[d(b.finished).getUTCMonth()].push(b));
+  const max = Math.max(3,...m.map(x=>x.length));
+  $('month-hint').textContent = `${s.fin.length} books in ${year}${s.fin.length?(()=>{const top=Math.max(...m.map(x=>x.length));const ms=MONTHS.filter((_,i)=>m[i].length===top);return `, most in ${ms.length>1?ms.slice(0,-1).join(', ')+' and '+ms.at(-1):ms[0]} (${top} each)`.replace(' each)',ms.length>1?' each)':')');})():''}`;
+  const gl = Array.from({length:max+1},(_,i)=>`<span style="top:${(1-i/max)*100}%"><em>${i}</em></span>`).filter((_,i)=>max<=4||i%2===0).join('');
+  $('chart').innerHTML = `<div class="gridlines">${gl}</div>` + m.map((x,i)=>{
+    const label = `${MONTHS[i]}: ${x.length} finished${x.length?' – '+x.map(b=>b.title).join(', '):''}`;
+    return `<button type="button" class="col" ${x.length?'':'data-zero'} data-i="${i}" aria-label="${esc(label)}"><i style="height:${x.length/max*100}%"></i></button>`;
+  }).join('');
+  $('chart').onpointerover = $('chart').onfocusin = e=>{ const c=e.target.closest('.col'); if(!c) return; const x=m[c.dataset.i];
+    showTip(c, `<b>${MONTHS[c.dataset.i]} ${year}</b>${x.length} finished${x.map(b=>'<br>'+esc(b.title)).join('')}`); };
+  $('chart').onpointerleave = $('chart').onfocusout = hideTip;
+  $('mtable').innerHTML = '<tr><th>Month</th><th>Finished</th><th>Titles</th></tr>'+m.map((x,i)=>`<tr><td>${MONTHS[i]}</td><td>${x.length}</td><td>${x.map(b=>esc(b.title)).join(', ')}</td></tr>`).join('');
+  // formats & genres
+  const tally = key => { const t={}; s.fin.forEach(b=>{const k=key(b); t[k]=(t[k]||0)+1;}); return Object.entries(t).sort((a,b)=>b[1]-a[1]); };
+  const fm = tally(b=>FMT[b.fmt]); bars($('formats'),fm,s.fin.length);
+  const gn = tally(b=>b.cat); bars($('genres'),gn.slice(0,5),s.fin.length);
+  // finished list
+  $('flist').previousElementSibling.previousElementSibling.textContent = `Finished in ${year}`;
+  $('flist').innerHTML = s.fin.slice(0,6).map(b=>`<li>${b.cover?`<img src="${b.cover}" alt="" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'phs'}))">`:'<span class="phs"></span>'}<div><div class="tt">${esc(b.title)}</div><div class="dd">${esc(b.authors)} · ${fmtDate(b.finished,{day:'numeric',month:'short'})}</div></div>${b.rating?stars(b.rating):''}</li>`).join('') + (s.fin.length>6?`<li style="display:block;font-size:13px;color:var(--ink-3)">and ${s.fin.length-6} more</li>`:'') || '<li class="hint">Nothing finished in this year.</li>';
+  const paged = s.fin.filter(b=>b.pages).sort((a,b)=>b.pages-a.pages);
+  const ex = paged.length>1 ? [paged[0],...paged.slice(1,-1).slice(0,2),paged[paged.length-1]] : paged;
+  bars($('extremes'), ex.map(b=>[b.title,b.pages,`${b.pages} pages`]), paged[0]?.pages);
+  renderCal();
+}
+function showTip(el,html){ const t=$('tip'), r=el.getBoundingClientRect(); t.innerHTML=html; t.style.left=(r.left+r.width/2+scrollX)+'px'; t.style.top=(r.top+scrollY+ (el.querySelector('i')?el.querySelector('i').getBoundingClientRect().top-r.top:0))+'px'; t.classList.add('on'); }
+function hideTip(){ $('tip').classList.remove('on'); }
+
+/* ---------- calendar ---------- */
+function renderCal(){
+  const ev={}; const key=t=>{const x=d(t);return `${x.getUTCFullYear()}-${x.getUTCMonth()}-${x.getUTCDate()}`;};
+  books.forEach(b=>{ if(b.started){(ev[key(b.started)]??={s:[],f:[]}).s.push(b.title);} if(b.finished){(ev[key(b.finished)]??={s:[],f:[]}).f.push(b.title);} });
+  let ns=0,nf=0; Object.entries(ev).forEach(([k,v])=>{ if(+k.split('-')[0]===year){ns+=v.s.length;nf+=v.f.length;} });
+  $('cal-sub').textContent = `${year}: ${ns} started, ${nf} finished`;
+  const todayKey = key(NOW);
+  $('cal').innerHTML = MONTHS.map((name,mi)=>{
+    const first = new Date(Date.UTC(year,mi,1)), len = new Date(Date.UTC(year,mi+1,0)).getUTCDate();
+    const off = (first.getUTCDay()+6)%7; let cells='', cnt=0;
+    for(let i=0;i<off;i++) cells+='<span></span>';
+    for(let dd=1; dd<=len; dd++){
+      const k=`${year}-${mi}-${dd}`, e=ev[k], t=Date.UTC(year,mi,dd,12);
+      const cls=['day', e?.s.length?'s':'', e?.f.length?'f':'', k===todayKey?'today':'', t>NOW?'future':''].join(' ');
+      if(e){ cnt+=e.s.length+e.f.length;
+        const lbl=[...e.f.map(x=>'Finished '+x),...e.s.map(x=>'Started '+x)].join('; ');
+        cells+=`<button type="button" class="${cls}" aria-label="${dd} ${name}: ${esc(lbl)}" data-tip="${esc(`<b>${dd} ${name}</b>`+[...e.f.map(x=>'Finished · '+esc(x)),...e.s.map(x=>'Started · '+esc(x))].join('<br>'))}">${dd}</button>`;
+      } else cells+=`<span class="${cls}">${dd}</span>`;
+    }
+    return `<div class="month"><h4>${name}${cnt?`<span>${cnt} event${cnt>1?'s':''}</span>`:''}</h4><div class="days">${['M','T','W','T','F','S','S'].map(x=>`<span class="dw" aria-hidden="true">${x}</span>`).join('')}${cells}</div></div>`;
+  }).join('');
+}
+$('cal').addEventListener('pointerover',e=>{const b=e.target.closest('button.day'); if(b) showTip(b,b.dataset.tip);});
+$('cal').addEventListener('focusin',e=>{const b=e.target.closest('button.day'); if(b) showTip(b,b.dataset.tip);});
+$('cal').addEventListener('pointerout',hideTip); $('cal').addEventListener('focusout',hideTip);
+renderStats();
+</script>
+</body>
+</html>

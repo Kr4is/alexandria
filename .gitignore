@@ -214,3 +214,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Front-end build (npm run build -> static/dist)
+node_modules/
+static/dist/

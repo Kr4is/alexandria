@@ -1,0 +1,162 @@
+/* index page styles: the collection (/) and a custom shelf (/shelf/<name>).
+   Every class here is prefixed ix- so it cannot collide with other pages. */
+@layer components {
+  /* ---------- the dater ---------- */
+  .ix-hero { padding-top: clamp(8px, 1.4vw, 20px); }
+  .ix-hero-head {
+    display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap;
+    margin-bottom: clamp(14px, 2vw, 24px);
+  }
+  .ix-hero-head > p { margin: 0; font-family: var(--font-mono); font-size: 14px; max-width: 46ch; }
+  .ix-legend { margin-top: 18px; }
+
+  /* ---------- pockets ---------- */
+  .ix-min { min-width: 0; }
+  .ix-title { text-decoration: none; overflow-wrap: anywhere; }
+  .ix-title:hover { text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 4px; }
+  .ix-chips { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .ix-chips a {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; border: 2px solid var(--color-type);
+    background: var(--color-slip); font-family: var(--font-mono); font-size: 12px; letter-spacing: .04em;
+    text-decoration: none; max-width: 100%; overflow-wrap: anywhere;
+  }
+  .ix-chips a:hover { background: var(--color-type); color: var(--color-slip); }
+  .ix-chips a.sh { border-style: dashed; }
+  .ix-nopages { margin: 18px 0 0; font-family: var(--font-mono); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
+  .log .label { font-weight: 600; }
+  .stepper .ix-ten { width: 52px; font-size: 15px; border-left: var(--rule); }
+  .ix-grow { flex: 1 1 140px; }
+  .ix-card-acts { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .ix-card-acts form, .ix-acts form { display: contents; }
+  .ix-card-acts .btn-line { background: var(--color-slip); }
+  .ix-card-acts .btn-line:hover { background: var(--color-d1); }
+  .ix-hold .ret, .ix-hold[aria-expanded="true"] .pull { display: none; }
+  .ix-hold[aria-expanded="true"] .ret { display: inline; }
+  .ix-acts.row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .ledger.log { align-content: center; padding: 14px 16px; }
+
+  /* ---------- status tabs + search ---------- */
+  .ix-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .ix-tabs a {
+    display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px;
+    border: 2px solid var(--color-type); background: var(--color-slip); text-decoration: none;
+    font-weight: 700; font-stretch: 85%; text-transform: uppercase; letter-spacing: .04em; font-size: 13px;
+  }
+  .ix-tabs a:hover { background: var(--color-d1); }
+  .ix-tabs a[aria-current] { background: var(--color-type); color: var(--color-slip); }
+  .ix-tabs b { font-family: var(--font-mono); font-weight: 600; font-size: 13px; }
+  .ix-tabs .chip { width: 18px; height: 14px; border: 2px solid var(--color-type); border-radius: 2px; }
+  .ix-tabs a[aria-current] .chip { border-color: var(--color-slip); }
+
+  .ix-find { border: var(--rule); background: var(--color-slip); padding: 14px; margin-bottom: clamp(24px, 3vw, 40px); }
+  .ix-find-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto; gap: 12px; align-items: end; }
+  .ix-find-go { display: flex; gap: 8px; }
+  .ix-find-go .btn-stamp { min-height: 48px; }
+  .ix-find-go .btn-line { min-height: 48px; }
+  .ix-more { margin-top: 10px; }
+  .ix-more summary {
+    display: inline-flex; align-items: center; min-height: 44px; cursor: pointer; font-family: var(--font-mono);
+    font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .ix-more-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; padding-top: 6px; }
+
+  /* ---------- the drawers ---------- */
+  .ix-drawers .drawer.ix-span-1 { grid-column: span 12; }
+  .ix-drawers .drawer.ix-span-2 { grid-column: span 6; }
+  .ix-drawers .drawer.ix-span-3 { grid-column: span 4; }
+  .ix-body { align-items: start; }
+  .ix-rows { grid-template-columns: minmax(0, 1fr); }
+  .ix-drawers .drawer.ix-span-1 .ix-rows { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ix-year-rule {
+    grid-column: 1 / -1; margin: 0; display: flex; align-items: baseline; gap: 10px;
+    font-family: var(--font-mono); font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    border-bottom: 2px solid var(--color-type); padding-bottom: 4px;
+  }
+  .ix-year-rule:not(:first-child) { margin-top: 10px; }
+  .ix-year-rule span { font-weight: 500; }
+
+  /* one filed book */
+  .ix-rec { position: relative; min-width: 0; transition: opacity .25s, filter .25s; }
+  .ix-rec .rec { height: 100%; }
+  .ix-rec .rec-body .h4 { overflow-wrap: anywhere; }
+  .ix-rec .rec.row .rec-body { padding-right: 50px; }
+  .ix-tag { position: absolute; top: 8px; left: 8px; z-index: 2; pointer-events: none; }
+  .ix-rec .rec.row ~ .ix-tag { top: auto; bottom: 8px; left: 8px; }
+  .ix-pull {
+    position: absolute; top: 0; right: 0; z-index: 3; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+    border: none; border-left: var(--rule); border-bottom: var(--rule); background: var(--color-slip);
+    font-family: var(--font-mono); font-size: 24px; font-weight: 600; cursor: pointer;
+  }
+  .ix-pull:hover { background: var(--color-type); color: var(--color-slip); }
+  .ix-pull span[aria-hidden] { display: inline-block; transition: transform .2s; }
+  .ix-pull[aria-expanded="true"] span[aria-hidden] { transform: rotate(45deg); }
+  .ix-rec.held .rec { box-shadow: 8px 8px 0 var(--color-type); }
+  .ix-rec.held .ix-detail { display: block; }
+  .ix-detail { position: relative; border: var(--rule); border-top: none; background: var(--color-slip); padding: 10px 12px 12px; }
+  .ix-detail .ledger { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .ix-detail .ledger dt { font-size: 11px; }
+  .ix-detail .ledger dd { margin-bottom: 6px; }
+  .ix-detail .private-note { font-size: 14px; overflow-wrap: anywhere; }
+  .ix-acts { display: grid; gap: 6px; margin-top: 10px; }
+  .ix-acts .btn-line { width: 100%; padding: 0 8px; }
+
+  /* pagination */
+  .ix-pager { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; margin-top: 16px; }
+  .ix-pager a, .ix-pager .cur {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding: 0 12px;
+    border: var(--rule); background: var(--color-slip); font-family: var(--font-mono); font-weight: 600; text-decoration: none;
+  }
+  .ix-pager a:hover { background: var(--color-d1); }
+  .ix-pager .cur { background: var(--color-type); color: var(--color-slip); }
+  .ix-pager .gap { font-family: var(--font-mono); }
+
+  /* empty states */
+  .ix-empty {
+    border: 2px dashed var(--color-type); background: var(--color-slip); padding: clamp(28px, 4vw, 56px) 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;
+  }
+  .ix-empty .display { margin: 0; font-size: clamp(36px, 4vw, 56px); }
+  .ix-empty .mono { margin: 0; max-width: 52ch; }
+
+  /* ---------- a glimpse of the year ---------- */
+  .ix-year-links { display: flex; gap: 8px; }
+  .ix-year { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr); gap: clamp(20px, 3vw, 48px); align-items: start; }
+  .ix-glimpse { display: flex; flex-direction: column; gap: 10px; }
+  .ix-say { margin: 0 0 10px; font-weight: 800; font-stretch: 80%; font-size: clamp(24px, 2.6vw, 38px); line-height: 1.05; max-width: 28ch; }
+  .ix-seg { height: 44px; margin: 0; }
+  .ix-seg > span { font-weight: 600; min-width: 0; padding: 0 6px; }
+
+  /* ---------- shelf page ---------- */
+  .ix-back {
+    display: inline-flex; align-items: center; min-height: 44px; font-family: var(--font-mono); font-size: 13px;
+    font-weight: 600; letter-spacing: .08em; text-transform: uppercase; text-decoration: none;
+  }
+  .ix-back:hover { text-decoration: underline; }
+  .ix-shelf { padding-top: 12px; }
+  .ix-shelf .kicker { margin-bottom: 8px; }
+  .ix-shelf .sec-head h1 { overflow-wrap: anywhere; min-width: 0; }
+
+  @media (max-width: 1100px) {
+    .ix-drawers .drawer.ix-span-3 { grid-column: span 6; }
+    .ix-drawers .drawer.ix-span-3:last-child { grid-column: span 12; }
+    .ix-drawers .drawer.ix-span-1 .ix-rows { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ix-more-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ix-year { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (max-width: 760px) {
+    .ix-find-row { grid-template-columns: minmax(0, 1fr); }
+    .ix-find-go .btn-stamp { flex: 1; }
+    .ix-more-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ix-drawers .drawer.ix-span-2, .ix-drawers .drawer.ix-span-3, .ix-drawers .drawer.ix-span-3:last-child { grid-column: span 12; }
+  }
+  @media (max-width: 640px) {
+    .ix-drawers .drawer.ix-span-1 .ix-rows { grid-template-columns: minmax(0, 1fr); }
+    .ix-more-grid { grid-template-columns: minmax(0, 1fr); }
+    .ix-tabs a { padding: 0 9px; }
+    .ix-year-links { margin-left: 0; }
+    .ix-card-acts .btn-line { flex: 1 1 auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ix-pull span[aria-hidden] { transition: none; }
+  }
+}

@@ -113,8 +113,12 @@ class TestBookDetailPage:
         assert 'https://openlibrary.org/isbn/9780441013593' in html
         assert 'rel="noopener noreferrer"' in html
         assert f'href="/book/{bid}/share"' in html
-        assert 'Discard Volume' not in html
+        assert 'data-confirm="delete"' not in html
+        assert 'data-confirm="finish"' not in html
+        assert f'/delete/{bid}' not in html
+        assert f'/edit/{bid}' not in html
         assert f'/progress/{bid}' not in html
+        assert 'name="current_page"' not in html
 
     def test_book_without_any_data_renders(self, client, make_book):
         bid = make_book(status=BookStatus.TBR)
@@ -125,8 +129,11 @@ class TestBookDetailPage:
     def test_owner_sees_actions_and_progress_form(self, auth_client, make_book):
         bid = make_book(status=BookStatus.READING, page_count=300)
         html = auth_client.get(f'/book/{bid}').get_data(as_text=True)
-        assert 'Close Chapter' in html
-        assert 'Discard Volume' in html
+        assert 'Stamp finished' in html
+        assert 'data-confirm="finish"' in html
+        assert f'data-action="/finish/{bid}"' in html
+        assert 'data-confirm="delete"' in html
+        assert f'data-action="/delete/{bid}"' in html
         assert f'action="/progress/{bid}"' in html
         assert 'name="current_page"' in html
 
@@ -134,3 +141,19 @@ class TestBookDetailPage:
         bid = make_book(status=BookStatus.FINISHED, page_count=300)
         html = auth_client.get(f'/book/{bid}').get_data(as_text=True)
         assert f'/progress/{bid}' not in html
+
+    def test_private_notes_only_for_owner(self, client, auth_client, make_book):
+        bid = make_book(status=BookStatus.READING, personal_notes='Secret marginalia')
+        assert 'Secret marginalia' not in client.get(f'/book/{bid}').get_data(as_text=True)
+        assert 'Secret marginalia' not in client.get(f'/book/{bid}/share').get_data(as_text=True)
+        assert 'Secret marginalia' in auth_client.get(f'/book/{bid}').get_data(as_text=True)
+
+    def test_stamp_history_and_shelf_links(self, client, make_book):
+        bid = make_book(status=BookStatus.FINISHED, date_started=datetime(2026, 1, 2, tzinfo=UTC),
+                        date_finished=datetime(2026, 2, 3, tzinfo=UTC), shelves='Favourites, Sci fi',
+                        categories='Fiction')
+        html = client.get(f'/book/{bid}').get_data(as_text=True)
+        assert '02 JAN 2026' in html and '03 FEB 2026' in html
+        assert 'href="/shelf/Favourites"' in html
+        assert 'href="/shelf/Sci%20fi"' in html
+        assert 'href="/?category=Fiction"' in html

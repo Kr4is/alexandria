@@ -1,0 +1,169 @@
+/* ==========================================================================
+   Books as objects: a reusable 3D volume + page-to-page view transitions.
+
+   Markup comes from the `book3d` macro in templates/_macros.html. The book
+   sizes itself from its container (give .b3d a width or a height; the 2:3
+   aspect ratio does the rest). Thickness follows the page count through --t,
+   a fraction of the book's height.
+   ========================================================================== */
+
+.b3d {
+    --ry: -24deg;          /* resting turn: shows the page block */
+    --rx: 0deg;
+    --lift: 0px;
+    --c: var(--leather);   /* binding colour (set per book) */
+    --t: .1;               /* thickness as a fraction of height */
+    --d: calc(var(--t) * 100cqh);
+    position: relative;
+    display: block;
+    aspect-ratio: 2 / 3;
+    container-type: size;
+    perspective: 1100px;
+    perspective-origin: 50% 40%;
+}
+
+.b3d-obj {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transform: translateZ(var(--lift)) rotateX(var(--rx)) rotateY(var(--ry));
+    transition: transform .55s cubic-bezier(.2, .8, .2, 1);
+}
+
+.b3d-face { position: absolute; display: block; backface-visibility: hidden; }
+
+.b3d-front {
+    inset: 0;
+    overflow: hidden;
+    border-radius: 1px 3px 3px 1px;
+    background: var(--c);
+    transform: translateZ(calc(var(--d) / 2));
+}
+/* hinge crease + a faint sheen that moves with the tilt */
+.b3d-front::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, rgba(0, 0, 0, .32) 0, rgba(0, 0, 0, .05) 2.5%, rgba(255, 255, 255, .14) 3.6%, transparent 6%),
+        linear-gradient(calc(105deg + var(--ry)), transparent 35%, rgba(255, 248, 230, .16) 50%, transparent 65%);
+}
+
+.b3d-back {
+    inset: 0;
+    border-radius: 3px 1px 1px 3px;
+    background: var(--c);
+    transform: rotateY(180deg) translateZ(calc(var(--d) / 2));
+}
+
+/* the page block, seen on the right when the book turns */
+.b3d-pages {
+    top: 1.5%;
+    bottom: 1.5%;
+    width: var(--d);
+    left: calc(100% - var(--d) / 2 - 1px);
+    transform: rotateY(90deg);
+    background:
+        linear-gradient(90deg, rgba(0, 0, 0, .18), transparent 18%, transparent 82%, rgba(0, 0, 0, .12)),
+        repeating-linear-gradient(90deg, #f6ecd9 0 1px, #e3d4b8 1px 2px);
+}
+
+/* top edge of the pages, visible when tilted from above */
+.b3d-top {
+    left: 0;
+    right: 1px;
+    height: var(--d);
+    top: calc(var(--d) / -2);
+    transform: rotateX(90deg);
+    background:
+        linear-gradient(0deg, rgba(0, 0, 0, .12), transparent 30%),
+        repeating-linear-gradient(0deg, #f6ecd9 0 1px, #e3d4b8 1px 2px);
+}
+
+.b3d-spine {
+    top: 0;
+    bottom: 0;
+    width: var(--d);
+    left: calc(var(--d) / -2);
+    transform: rotateY(-90deg);
+    background: linear-gradient(90deg, rgba(0, 0, 0, .35), rgba(255, 255, 255, .08) 45%, rgba(0, 0, 0, .3)), var(--c);
+}
+
+/* cast shadow on whatever the book stands on */
+.b3d::after {
+    content: '';
+    position: absolute;
+    left: 4%;
+    right: -14%;
+    bottom: -7%;
+    height: 12%;
+    pointer-events: none;
+    background: radial-gradient(closest-side, rgba(30, 16, 8, .5), transparent);
+    transition: opacity .55s cubic-bezier(.2, .8, .2, 1), transform .55s cubic-bezier(.2, .8, .2, 1);
+    z-index: -1;
+}
+
+/* too small to read: keep the binding, drop the lettering */
+@container (max-width: 64px) { .b3d .b3d-ph { font-size: 0; } }
+
+.b3d-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+.b3d-ph {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-start;
+    padding: 10% 9% 10% 13%;
+    color: var(--vintage-cream);
+    font: italic 700 clamp(.75rem, 9cqw, 1.5rem)/1.2 'Fraunces', Georgia, serif;
+    text-wrap: balance;
+    overflow: hidden;
+    background:
+        linear-gradient(180deg, transparent 72%, rgba(230, 201, 140, .55) 72% 73%, transparent 73% 76%, rgba(230, 201, 140, .55) 76% 77%, transparent 77%),
+        var(--c);
+}
+
+/* status ribbon in the bottom-left corner of the cover */
+.b3d-flag {
+    position: absolute; left: 0; bottom: 0; z-index: 1;
+    padding: .1rem .45rem; font-size: .75rem; font-weight: 700; letter-spacing: .05em;
+    background: #f6ead4; color: var(--vintage-ink);
+}
+
+/* Interaction: a book you point at comes off the shelf towards you. */
+.b3d-lift:hover .b3d, .b3d-lift:focus-visible .b3d, .b3d.is-lifted {
+    --ry: -6deg;
+    --lift: 26px;
+}
+.b3d-lift:hover .b3d::after, .b3d-lift:focus-visible .b3d::after { opacity: .55; transform: scaleX(1.12) translateY(6px); }
+
+/* Pointer-tracked tilt (data-tilt): JS writes --ry/--rx; keep it responsive. */
+.b3d[data-tilt].is-tilting .b3d-obj { transition-duration: .12s; }
+
+@media (prefers-reduced-motion: reduce) {
+    .b3d-obj, .b3d::after { transition: none; }
+}
+
+/* ---------- Page transitions: the book flies between pages ---------- */
+@view-transition { navigation: auto; }
+
+.alx-nav { view-transition-name: site-nav; }
+
+::view-transition-group(book-cover) {
+    animation-duration: .6s;
+    animation-timing-function: cubic-bezier(.2, .85, .25, 1);
+}
+::view-transition-old(book-cover), ::view-transition-new(book-cover) {
+    height: 100%;
+    object-fit: cover;
+}
+::view-transition-old(root) { animation: 180ms ease-in both vt-fade-out; }
+::view-transition-new(root) { animation: 320ms cubic-bezier(.2, .8, .2, 1) 60ms both vt-rise-in; }
+
+@keyframes vt-fade-out { to { opacity: 0; } }
+@keyframes vt-rise-in { from { opacity: 0; transform: translateY(10px); } }
+
+@media (prefers-reduced-motion: reduce) {
+    @view-transition { navigation: none; }
+}

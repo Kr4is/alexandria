@@ -1,99 +1,60 @@
-# Design system
+# Design: Circulation Record
 
-## Direction
+Alexandria's interface is a library circulation record: date-due slips, book pockets, coloured index-card stock and rubber date stamps. Every start and every finish is a stamped date. The owner's books, dates and numbers carry the pages; the look only gives them a place to land.
 
-Alexandria should feel like a personal library, not a spreadsheet of books. The
-interface borrows from three physical things:
+The source of truth for tokens and components is `static/src/app.css`. Shared Jinja pieces are in `templates/_macros.html`, shared behaviour in `static/js/app.js`.
 
-- **Wooden shelves**: the collection stands on dark wood shelves with the book
-  covers as spines and faces, so the home page reads as a room you walk into.
-- **The catalog card**: book detail pages are laid out like a library catalog
-  card, with ruled lines, typewriter-like labels and tidy fields.
-- **Ex libris**: the bookplate stamped inside a cover. It informs the logo, the
-  share card and the small ornamental details (borders, seals, rules).
+## Rules
 
-The mood is warm and tactile: coffee, paper and autumn. No cold greys, no
-neon, no glass. Decoration serves the metaphor; information stays legible.
+1. **Card stock = status.** Each status has one stock colour and nothing else uses it.
+   | Status | Token | |
+   |---|---|---|
+   | Reading | `stock-reading` | yellow `#f2d13a` |
+   | Finished | `stock-finished` | green `#7fc4a0` |
+   | To read | `stock-tbr` | blue `#8fc1e6` |
+   | Paused | `stock-paused` | salmon `#f29a85` |
+   | Did not finish | `stock-dnf` | plain slip `#fbfaf6` |
+2. **Ink = event.** Violet `ink-started` (#5236a8) means started, red `ink-finished` (#d8232a) means finished, black `ink-returned` means returned unread. Inks are never ornament, links or buttons.
+3. **One tonal ramp.** Density goes through five steps, `d0` to `d4`, from paper to 58% black. Busy months, hover fills and secondary grounds use these and nothing else.
+4. **Ground and type.** Paper `#f4f1ea`, slip `#fffdf8`, type `#141414`. Rules are 2px solid type. Corners are square or a 6–8px card radius; no soft shadows. The only shadow is a hard offset in type colour for a lifted record.
+5. **Tabular digits everywhere.** Set on `body`.
+6. **One record held at a time.** Opening a card (`[data-record]` + `[data-hold]`) dims the rest; Esc returns it.
+7. **Today's date is live.** The big dater (`dater()` macro) sits at the top of the collection; once it scrolls away, the dial pinned bottom-right shows the date every action will stamp (owner only).
 
-## Palette
+## Type
 
-| Token | Hex | Use |
-| :--- | :--- | :--- |
-| cream | `#efe3cf` | Page background |
-| paper | `#f8f0e2` | Cards, catalog card, share card surface |
-| ink | `#2a1d16` | Body text, headings |
-| brass | `#b8832f` | Accents, focus rings, seals, primary highlights |
-| oxblood | `#6f2a24` | Destructive actions, dnf status, strong emphasis |
-| moss | `#4a5d3a` | Finished status, positive indicators |
-| wood | `#5a3a22` | Shelf boards, primary dark surfaces |
-| wood (deep) | `#3b2415` | Shelf shadow, header, footer |
-| leather | `#8a5a36` | Secondary buttons, borders on paper |
-| rust | `#b4532a` | Reading status, charts, warm highlights |
+| Role | Face | Use |
+|---|---|---|
+| Dater | Big Shoulders Display 700–900 | the dater, section heads, big figures, stamps |
+| UI | Archivo 400–800, width 75–100% | titles (800 at 80% width), body, buttons |
+| Typewriter | IBM Plex Mono 400–700 | labels, metadata, dates, counts, notes on the record |
 
-Guidance:
+All three are self-hosted in `static/fonts` (latin subset, covers English, Spanish and Galician). Fraunces and EB Garamond stay only for the share-card PNG.
 
-- Text on cream or paper is always ink (or wood for secondary text), never
-  brass or leather.
-- Brass is for accents and large or bold elements; do not use it for small body
-  text on cream.
-- Status colours: reading is rust, finished is moss, to-read is brass, paused is
-  leather, abandoned is oxblood. Never rely on colour alone; pair it with a
-  label or icon.
+## Components (`static/src/app.css`)
 
-## Typography
+- `.top`, `.nav`, `.mark`: header. `.nav .add` is the one filled nav item.
+- `.dater` / `.band`: the rubber-band dater. `.dial`: the pinned dial.
+- `.sec-head`: ruled section head with a huge uppercase dater-face title, `.count` and `.aside`.
+- `.stamp.{started|finished|returned}.{xs|sm|med|big}`: ink stamps; use the `stamp()` macro.
+- `.pocket` > `.card` + `.pocket-sleeve`: a book that is out (reading). `.ruler` for progress, `.slip` for where stamps land and the page log, `.stepper` for page input.
+- `.drawer.{reading|finished|tbr|paused|dnf|plain}` > `.drawer-tab` + `.drawer-body`: a status drawer. `.drawer-body.grid6` for a cover grid.
+- `.rec` (and `.rec.row`): one book as an index card; use the `rec()` macro.
+- `.cover`: 2:3 ruled cover with a typed placeholder behind it; use the `cover()` macro.
+- `.tally`, `.segbar`, `.yearsel`, `.months` / `.month[data-d]` / `.days` / `.dot`: stats and calendar.
+- `.btn-stamp` (filled, primary), `.btn-line` (outline), `.field` / `.input` / `.hint`: forms.
+- `.flash`, `.toast`, `.modal`: feedback. Confirmations use `data-confirm="finish|delete"` with `data-action` and `data-title`.
 
-| Role | Font | Notes |
-| :--- | :--- | :--- |
-| Display | **Fraunces** | Headings, shelf labels, big numbers in stats. Its soft, wonky serifs give the "old press" character. |
-| Text | **EB Garamond** | Body copy, descriptions, notes, forms |
-
-Rules:
-
-- Body text is at least 16px; the smallest text anywhere (captions, badges,
-  chart labels) is 12px.
-- Use Fraunces for anything that is a title or a number you want to be
-  remembered; use EB Garamond for everything you read.
-- Keep line length around 60 to 75 characters for descriptions and notes.
-- Small caps and letter-spacing are fine for catalog-card labels, but keep them
-  at 12px or larger.
-
-## Components
-
-- **Shelf**: a row of covers resting on a wooden plank (wood to deep wood
-  gradient with a subtle top highlight and a cast shadow). Covers keep their
-  aspect ratio; missing covers fall back to a leather-bound placeholder with the
-  title set in Fraunces.
-- **Book cover tile**: lifts slightly on hover and focus; a thin progress bar
-  under reading books shows `current_page / page_count`.
-- **Catalog card**: paper surface, ruled lines, brass top rule, field labels in
-  small caps. Used for the book detail page.
-- **Share card**: a self-contained paper card with an ex libris border, cover,
-  title, author, rating and two or three key metrics. Designed to look right as
-  a screenshot at a fixed aspect ratio.
-- **Status badge**: pill with the status colour, always with a text label.
-- **Stat tile**: Fraunces number over a small EB Garamond caption; the year
-  selector sits above the stats grid.
-- **Buttons**: primary is wood with cream text, secondary is outlined leather,
-  destructive is oxblood. All have visible hover, focus and disabled states.
-- **Forms**: paper inputs with a leather border and a brass focus ring; labels
-  are always visible, never placeholder-only.
-- **Charts**: warm single-hue or rust, brass and moss series on paper; every
-  chart has a text equivalent (a number, table or label).
+Page-specific CSS goes in `static/src/pages/<page>.css`, inside `@layer components`.
 
 ## Accessibility
 
-- **Text size**: nothing below 12px; body text 16px or larger.
-- **Contrast**: text and meaningful UI meet WCAG AA (4.5:1 for normal text, 3:1
-  for large text and component boundaries). Ink on cream or paper and cream on
-  wood or oxblood pass comfortably; check any new pairing before using it.
-- **Touch targets**: interactive elements are at least 44 by 44px, including
-  icon-only buttons and the controls on book tiles.
-- **Focus**: every interactive element has a visible focus ring (brass, 2px or
-  thicker, with offset). Focus is never removed without a replacement.
-- **Reduced motion**: decorative motion (hover lifts, page transitions, card
-  entrance) is disabled under `prefers-reduced-motion: reduce`. No information is
-  conveyed by motion alone.
-- **Colour independence**: status, rating and chart meaning is always repeated in
-  text.
-- **Semantics**: images of covers have alt text with the title; headings follow a
-  logical order; forms have associated labels.
+WCAG 2.1 AA: 3px type-colour focus ring with a slip halo, 44px minimum targets, `prefers-reduced-motion` turns off every transition and the stamp "thunk". Stamps and colour never carry meaning alone: every stamp has its word (STARTED, FINISHED) and every stock has its status label.
+
+## Voice
+
+Library circulation words, said plainly: "out now", "stamped finished", "returned unread", "filed under to read", "withdraw". No pastiche of old-fashioned prose.
+
+## Build
+
+`npm ci && npm run build` (or `make css`) compiles `static/src/app.css` to `static/dist/app.css`, which is git-ignored. Docker images build it in an `assets` stage. `make css-watch` rebuilds while editing templates.

@@ -77,7 +77,7 @@ extend.
 | Web | Flask 3, blueprints, Jinja2 templates |
 | Persistence | SQLite via Flask-SQLAlchemy, Alembic migrations (Flask-Migrate) |
 | Auth / safety | Flask-Login, Flask-WTF (CSRF), Flask-Limiter |
-| Styling | Tailwind CSS (CDN) with a small custom design system |
+| Styling | Tailwind CSS v4, compiled with the Tailwind CLI, plus a small component layer |
 | External data | Google Books API via `requests`, in-memory TTL cache |
 | Serving | gunicorn (single worker), Docker, Docker Compose |
 | Quality | pytest, pytest-cov, ruff, GitHub Actions |
@@ -99,12 +99,12 @@ bottleneck for a personal library; the entrypoint runs `flask db upgrade` before
 gunicorn starts for the same reason. If you ever need more throughput, move to
 PostgreSQL first and raise the worker count second.
 
-**Why Tailwind via CDN.** There is no Node toolchain in the project, so a fresh
-clone runs with `uv` alone and the templates stay the single source of truth for
-styling. The trade-off is real: the browser downloads and runs the Tailwind
-runtime, you need network access to the CDN, and you cannot purge unused CSS.
-For a self-hosted app with a handful of pages that is an acceptable price; a
-compiled stylesheet is the natural upgrade if the app is ever served at scale.
+**Why a compiled stylesheet.** The design tokens and components live in
+`static/src/app.css` and are compiled with the Tailwind CLI into
+`static/dist/app.css`, which only ships the classes the templates use. Node is
+needed to build CSS, not to run the app: Docker images build it in a separate
+stage and the runtime image stays Python-only. There is still no JavaScript
+bundling; the few interactive bits are plain scripts in `static/js`.
 The design tokens are documented in [docs/DESIGN.md](docs/DESIGN.md).
 
 More detail, including the request flow and data model, is in
@@ -130,15 +130,16 @@ push to `master`.
 
 ### Local development
 
-Requires [uv](https://github.com/astral-sh/uv) and Python 3.13.
+Requires [uv](https://github.com/astral-sh/uv), Python 3.13 and Node 22 (for the CSS build).
 
 ```bash
 cp .env.example .env
 make install run
 ```
 
-Without `make`, the equivalent commands are `uv sync --group dev`,
-`uv run python app.py` and `uv run pytest`.
+Without `make`, the equivalent commands are `uv sync --group dev`, `npm ci`,
+`npm run build`, `uv run python app.py` and `uv run pytest`. While editing
+templates or styles, `make css-watch` rebuilds the stylesheet on save.
 
 Then open `http://localhost:5000` and sign in with the librarian credentials
 from your `.env` (defaults: `admin` / `alexandria`).
@@ -147,8 +148,10 @@ from your `.env` (defaults: `admin` / `alexandria`).
 
 | Target | What it does |
 | :--- | :--- |
-| `make install` | Install runtime and dev dependencies with `uv sync --group dev` |
-| `make run` | Start the development server |
+| `make install` | Install Python dependencies (`uv sync --group dev`) and the CSS toolchain (`npm ci`) |
+| `make css` | Build `static/dist/app.css` |
+| `make css-watch` | Rebuild the CSS on every change |
+| `make run` | Build the CSS and start the development server |
 | `make test` | Run the pytest suite |
 | `make lint` | Run ruff |
 | `make cov` | Run the tests with a coverage report |

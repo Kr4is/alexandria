@@ -1,0 +1,13 @@
+{
+  "name": "alexandria-frontend",
+  "private": true,
+  "description": "CSS build for the Alexandria templates (Tailwind CLI). No JS bundling.",
+  "scripts": {
+    "build": "tailwindcss -i static/src/app.css -o static/dist/app.css --minify",
+    "watch": "tailwindcss -i static/src/app.css -o static/dist/app.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.5",
+    "tailwindcss": "4.3.5"
+  }
+}

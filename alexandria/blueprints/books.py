@@ -47,11 +47,11 @@ def set_status(book_id):
     changed = book_service.quick_set_status(book, new_status)
     if changed:
         labels = {
-            BookStatus.READING: 'Now reading — enjoy the voyage.',
-            BookStatus.FINISHED: 'Chapter closed — voyage recorded as complete.',
-            BookStatus.TBR: 'Added to your wish list.',
+            BookStatus.READING: 'Checked out: now reading.',
+            BookStatus.FINISHED: 'Stamped finished.',
+            BookStatus.TBR: 'Filed under to read.',
             BookStatus.PAUSED: 'Reading paused.',
-            BookStatus.DNF: 'Volume set aside.',
+            BookStatus.DNF: 'Returned unread.',
         }
         flash(labels.get(new_status, 'Status updated.'), 'success')
     return redirect(request.referrer or url_for('main.index'))
@@ -78,7 +78,7 @@ def shelf(name):
 def finish_book(book_id):
     book = book_service.get_book_or_404(book_id)
     book_service.mark_book_finished(book)
-    flash('Chapter closed — voyage recorded as complete.', 'success')
+    flash('Stamped finished.', 'success')
     return redirect(url_for('main.index'))
 
 
@@ -101,5 +101,5 @@ def edit_book(book_id):
 def delete_book(book_id):
     book = book_service.get_book_or_404(book_id)
     book_service.delete_book(book)
-    flash('Volume removed from the archives.', 'success')
+    flash('Withdrawn from the library.', 'success')
     return redirect(url_for('main.index'))
