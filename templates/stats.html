@@ -34,9 +34,9 @@
 <div class="st-share">
     <p class="label m-0">{{ label }}</p>
     <div class="segbar" aria-hidden="true">
-        {% for name, n in rows %}<span style="flex: {{ n }}" title="{{ name }} {{ n }}">{{ name }} {{ n }}</span>{% endfor %}
+        {% for name, n in rows %}<span data-i="{{ loop.index0 % 5 }}" style="flex: {{ n }}" title="{{ name }} {{ n }}">{{ name }} {{ n }}</span>{% endfor %}
     </div>
-    <p class="st-key">{% for name, n in rows %}<span>{{ name }} <b>{{ n }}</b>{% if total %} <small>({{ (n / total * 100)|round|int }}%)</small>{% endif %}</span>{% endfor %}</p>
+    <p class="st-key">{% for name, n in rows %}<span data-i="{{ loop.index0 % 5 }}">{{ name }} <b>{{ n }}</b>{% if total %} <small>({{ (n / total * 100)|round|int }}%)</small>{% endif %}</span>{% endfor %}</p>
 </div>
 {% endmacro %}
 
