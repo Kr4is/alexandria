@@ -192,3 +192,67 @@ def test_metrics_tbr_has_no_reading_time():
     )
     m = share_card.build_metrics(book)
     assert m['days'] is None and m['pages_per_day'] is None
+
+
+# --- the Circulation Record card -----------------------------------------------
+
+def _book(**kw):
+    defaults = dict(id=7, title='A Book', authors='A. Writer', page_count=300, published_year='2001',
+                    date_added=datetime.now(UTC) - timedelta(days=30), date_started=None, date_finished=None,
+                    average_rating=4.0, personal_rating=None, status='tbr')
+    defaults.update(kw)
+    return SimpleNamespace(**defaults)
+
+
+@pytest.mark.parametrize('status,expected', [
+    ('finished', ('FINISHED', share_card.INK_FINISHED)),
+    ('reading', ('STARTED', share_card.INK_STARTED)),
+    ('dnf', ('RETURNED UNREAD', share_card.INK_RETURNED)),
+    ('tbr', None),
+    ('paused', None),
+])
+def test_stamp_follows_the_event_and_its_ink(status, expected):
+    now = datetime.now(UTC)
+    book = _book(status=status, date_finished=now - timedelta(days=2), date_started=now - timedelta(days=9))
+    stamp = share_card._stamp_for(book, share_card.build_metrics(book))
+    assert (stamp[0], stamp[2]) == expected if expected else stamp is None
+
+
+def test_reading_card_carries_the_start_date():
+    book = _book(status='reading', date_started=datetime(2026, 10, 6, tzinfo=UTC))
+    stamp = share_card._stamp_for(book, share_card.build_metrics(book))
+    assert stamp[1] == '06 OCT 2026'
+
+
+@pytest.mark.parametrize('status', ['reading', 'finished', 'tbr', 'paused', 'dnf'])
+def test_every_status_renders_at_card_size(status):
+    now = datetime.now(UTC)
+    book = _book(status=status, personal_rating=4.5, date_finished=now, date_started=now - timedelta(days=5),
+                 title='A very long title that has to wrap onto several lines and still fit the card')
+    png, used = share_card.render_card(book, cover=Image.new('RGB', (300, 450), 'navy'))
+    assert used is True
+    assert Image.open(io.BytesIO(png)).size == (1200, 630)
+
+
+def test_card_without_cover_draws_the_typed_index_card(monkeypatch):
+    monkeypatch.setattr(share_card, 'fetch_cover', lambda book: None)
+    png, used = share_card.render_card(_book())
+    assert used is False
+    assert Image.open(io.BytesIO(png)).size == (1200, 630)
+
+
+def test_google_image_not_available_is_not_used_as_a_cover(monkeypatch):
+    monkeypatch.setattr(share_card.requests, 'get', lambda *a, **k: _response(_png((128, 170))))
+    book = SimpleNamespace(id=None, remote_cover_url='https://books.google.com/books/content?id=x',
+                           cover_fallback_url=None)
+    assert share_card.fetch_cover(book) is None
+
+
+def test_etag_depends_on_the_card_design_inputs(app, make_book):
+    now = datetime.now(UTC)
+    book = make_book(title='Reading', status='reading', date_started=now - timedelta(days=3))
+    with app.app_context():
+        b = db.session.get(Book, book)
+        first = share_card.card_etag(b, share_card.build_metrics(b))
+        b.date_started = now - timedelta(days=8)
+        assert share_card.card_etag(b, share_card.build_metrics(b)) != first

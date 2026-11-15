@@ -29,7 +29,7 @@ The source of truth for tokens and components is `static/src/app.css`. Shared Ji
 | UI | Archivo 400–800, width 75–100% | titles (800 at 80% width), body, buttons |
 | Typewriter | IBM Plex Mono 400–700 | labels, metadata, dates, counts, notes on the record |
 
-All three are self-hosted in `static/fonts` (latin subset, covers English, Spanish and Galician). Fraunces and EB Garamond stay only for the share-card PNG.
+All three are self-hosted in `static/fonts` (latin subset, covers English, Spanish and Galician). The share-card PNG (`alexandria/services/share_card.py`) draws with the same three faces, read straight from these files.
 
 ## Components (`static/src/app.css`)
 
@@ -58,3 +58,7 @@ Library circulation words, said plainly: "out now", "stamped finished", "returne
 ## Build
 
 `npm ci && npm run build` (or `make css`) compiles `static/src/app.css` to `static/dist/app.css`, which is git-ignored. Docker images build it in an `assets` stage. `make css-watch` rebuilds while editing templates.
+
+## Share card (1200x630 PNG)
+
+Rendered with Pillow in the same system: the whole card is the book's status stock colour inside a 6px ruled frame on paper, a header band (`CIRCULATION RECORD`, status tag, call number), the cover lifted with a hard offset shadow, the title in Archivo 800 at 80% width (as large as fits), the rating as figures, and a date slip with the numbers in Big Shoulders digits split by rules. The rubber stamp (`FINISHED` red, `STARTED` violet, `RETURNED UNREAD` black) lands on the slip's top edge; to-read and paused books carry no stamp. A book with no usable cover gets a typed index card. Covers pass through the same placeholder check as the rest of the app, so a provider's "image not available" is never shown.
