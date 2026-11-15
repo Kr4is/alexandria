@@ -33,7 +33,7 @@
 
     <header class="top">
         <div class="wrap">
-            <a class="mark" href="{{ url_for('main.index') }}">{{ config['APP_NAME'] }}</a>
+            <a class="mark" href="{{ url_for('main.index') }}"><img src="{{ url_for('static', filename='logo.svg') }}" alt="" width="44" height="38">{{ config['APP_NAME'] }}</a>
             <nav class="nav" aria-label="Main">
                 <a href="{{ url_for('main.index') }}" {% if ep == 'main.index' %}aria-current="page"{% endif %}>Collection</a>
                 <a href="{{ url_for('main.stats') }}" {% if ep == 'main.stats' %}aria-current="page"{% endif %}>Stats</a>

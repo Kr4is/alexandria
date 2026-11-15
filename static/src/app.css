@@ -101,6 +101,7 @@
   .wrap { max-width: 1440px; margin-inline: auto; padding-inline: var(--gutter); }
   .mono { font-family: var(--font-mono); }
   .kicker { font-family: var(--font-mono); font-weight: 600; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; }
+  .mark img { width: 44px; height: auto; flex: none; }
   .label { font-family: var(--font-mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
 
   .skip-link {
@@ -112,7 +113,7 @@
   /* ---------- header ---------- */
   .top { border-bottom: var(--rule); background: var(--color-paper); position: sticky; top: 0; z-index: 40; }
   .top .wrap { display: flex; align-items: center; gap: 24px; min-height: 68px; flex-wrap: wrap; }
-  .mark { font-family: var(--font-dater); font-weight: 900; font-size: 28px; letter-spacing: .06em; text-decoration: none; text-transform: uppercase; }
+  .mark { display: inline-flex; align-items: center; gap: 10px; font-family: var(--font-dater); font-weight: 900; font-size: 28px; letter-spacing: .06em; text-decoration: none; text-transform: uppercase; }
   .nav { display: flex; gap: 4px; margin-left: auto; flex-wrap: wrap; align-items: center; }
   .nav a, .nav button {
     display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; text-decoration: none;
