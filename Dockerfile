@@ -1,6 +1,6 @@
 # Use a standard Python image
 # Front-end: compile static/src/app.css (Tailwind CLI) into static/dist/app.css
-FROM node:22-bookworm-slim AS assets
+FROM node:26-bookworm-slim AS assets
 WORKDIR /src
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
