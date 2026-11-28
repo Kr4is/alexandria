@@ -331,8 +331,9 @@ def build_stats_context(
         month = b.date_finished.strftime('%B')
         months[month] = months.get(month, 0) + 1
 
-    # Completion = finished share of every book I actually started (to-be-read excluded).
-    started = [b for b in all_books if b.status != BookStatus.TBR]
+    # Completion = finished share of every book I actually started (to-be-read and
+    # read-before books excluded: neither was tracked here).
+    started = [b for b in all_books if b.status not in BookStatus.UNDATED]
     completion_rate = int(safe_div(len(all_finished), len(started)) * 100)
 
     started_books = [b for b in all_books if start_date(b)]

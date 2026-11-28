@@ -5,8 +5,10 @@
     ('reading', 'Reading now'),
     ('tbr', 'To read'),
     ('paused', 'Paused'),
+    ('past', 'Read before'),
 ] %}
-{# 'finished' is deliberately not offered: add_book_from_api_details does not set date_finished. #}
+{# 'finished' is deliberately not offered: add_book_from_api_details does not set date_finished.
+   'Read before' is the home for books read in the past, with no dates. #}
 
 {% block title %}Accessions · {{ config['APP_NAME'] }}{% endblock %}
 
@@ -27,6 +29,9 @@
         </div>
         <button type="submit" class="btn-stamp">Search</button>
     </form>
+    {% if current_user.is_authenticated %}
+    <p class="scan-link"><a class="btn-line" href="{{ url_for('books.scan') }}">Scan a barcode</a><span class="hint">Point your camera at the ISBN on the back cover.</span></p>
+    {% endif %}
 
     {% if search_api_error %}
     <div class="acc-alert" role="alert">

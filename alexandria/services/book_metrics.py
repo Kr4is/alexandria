@@ -35,7 +35,7 @@ def book_metrics(book, library_avg_pages=None, now=None):
     started_at = getattr(book, 'date_started', None) or getattr(book, 'date_added', None)
 
     days_reading = None
-    if started_at and status != BookStatus.TBR:
+    if started_at and status not in BookStatus.UNDATED:
         end = as_utc(finished_at) if finished_at else now
         days_reading = max((end - as_utc(started_at)).days, 0)
 

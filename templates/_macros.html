@@ -1,7 +1,7 @@
 {#- Shared pieces of the Circulation Record look (see docs/DESIGN.md).
     Import with: {% from '_macros.html' import cover, stamp, rec, status_tag, stars, dater with context %} -#}
 
-{% set STATUS_LABELS = {'reading': 'Reading', 'finished': 'Finished', 'tbr': 'To read', 'paused': 'Paused', 'dnf': 'Did not finish'} %}
+{% set STATUS_LABELS = {'reading': 'Reading', 'finished': 'Finished', 'tbr': 'To read', 'paused': 'Paused', 'dnf': 'Did not finish', 'past': 'Read before'} %}
 
 {#- A cover that silently fails over: 1x1 pixels and Google's 128x170
     "image not available" card count as missing. The fallback provider is
@@ -91,5 +91,6 @@
     <span><i class="chip stock-tbr"></i>To read</span>
     <span><i class="chip stock-paused"></i>Paused</span>
     <span><i class="chip stock-dnf"></i>Did not finish</span>
+    <span><i class="chip stock-past"></i>Read before</span>
 </div>
 {% endmacro %}

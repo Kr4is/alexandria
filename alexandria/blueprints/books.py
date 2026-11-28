@@ -1,9 +1,11 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import login_required
 
 from alexandria.constants import BookStatus
+from alexandria.extensions import limiter
 from alexandria.integrations.google_books import SearchOutcome, get_book_details, search_books
 from alexandria.services import books as book_service
+from alexandria.services.isbn_lookup import lookup_by_isbn
 
 bp = Blueprint('books', __name__)
 
@@ -39,6 +41,73 @@ def add_book(google_books_id):
     return redirect(url_for('main.index'))
 
 
+@bp.route('/scan')
+@login_required
+def scan():
+    return render_template('scan.html')
+
+
+@bp.route('/scan/lookup')
+@login_required
+@limiter.limit('60 per minute')
+def scan_lookup():
+    """HTML fragment for one scanned ISBN: the book found, or why there is none."""
+    isbn, details = lookup_by_isbn(request.args.get('isbn', ''))
+    existing = book_service.find_existing(isbn, details)
+    return render_template('_scan_result.html', isbn=isbn, book=details, existing=existing)
+
+
+@bp.route('/add/isbn/<isbn>', methods=['POST'])
+@login_required
+def add_by_isbn(isbn):
+    isbn, details = lookup_by_isbn(isbn)
+    if not details:
+        flash('Could not find that ISBN in the archives.', 'error')
+        return redirect(url_for('books.scan'))
+    existing = book_service.find_existing(isbn, details)
+    if existing:
+        flash('This volume is already in your collection.', 'info')
+        return redirect(url_for('main.book_detail', book_id=existing.id))
+    status = request.form.get('status', BookStatus.READING)
+    book = book_service.add_book_from_api_details(details, status=status)
+    flash('Volume added to your collection.', 'success')
+    return redirect(url_for('main.book_detail', book_id=book.id))
+
+
+BATCH_STATUSES = (BookStatus.TBR, BookStatus.PAST, BookStatus.READING, BookStatus.PAUSED)
+
+
+@bp.route('/scan/batch', methods=['POST'])
+@login_required
+@limiter.limit('120 per minute')
+def scan_batch():
+    """Batch scanning: add one ISBN straight away and report what happened as JSON."""
+    raw = request.form.get('isbn', '')
+    isbn, details = lookup_by_isbn(raw)
+    if not isbn:
+        return jsonify(result='invalid', isbn=raw[:20])
+    existing = book_service.find_existing(isbn, details)
+    if existing:
+        return jsonify(result='owned', isbn=isbn, book_id=existing.id,
+                       title=existing.title, authors=existing.authors or '',
+                       url=url_for('main.book_detail', book_id=existing.id))
+    if not details:
+        return jsonify(result='missing', isbn=isbn)
+    status = request.form.get('status', BookStatus.TBR)
+    if status not in BATCH_STATUSES:
+        status = BookStatus.TBR
+    book = book_service.add_book_from_api_details(details, status=status)
+    return jsonify(result='added', isbn=isbn, book_id=book.id, title=book.title,
+                   authors=book.authors or '', url=url_for('main.book_detail', book_id=book.id))
+
+
+@bp.route('/scan/batch/<int:book_id>/undo', methods=['POST'])
+@login_required
+def scan_batch_undo(book_id):
+    book_service.delete_book(book_service.get_book_or_404(book_id))
+    return jsonify(result='undone', book_id=book_id)
+
+
 @bp.route('/status/<int:book_id>', methods=['POST'])
 @login_required
 def set_status(book_id):
@@ -52,6 +121,7 @@ def set_status(book_id):
             BookStatus.TBR: 'Filed under to read.',
             BookStatus.PAUSED: 'Reading paused.',
             BookStatus.DNF: 'Returned unread.',
+            BookStatus.PAST: 'Filed as read before.',
         }
         flash(labels.get(new_status, 'Status updated.'), 'success')
     return redirect(request.referrer or url_for('main.index'))

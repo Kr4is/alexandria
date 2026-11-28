@@ -19,6 +19,7 @@ from alexandria.services.stats import build_stats_context
 bp = Blueprint('main', __name__)
 
 # Personal fields only the librarian sees in exports.
+PAST_PREVIEW = 12  # 'Read before' can run to hundreds after an import; the rest sits behind ?status=past
 PRIVATE_EXPORT_FIELDS = ('personal_notes', 'shelves', 'current_page')
 
 
@@ -98,6 +99,7 @@ def index():
         tbr=groups['tbr'],
         paused=groups['paused'],
         dnf=groups['dnf'],
+        past=groups['past'][:PAST_PREVIEW],
         finished_total=groups['_finished_total'],
         finished_pages=groups['_finished_pages'],
         this_year=groups['this_year'],

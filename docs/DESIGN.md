@@ -14,6 +14,7 @@ The source of truth for tokens and components is `static/src/app.css`. Shared Ji
    | To read | `stock-tbr` | blue `#8fc1e6` |
    | Paused | `stock-paused` | salmon `#f29a85` |
    | Did not finish | `stock-dnf` | plain slip `#fbfaf6` |
+   | Read before | `stock-past` | manila `#d6c4a0` |
 2. **Ink = event.** Violet `ink-started` (#5236a8) means started, red `ink-finished` (#d8232a) means finished, black `ink-returned` means returned unread. Inks are never ornament, links or buttons.
 3. **One tonal ramp.** Density goes through five steps, `d0` to `d4`, from paper to 58% black. Busy months, hover fills and secondary grounds use these and nothing else.
 4. **Ground and type.** Paper `#f4f1ea`, slip `#fffdf8`, type `#141414`. Rules are 2px solid type. Corners are square or a 6–8px card radius; no soft shadows. The only shadow is a hard offset in type colour for a lifted record.
@@ -46,6 +47,10 @@ All three are self-hosted in `static/fonts` (latin subset, covers English, Spani
 - `.flash`, `.toast`, `.modal`: feedback. Confirmations use `data-confirm="finish|delete"` with `data-action` and `data-title`.
 
 Page-specific CSS goes in `static/src/pages/<page>.css`, inside `@layer components`.
+
+## Scanner (`/scan`)
+
+Reached from the "Scan a barcode" `.btn-line` under the search form on `/search` (owner only); it adds no nav item. A ruled 2px viewfinder (`.scan-view`) with a slip-coloured frame and a sweep line (static under reduced motion). Every state is a `.scan-note` slip with a dater-face heading: camera off, starting, looking, blocked, no camera, needs HTTPS, not an ISBN, not in the archives. A hit renders the same `.acc-slip` as search results with the status stock picker and "Accession"; a book already owned shows "In your library". Photo (`capture="environment"`) and typed ISBN are always offered, so the camera is never the only way in. Batch mode (a `.scan-toggle` checkbox) keeps the camera running and posts each ISBN to `/scan/batch`; every outcome lands in the `.scan-log` list as a row (Filed, In your library, Not found, Withdrawn) with an Undo or Try again button. Those outcome tags use the tonal ramp, never the status stocks. The status picker defaults to Read before (books read in the past, with no dates: they stay out of the calendar and the stats and never get a stamp). Reading now would stamp today as the start date on every book. Behaviour lives in `static/js/scan.js`; the camera is released on stop, on hide and on a successful read.
 
 ## Accessibility
 

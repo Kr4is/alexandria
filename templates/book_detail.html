@@ -10,7 +10,7 @@
 {% set status = book.status %}
 {% set call_no = 'MS-' ~ book.id %}
 {#- Started: the stamp uses date_started; older records only have date_added. -#}
-{% set started = book.date_started or (book.date_added if status != 'tbr' else None) %}
+{% set started = book.date_started or (book.date_added if status not in ('tbr', 'past') else None) %}
 {% set shelf_names = (book.shelves or '').split(',')|map('trim')|select|list %}
 {% set categories = book.categories|categories_list if book.categories else [] %}
 {% set has_pages = book.current_page and book.page_count %}
@@ -135,7 +135,7 @@
                 {% if status == 'finished' and book.date_finished %}{{ stamp('finished', book.date_finished, 'big', rotate=3, class='bk-stamp land') }}{% endif %}
                 {% if status == 'dnf' %}{{ stamp('returned', None, 'big', rotate=-2, class='bk-stamp land') }}{% endif %}
                 {% if not started and status != 'dnf' and not (status == 'finished' and book.date_finished) %}
-                <p class="bk-unstamped">{% if status == 'tbr' %}Filed under to read. Not out yet.{% else %}No dates stamped yet.{% endif %}</p>
+                <p class="bk-unstamped">{% if status == 'tbr' %}Filed under to read. Not out yet.{% elif status == 'past' %}Read before this record began. No dates, no stamps.{% else %}No dates stamped yet.{% endif %}</p>
                 {% endif %}
             </div>
             <ol class="bk-lines">
@@ -175,7 +175,7 @@
         {% elif status == 'dnf' %}
             {{ status_btn('reading', 'Check out again', 'btn-stamp') }}
             {{ status_btn('tbr', 'File under to read') }}
-        {% elif status == 'finished' %}
+        {% elif status in ('finished', 'past') %}
             {{ status_btn('reading', 'Read again') }}
         {% endif %}
 

@@ -81,7 +81,7 @@ Paginated, filterable list of books.
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
-| `status` | string | One of `reading`, `finished`, `tbr`, `paused`, `dnf` |
+| `status` | string | One of `reading`, `finished`, `tbr`, `paused`, `dnf`, `past`. `past` is "Read before": read in the past, never tracked, no dates |
 | `q` | string | Free-text search over title and authors |
 | `category` | string | Filter by category |
 | `year` | `YYYY` | Books finished in that year |
@@ -194,7 +194,7 @@ Shared by every endpoint that returns books.
 | `published_year` | string | Publication year |
 | `language` | string | Language code |
 | `average_rating` | number | Public rating |
-| `status` | string | `reading`, `finished`, `tbr`, `paused` or `dnf` |
+| `status` | string | `reading`, `finished`, `tbr`, `paused`, `dnf` or `past` |
 | `date_added` | string | `YYYY-MM-DD` |
 | `date_started` | string | `YYYY-MM-DD` or `null` |
 | `date_finished` | string | `YYYY-MM-DD` or `null` |

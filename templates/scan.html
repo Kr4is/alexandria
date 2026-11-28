@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Scan a barcode · {{ config['APP_NAME'] }}{% endblock %}
+
+{% block content %}
+<section class="acc scan" data-scan data-lookup-url="{{ url_for('books.scan_lookup') }}"
+    data-wasm="{{ url_for('static', filename='js/vendor/zxing_reader.wasm') }}"
+    data-batch-url="{{ url_for('books.scan_batch') }}"
+    data-undo-url="{{ url_for('books.scan_batch_undo', book_id=0) }}">
+    <header class="sec-head">
+        <h1>Scan</h1>
+        <span class="count">Read the barcode on the back cover</span>
+    </header>
+
+    <div class="scan-desk">
+        <div class="scan-view" data-view hidden>
+            <video class="scan-video" data-video playsinline muted></video>
+            <div class="scan-frame" aria-hidden="true"></div>
+        </div>
+
+        <div class="scan-note" data-note>
+            <h2 data-note-title>Camera off</h2>
+            <p data-note-body>Allow camera access when your browser asks. Nothing is recorded or uploaded: the barcode is read on this device.</p>
+        </div>
+
+        <div class="scan-actions">
+            <button type="button" class="btn-stamp" data-start>Start camera</button>
+            <button type="button" class="btn-line" data-stop hidden>Stop camera</button>
+            <label class="btn-line scan-photo" data-photo-wrap>
+                Take a photo instead
+                <input type="file" accept="image/*" capture="environment" data-photo class="sr-only">
+            </label>
+        </div>
+
+        <p class="sr-only" role="status" aria-live="polite" data-live></p>
+
+        <div class="scan-batch">
+            <label class="scan-toggle">
+                <input type="checkbox" data-batch>
+                <span><b>Batch mode</b> Keep the camera open and file each book the moment it is read.</span>
+            </label>
+            <div class="scan-batch-opts" data-batch-opts hidden>
+                <fieldset class="stock-pick compact">
+                    <legend class="label">File every scan under</legend>
+                    {% for value, label in [('past', 'Read before'), ('tbr', 'To read'), ('reading', 'Reading now'), ('paused', 'Paused')] %}
+                    <label>
+                        <input type="radio" name="batch-status" value="{{ value }}"{% if loop.first %} checked{% endif %}>
+                        <span class="stock-{{ value }}">{{ label }}</span>
+                    </label>
+                    {% endfor %}
+                </fieldset>
+                <p class="hint">Read before is for books you read in the past: no dates, so your stats and calendar stay true. Reading now stamps today as the start date on every book.</p>
+            </div>
+        </div>
+    </div>
+
+    <section class="scan-log" data-log hidden aria-labelledby="scan-log-title">
+        <header class="scan-log-head">
+            <h2 id="scan-log-title">Filed this session</h2>
+            <p class="mono" data-log-summary></p>
+        </header>
+        <ol class="scan-log-list" role="list" data-log-list></ol>
+    </section>
+
+    <form class="acc-desk scan-manual" data-manual action="{{ url_for('books.scan_lookup') }}" method="GET">
+        <div class="field">
+            <label for="scan-isbn">Or type the ISBN</label>
+            <input id="scan-isbn" name="isbn" class="input acc-q mono" inputmode="numeric" autocomplete="off"
+                placeholder="978 0 441 01359 3" aria-describedby="scan-isbn-hint">
+            <p class="hint" id="scan-isbn-hint">10 or 13 digits. Hyphens are fine.</p>
+        </div>
+        <button type="submit" class="btn-stamp">Look up</button>
+    </form>
+
+    <div class="scan-result" data-result aria-live="polite"></div>
+</section>
+{% endblock %}
+
+{% block head %}
+<script src="{{ url_for('static', filename='js/vendor/barcode-detector.js') }}" defer></script>
+<script src="{{ url_for('static', filename='js/scan.js') }}" defer></script>
+{% endblock %}

@@ -33,7 +33,7 @@ extend.
 - **Catalog card**: each book has a detail page styled as a library catalog
   card, with description, categories, your private notes and rating.
 - **Formats**: mark a book as paper, ebook or audiobook.
-- **Status workflow**: `reading`, `finished`, `tbr`, `paused`, `dnf`, with quick
+- **Status workflow**: `reading`, `finished`, `tbr`, `paused`, `dnf`, plus `past` ("Read before": books you read long ago and never tracked, kept out of the calendar and stats), with quick
   status changes and a one-click "finish" action.
 - **Calendar**: a month view of what you started and finished.
 
@@ -50,6 +50,15 @@ extend.
 
 - **Archive search**: find and add books through Google Books (cached, with an
   optional API key).
+- **Barcode scanner**: `/scan` reads the ISBN barcode on a book's back cover
+  with the phone camera (or from a photo, or a typed ISBN), looks it up in Google
+  Books with Open Library as a fallback, and files it in one tap. The decoder is
+  vendored in `static/js/vendor` (no CDN) and runs on the device. Browsers only
+  open the camera on HTTPS pages (or `localhost`), so serve Alexandria over HTTPS
+  to scan from a phone; the photo and typed-ISBN options work without it.
+  **Batch mode** keeps the camera open and files every book the moment it is read
+  (by default as "Read before", so a first import of books you already read adds no
+  dates), with a running list, duplicate detection and an undo for each.
 - **External links**: jump from any book to Open Library, Goodreads, WorldCat
   and others, built from its ISBN or title.
 - **Public JSON API**: read-only endpoints for books, per-book metrics, stats and
