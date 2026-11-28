@@ -1,6 +1,6 @@
 {#- One scanned ISBN, rendered as a fragment and dropped into the scan page's [data-result]. -#}
 {% from '_macros.html' import cover %}
-{% set add_statuses = [('reading', 'Reading now'), ('tbr', 'To read'), ('paused', 'Paused')] %}
+{% set add_statuses = [('reading', 'Reading now'), ('tbr', 'To read'), ('paused', 'Paused'), ('past', 'Read before')] %}
 {% if not isbn %}
 <div class="scan-note" data-state="invalid">
     <h2>That is not an ISBN</h2>

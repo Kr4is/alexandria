@@ -47,6 +47,7 @@
   --color-stock-tbr: #8fc1e6;
   --color-stock-paused: #f29a85;
   --color-stock-dnf: #fbfaf6;
+  --color-stock-past: #d6c4a0;
 
   /* inks, one per event */
   --color-ink-started: #5236a8;
@@ -203,6 +204,7 @@
   .stock-tbr { background: var(--color-stock-tbr); }
   .stock-paused { background: var(--color-stock-paused); }
   .stock-dnf { background: var(--color-stock-dnf); }
+  .stock-past { background: var(--color-stock-past); }
   .status-tag {
     display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--color-type); border-radius: 2px;
     padding: 2px 8px; font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
@@ -307,6 +309,7 @@
   .drawer.tbr .drawer-tab, .drawer.tbr .drawer-body { background: var(--color-stock-tbr); }
   .drawer.paused .drawer-tab, .drawer.paused .drawer-body { background: var(--color-stock-paused); }
   .drawer.dnf .drawer-tab, .drawer.dnf .drawer-body { background: var(--color-stock-dnf); }
+  .drawer.past .drawer-tab, .drawer.past .drawer-body { background: var(--color-stock-past); }
   .drawer.plain .drawer-tab, .drawer.plain .drawer-body { background: var(--color-slip); }
   .drawer .drawer-body.grid6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .drawer.third .drawer-body { grid-template-columns: 1fr; }

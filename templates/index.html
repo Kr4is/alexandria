@@ -3,7 +3,7 @@
 
 {% set auth = current_user.is_authenticated %}
 {% set FORMATS = {'paper': 'Paper', 'ebook': 'Ebook', 'audiobook': 'Audiobook'} %}
-{% set STATUS_ORDER = ['reading', 'finished', 'tbr', 'paused', 'dnf'] %}
+{% set STATUS_ORDER = ['reading', 'finished', 'tbr', 'paused', 'dnf', 'past'] %}
 
 {% block title %}Collection · {{ config['APP_NAME'] }}{% endblock %}
 
@@ -31,7 +31,7 @@
     </button>
     <div class="ix-detail held-only" id="{{ did }}">
         <dl class="ledger">
-            {% if book.status == 'tbr' %}
+            {% if book.status in ('tbr', 'past') %}
             <dt>Added</dt><dd>{{ d(book.date_added) }}</dd>
             {% elif book.date_started %}
             <dt>Started</dt><dd>{{ d(book.date_started) }}</dd>
@@ -57,6 +57,8 @@
             {{ status_post(book, 'dnf', 'Return unread') }}
             {% elif book.status == 'dnf' %}
             {{ status_post(book, 'reading', 'Resume') }}
+            {% elif book.status == 'past' %}
+            {{ status_post(book, 'reading', 'Read again') }}
             {% elif book.status == 'reading' %}
             <button type="button" class="btn-line" data-confirm="finish"
                 data-action="{{ url_for('books.finish_book', book_id=book.id) }}" data-title="{{ book.title }}">Stamp finished</button>
@@ -380,6 +382,18 @@
             </div>
         </section>
         {% endfor %}
+
+        {% if past and page == 1 %}
+        <section class="drawer past" aria-labelledby="ix-dr-past">
+            <h3 class="drawer-tab" id="ix-dr-past">Read before <span class="n" aria-label="{{ counts.past }} books">{{ counts.past }}</span></h3>
+            <div class="drawer-body grid6 ix-body">
+                {% for book in past %}{{ filed(book) }}{% endfor %}
+            </div>
+            {% if counts.past > past|length %}
+            <div class="drawer-foot"><a href="{{ url_for('main.index', status='past') }}">All {{ counts.past }} books read before &rarr;</a></div>
+            {% endif %}
+        </section>
+        {% endif %}
     </div>
     {% endif %}
 </section>

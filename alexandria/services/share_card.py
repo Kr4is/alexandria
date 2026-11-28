@@ -30,6 +30,7 @@ STOCK = {
     'tbr': '#8fc1e6',
     'paused': '#f29a85',
     'dnf': '#fbfaf6',
+    'past': '#d6c4a0',
 }
 INK_STARTED = '#5236a8'
 INK_FINISHED = '#d8232a'
@@ -41,6 +42,7 @@ STATUS_LABELS = {
     'tbr': 'On the list',
     'paused': 'Paused',
     'dnf': 'Set aside',
+    'past': 'Read before',
 }
 
 COVER_TIMEOUT = (2, 4)

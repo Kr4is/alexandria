@@ -74,7 +74,7 @@ def add_by_isbn(isbn):
     return redirect(url_for('main.book_detail', book_id=book.id))
 
 
-BATCH_STATUSES = (BookStatus.TBR, BookStatus.READING, BookStatus.PAUSED)
+BATCH_STATUSES = (BookStatus.TBR, BookStatus.PAST, BookStatus.READING, BookStatus.PAUSED)
 
 
 @bp.route('/scan/batch', methods=['POST'])
@@ -121,6 +121,7 @@ def set_status(book_id):
             BookStatus.TBR: 'Filed under to read.',
             BookStatus.PAUSED: 'Reading paused.',
             BookStatus.DNF: 'Returned unread.',
+            BookStatus.PAST: 'Filed as read before.',
         }
         flash(labels.get(new_status, 'Status updated.'), 'success')
     return redirect(request.referrer or url_for('main.index'))

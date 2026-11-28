@@ -181,3 +181,16 @@ def test_batch_undo_withdraws_the_book(monkeypatch, app, auth_client):
     with app.app_context():
         assert Book.query.count() == 0
     assert auth_client.post('/scan/batch/999/undo').status_code == 404
+
+
+def test_batch_can_file_as_read_before(monkeypatch, app, auth_client):
+    _google(monkeypatch, [DUNE])
+    assert _batch(auth_client, status='past')['result'] == 'added'
+    with app.app_context():
+        book = Book.query.one()
+        assert book.status == 'past' and book.date_started is None
+
+
+def test_scan_page_defaults_to_read_before_in_batch(auth_client):
+    html = auth_client.get('/scan').get_data(as_text=True)
+    assert html.index('value="past" checked') < html.index('value="tbr"')

@@ -22,7 +22,7 @@
   .stock-pick input:checked + span::before { background: radial-gradient(circle, var(--color-type) 0 4px, var(--color-slip) 5px); }
   .stock-pick input:checked + span b { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 3px; }
   .stock-pick input:focus-visible + span { outline: 3px solid var(--color-type); outline-offset: 4px; }
-  .stock-pick.compact { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .stock-pick.compact { grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: 8px; }
   .stock-pick.compact span { min-height: 48px; padding: 6px 8px 6px 34px; font-weight: 700; font-stretch: 85%; text-transform: uppercase; font-size: 14px; line-height: 1.1; }
   .stock-pick.compact span::before { left: 9px; width: 16px; height: 16px; margin-top: -8px; }
 

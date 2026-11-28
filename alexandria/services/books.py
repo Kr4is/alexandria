@@ -212,7 +212,7 @@ def _clamp_page(book: Book, page: int) -> int:
 def _apply_status_progress(book: Book, old_status: str | None, new_status: str) -> None:
     """Keep date_started / current_page coherent when a book changes status."""
     if new_status == BookStatus.READING:
-        if old_status == BookStatus.FINISHED:  # re-reading: a fresh start
+        if old_status in (BookStatus.FINISHED, BookStatus.PAST):  # re-reading: a fresh start
             book.current_page = None
             book.date_started = datetime.now(UTC)
         elif not book.date_started:
@@ -220,7 +220,7 @@ def _apply_status_progress(book: Book, old_status: str | None, new_status: str) 
     elif new_status == BookStatus.FINISHED:
         if book.page_count:
             book.current_page = book.page_count
-    elif new_status == BookStatus.TBR:  # not started: forget any progress
+    elif new_status in BookStatus.UNDATED:  # not started here: forget any progress
         book.current_page = None
         book.date_started = None
     elif old_status == BookStatus.FINISHED:  # reopened as paused / DNF

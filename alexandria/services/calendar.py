@@ -14,10 +14,11 @@ def _event_for(book: Book, kind: str) -> dict:
 
 def start_date(book):
     """The day a book was started: ``date_started``, else ``date_added`` for a
-    book that has left the to-read pile. A wish-list book has not been started."""
+    book that has left the to-read pile. A wish-list book has not been started,
+    and a book read before Alexandria has no honest start date at all."""
     if book.date_started:
         return book.date_started
-    if book.status != BookStatus.TBR:
+    if book.status not in BookStatus.UNDATED:
         return book.date_added
     return None
 
