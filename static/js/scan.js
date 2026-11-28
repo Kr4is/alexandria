@@ -3,6 +3,8 @@
  * Reads the EAN-13 on a book's back cover (an ISBN-13 starting 978/979) from the
  * camera, a photo or typed text, asks the server for the matching book and drops
  * the returned fragment into [data-result]. The server validates the ISBN again.
+ * Batch mode keeps the camera open and files each book straight away (see enqueue()),
+ * listing every outcome with an undo for the ones it added.
  * Uses the native BarcodeDetector when the browser has it, otherwise the vendored
  * barcode-detector ponyfill (zxing-wasm, served from /static, no CDN).
  */
@@ -19,6 +21,13 @@
     var photoWrap = $('[data-photo-wrap]'), photoInput = $('[data-photo]');
     var manual = $('[data-manual]'), result = $('[data-result]'), live = $('[data-live]');
     var lookupUrl = root.getAttribute('data-lookup-url');
+    var batchUrl = root.getAttribute('data-batch-url');
+    var undoUrl = root.getAttribute('data-undo-url');
+    var batchBox = $('[data-batch]'), batchOpts = $('[data-batch-opts]');
+    var log = $('[data-log]'), logList = $('[data-log-list]'), logSummary = $('[data-log-summary]');
+    var csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+    var seen = {};                       // ISBNs already handled this session: never sent twice
+    var counts = { added: 0, owned: 0, missing: 0 };
 
     var stream = null, detector = null, scanning = false, busy = false;
 
@@ -89,6 +98,116 @@
             .then(function () { busy = false; result.removeAttribute('aria-busy'); });
     }
 
+    /* ---------- batch mode ---------- */
+    function batchStatus() {
+        var picked = root.querySelector('input[name="batch-status"]:checked');
+        return picked ? picked.value : 'tbr';
+    }
+
+    function renderSummary() {
+        var parts = [counts.added + ' added'];
+        if (counts.owned) parts.push(counts.owned + ' already in library');
+        if (counts.missing) parts.push(counts.missing + ' not found');
+        logSummary.textContent = parts.join(' · ');
+    }
+
+    function el(tag, cls, text) {
+        var node = document.createElement(tag);
+        if (cls) node.className = cls;
+        if (text) node.textContent = text;
+        return node;
+    }
+
+    function paintRow(row, out) {
+        // Titles come from outside APIs: only ever set as text, never as HTML.
+        row.textContent = '';
+        row.setAttribute('data-result', out.result);
+        var tag = { added: 'Filed', owned: 'In your library', missing: 'Not found', invalid: 'Not an ISBN' }[out.result] || 'Error';
+        row.appendChild(el('span', 'status-tag scan-tag scan-tag-' + out.result, tag));
+        var body = el('div', 'scan-row-body');
+        if (out.title) {
+            var title = out.url ? el('a', 'scan-row-title', out.title) : el('span', 'scan-row-title', out.title);
+            if (out.url) title.href = out.url;
+            body.appendChild(title);
+            if (out.authors) body.appendChild(el('span', 'scan-row-by', out.authors));
+        } else {
+            body.appendChild(el('span', 'scan-row-title', out.message || 'ISBN ' + out.isbn));
+        }
+        body.appendChild(el('span', 'scan-row-isbn mono', 'ISBN ' + out.isbn));
+        row.appendChild(body);
+        var actions = el('div', 'scan-row-actions');
+        if (out.result === 'added') {
+            var undo = el('button', 'btn-line scan-undo', 'Undo');
+            undo.type = 'button';
+            undo.setAttribute('aria-label', 'Undo: withdraw ' + out.title);
+            undo.addEventListener('click', function () { undoAdd(row, out, undo); });
+            actions.appendChild(undo);
+        } else if (out.result === 'missing') {
+            var retry = el('button', 'btn-line scan-undo', 'Try again');
+            retry.type = 'button';
+            retry.addEventListener('click', function () { delete seen[out.isbn]; row.remove(); counts.missing--; renderSummary(); enqueue(out.isbn); });
+            actions.appendChild(retry);
+        }
+        row.appendChild(actions);
+    }
+
+    function undoAdd(row, out, button) {
+        button.disabled = true;
+        fetch(undoUrl.replace('/0/', '/' + out.book_id + '/'), {
+            method: 'POST', credentials: 'same-origin', headers: { 'X-CSRFToken': csrf }
+        }).then(function (res) {
+            if (!res.ok) throw new Error('http-' + res.status);
+            counts.added--; delete seen[out.isbn]; renderSummary();
+            row.setAttribute('data-result', 'undone');
+            row.textContent = '';
+            row.appendChild(el('span', 'status-tag scan-tag', 'Withdrawn'));
+            row.appendChild(el('div', 'scan-row-body', out.title + ' was removed. Scan it again to re-file it.'));
+            announce(out.title + ' withdrawn.');
+        }).catch(function () { button.disabled = false; announce('Could not undo. Try again.'); });
+    }
+
+    function enqueue(raw) {
+        var isbn = String(raw).replace(/[\s-]/g, '');
+        if (seen[isbn]) return;
+        seen[isbn] = true;
+        log.hidden = false;
+        var row = el('li', 'scan-row');
+        row.setAttribute('data-result', 'pending');
+        row.appendChild(el('span', 'status-tag scan-tag', 'Reading…'));
+        row.appendChild(el('div', 'scan-row-body', 'ISBN ' + isbn));
+        logList.insertBefore(row, logList.firstChild);
+        var body = new URLSearchParams({ isbn: isbn, status: batchStatus() });
+        fetch(batchUrl, { method: 'POST', credentials: 'same-origin', headers: { 'X-CSRFToken': csrf }, body: body })
+            .then(function (res) {
+                if (res.redirected || res.status === 401) { window.location.reload(); return null; }
+                if (!res.ok) throw new Error('http-' + res.status);
+                return res.json();
+            })
+            .then(function (out) {
+                if (!out) return;
+                if (out.result === 'added') counts.added++;
+                else if (out.result === 'owned') counts.owned++;
+                else if (out.result === 'missing') counts.missing++;
+                if (out.result === 'invalid') delete seen[isbn];
+                paintRow(row, out);
+                renderSummary();
+                announce({ added: 'Filed ' + out.title, owned: out.title + ' is already in your library',
+                    missing: 'ISBN ' + isbn + ' not found', invalid: 'Not an ISBN' }[out.result] || 'Done');
+            })
+            .catch(function () {
+                delete seen[isbn];
+                paintRow(row, { result: 'error', isbn: isbn, message: 'The archives did not answer. Scan it again.' });
+            });
+    }
+
+    batchBox.addEventListener('change', function () {
+        batchOpts.hidden = !batchBox.checked;
+        result.innerHTML = '';
+        startBtn.textContent = 'Start camera';
+        if (stream) note(batchBox.checked ? 'Batch mode' : 'Looking for a barcode',
+            batchBox.checked ? 'Keep scanning: each book is filed as soon as it is read.' : 'Hold the barcode on the back cover inside the frame. The one starting 978 or 979.', false);
+    });
+
     /* ---------- camera ---------- */
     function stop() {
         scanning = false;
@@ -102,10 +221,16 @@
 
     function tick() {
         if (!scanning) return;
-        if (busy || video.readyState < 2) { setTimeout(tick, 200); return; }
+        if ((busy && !batchBox.checked) || video.readyState < 2) { setTimeout(tick, 200); return; }
         detector.detect(video).then(function (codes) {
             var isbn = firstIsbn(codes);
             if (!isbn || !scanning) { setTimeout(tick, 150); return; }
+            if (batchBox.checked) {
+                if (!seen[isbn] && navigator.vibrate) navigator.vibrate(60);
+                enqueue(isbn);
+                setTimeout(tick, 600);
+                return;
+            }
             if (navigator.vibrate) navigator.vibrate(60);
             stop();
             startBtn.textContent = 'Scan another';
@@ -146,7 +271,8 @@
             startBtn.hidden = true;
             stopBtn.hidden = false;
             stopBtn.focus();
-            note('Looking for a barcode', 'Hold the barcode on the back cover inside the frame. The one starting 978 or 979.', false);
+            if (batchBox.checked) note('Batch mode', 'Keep scanning: each book is filed as soon as it is read.', false);
+            else note('Looking for a barcode', 'Hold the barcode on the back cover inside the frame. The one starting 978 or 979.', false);
             announce('Camera on. Looking for a barcode.');
             scanning = true;
             tick();
@@ -193,7 +319,7 @@
                 return;
             }
             note('Barcode read', 'ISBN ' + isbn, false);
-            lookup(isbn);
+            if (batchBox.checked) enqueue(isbn); else lookup(isbn);
         }).catch(function () {
             note('Could not read that photo', 'Try another photo, or type the ISBN.', false);
         });
@@ -204,6 +330,6 @@
         e.preventDefault();
         var value = manual.elements.isbn.value.trim();
         if (!value) return;
-        lookup(value);
+        if (batchBox.checked) { enqueue(value); manual.elements.isbn.value = ''; } else lookup(value);
     });
 })();

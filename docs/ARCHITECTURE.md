@@ -87,7 +87,7 @@ runs the startup bootstrap.
 | :--- | :--- |
 | `main` | Home (shelves), book detail, stats, calendar, CSV/JSON export |
 | `auth` | Login (rate limited to 10 POSTs per minute) and logout |
-| `books` | Google Books search, the barcode scanner (`/scan`, `/scan/lookup`, `POST /add/isbn/<isbn>`, resolved by `services/isbn_lookup.py`: Google Books, then Open Library) and the mutating actions: add, change status, finish, edit, delete. Login required. |
+| `books` | Google Books search, the barcode scanner (`/scan`, `/scan/lookup`, `POST /add/isbn/<isbn>`, plus `POST /scan/batch` and `/scan/batch/<id>/undo` for batch mode, resolved by `services/isbn_lookup.py`: Google Books, then Open Library) and the mutating actions: add, change status, finish, edit, delete. Login required. |
 | `api` | Read-only JSON API, optionally protected by `READING_API_TOKEN`. See [API.md](API.md). |
 | `share` | Renders the shareable card for a book from its metrics |
 

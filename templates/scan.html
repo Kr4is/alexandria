@@ -4,7 +4,9 @@
 
 {% block content %}
 <section class="acc scan" data-scan data-lookup-url="{{ url_for('books.scan_lookup') }}"
-    data-wasm="{{ url_for('static', filename='js/vendor/zxing_reader.wasm') }}">
+    data-wasm="{{ url_for('static', filename='js/vendor/zxing_reader.wasm') }}"
+    data-batch-url="{{ url_for('books.scan_batch') }}"
+    data-undo-url="{{ url_for('books.scan_batch_undo', book_id=0) }}">
     <header class="sec-head">
         <h1>Scan</h1>
         <span class="count">Read the barcode on the back cover</span>
@@ -31,7 +33,34 @@
         </div>
 
         <p class="sr-only" role="status" aria-live="polite" data-live></p>
+
+        <div class="scan-batch">
+            <label class="scan-toggle">
+                <input type="checkbox" data-batch>
+                <span><b>Batch mode</b> Keep the camera open and file each book the moment it is read.</span>
+            </label>
+            <div class="scan-batch-opts" data-batch-opts hidden>
+                <fieldset class="stock-pick compact">
+                    <legend class="label">File every scan under</legend>
+                    {% for value, label in [('tbr', 'To read'), ('reading', 'Reading now'), ('paused', 'Paused')] %}
+                    <label>
+                        <input type="radio" name="batch-status" value="{{ value }}"{% if loop.first %} checked{% endif %}>
+                        <span class="stock-{{ value }}">{{ label }}</span>
+                    </label>
+                    {% endfor %}
+                </fieldset>
+                <p class="hint">Reading now stamps today as the start date on every book. For a first import, To read keeps your calendar clean.</p>
+            </div>
+        </div>
     </div>
+
+    <section class="scan-log" data-log hidden aria-labelledby="scan-log-title">
+        <header class="scan-log-head">
+            <h2 id="scan-log-title">Filed this session</h2>
+            <p class="mono" data-log-summary></p>
+        </header>
+        <ol class="scan-log-list" role="list" data-log-list></ol>
+    </section>
 
     <form class="acc-desk scan-manual" data-manual action="{{ url_for('books.scan_lookup') }}" method="GET">
         <div class="field">

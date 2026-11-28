@@ -167,6 +167,14 @@ def book_by_isbn(isbn: str):
     return Book.query.filter_by(isbn=isbn).first()
 
 
+def find_existing(isbn: str | None, details: dict | None):
+    """The library's copy of a looked-up book, matched by ISBN then by Google Books id."""
+    existing = book_by_isbn(isbn) if isbn else None
+    if not existing and details and details.get('google_books_id'):
+        existing = book_by_google_id(details['google_books_id'])
+    return existing
+
+
 def add_book_from_api_details(details: dict, status: str = BookStatus.READING) -> Book:
     if status not in BookStatus.ALL:
         status = BookStatus.READING

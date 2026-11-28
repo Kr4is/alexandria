@@ -56,6 +56,9 @@ extend.
   vendored in `static/js/vendor` (no CDN) and runs on the device. Browsers only
   open the camera on HTTPS pages (or `localhost`), so serve Alexandria over HTTPS
   to scan from a phone; the photo and typed-ISBN options work without it.
+  **Batch mode** keeps the camera open and files every book the moment it is read
+  (default status To read, so a first import does not stamp today as the start date
+  on every book), with a running list, duplicate detection and an undo for each.
 - **External links**: jump from any book to Open Library, Goodreads, WorldCat
   and others, built from its ISBN or title.
 - **Public JSON API**: read-only endpoints for books, per-book metrics, stats and

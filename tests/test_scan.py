@@ -122,3 +122,62 @@ def test_add_by_isbn_rejects_bad_isbn(app, auth_client):
     assert res.status_code == 302 and res.headers['Location'].endswith('/scan')
     with app.app_context():
         assert Book.query.count() == 0
+
+
+def _batch(client, isbn='9780441013593', **data):
+    return client.post('/scan/batch', data={'isbn': isbn, **data}).get_json()
+
+
+def test_batch_needs_login(client):
+    assert client.post('/scan/batch', data={'isbn': '9780441013593'}).status_code == 302
+    assert client.post('/scan/batch/1/undo').status_code == 302
+
+
+def test_batch_adds_as_to_read_by_default(monkeypatch, app, auth_client):
+    _google(monkeypatch, [DUNE])
+    out = _batch(auth_client)
+    assert out['result'] == 'added' and out['title'] == 'Dune' and out['url'] == f"/book/{out['book_id']}"
+    with app.app_context():
+        book = Book.query.one()
+        assert book.status == 'tbr' and book.date_started is None
+
+
+def test_batch_uses_chosen_status(monkeypatch, app, auth_client):
+    _google(monkeypatch, [DUNE])
+    _batch(auth_client, status='paused')
+    with app.app_context():
+        assert Book.query.one().status == 'paused'
+
+
+def test_batch_rejects_unlisted_status(monkeypatch, app, auth_client):
+    _google(monkeypatch, [DUNE])
+    _batch(auth_client, status='finished')
+    with app.app_context():
+        assert Book.query.one().status == 'tbr'
+
+
+def test_batch_reports_owned_without_duplicating(monkeypatch, app, auth_client):
+    _google(monkeypatch, [DUNE])
+    assert _batch(auth_client)['result'] == 'added'
+    again = _batch(auth_client)
+    assert again['result'] == 'owned' and again['title'] == 'Dune'
+    with app.app_context():
+        assert Book.query.count() == 1
+
+
+def test_batch_missing_and_invalid(monkeypatch, app, auth_client):
+    _google(monkeypatch, [])
+    _open_library(monkeypatch, None)
+    assert _batch(auth_client)['result'] == 'missing'
+    assert _batch(auth_client, isbn='1234567890123')['result'] == 'invalid'
+    with app.app_context():
+        assert Book.query.count() == 0
+
+
+def test_batch_undo_withdraws_the_book(monkeypatch, app, auth_client):
+    _google(monkeypatch, [DUNE])
+    book_id = _batch(auth_client)['book_id']
+    assert auth_client.post(f'/scan/batch/{book_id}/undo').get_json()['result'] == 'undone'
+    with app.app_context():
+        assert Book.query.count() == 0
+    assert auth_client.post('/scan/batch/999/undo').status_code == 404
