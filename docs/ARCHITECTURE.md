@@ -180,7 +180,7 @@ Alexandria is single-user today.
 | :--- | :--- |
 | `google_books_id` | Unique when present; books can also be created without one |
 | `title`, `authors`, `isbn`, `description`, `page_count`, `categories`, `published_year`, `language`, `average_rating`, `thumbnail` | Metadata fetched from Google Books. `categories` is a comma-separated string. `average_rating` is the public rating. |
-| `status` | One of `reading`, `finished`, `tbr`, `paused`, `dnf` (see `alexandria/constants.py`) |
+| `status` | One of `reading`, `finished`, `tbr`, `paused`, `dnf`, `past` (see `alexandria/constants.py`) |
 | `date_added` | When the book entered the library (UTC) |
 | `date_started` | When reading began; used for days reading and pages per day |
 | `date_finished` | Set when the book is finished; drives the calendar and per-year stats |
