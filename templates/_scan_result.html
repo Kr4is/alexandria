@@ -1,0 +1,52 @@
+{#- One scanned ISBN, rendered as a fragment and dropped into the scan page's [data-result]. -#}
+{% from '_macros.html' import cover %}
+{% set add_statuses = [('reading', 'Reading now'), ('tbr', 'To read'), ('paused', 'Paused')] %}
+{% if not isbn %}
+<div class="scan-note" data-state="invalid">
+    <h2>That is not an ISBN</h2>
+    <p>Book barcodes start with 978 or 979. Hold the barcode on the back cover inside the frame, or type the ISBN below.</p>
+</div>
+{% elif not book %}
+<div class="scan-note" data-state="missing">
+    <h2>Not in the archives</h2>
+    <p class="mono">ISBN {{ isbn }}</p>
+    <p>Neither Google Books nor Open Library knows this edition. Try searching by title instead.</p>
+    <a class="btn-line" href="{{ url_for('books.search') }}">Search by title</a>
+</div>
+{% else %}
+<article class="acc-slip scan-slip{{ ' owned' if existing }}" data-state="{{ 'owned' if existing else 'found' }}">
+    <div class="acc-top">
+        {{ cover(book, class='acc-cover') }}
+        <div class="acc-body">
+            {% if existing %}<span class="status-tag acc-owned">In your library</span>{% endif %}
+            <h2 class="acc-title">{{ book.title }}</h2>
+            <p class="acc-by">{{ book.authors or 'Author unknown' }}</p>
+            <dl class="ledger acc-ledger">
+                <dt>ISBN</dt><dd>{{ isbn }}</dd>
+                {% if book.published_year %}<dt>Year</dt><dd>{{ book.published_year }}</dd>{% endif %}
+                {% if book.page_count %}<dt>Pages</dt><dd>{{ book.page_count }}</dd>{% endif %}
+            </dl>
+        </div>
+    </div>
+    <div class="acc-foot">
+        {% if existing %}
+        <a class="btn-line" href="{{ url_for('main.book_detail', book_id=existing.id) }}">Open its record &rarr;</a>
+        <span class="hint">Already catalogued, no need to add it again.</span>
+        {% else %}
+        <form action="{{ url_for('books.add_by_isbn', isbn=isbn) }}" method="POST" class="js-submit-loading acc-add">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <fieldset class="stock-pick compact">
+                <legend class="label">File it under</legend>
+                {% for value, label in add_statuses %}
+                <label>
+                    <input type="radio" name="status" value="{{ value }}"{% if loop.first %} checked{% endif %}>
+                    <span class="stock-{{ value }}">{{ label }}</span>
+                </label>
+                {% endfor %}
+            </fieldset>
+            <button type="submit" class="btn-stamp">Accession</button>
+        </form>
+        {% endif %}
+    </div>
+</article>
+{% endif %}

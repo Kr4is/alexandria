@@ -72,7 +72,7 @@ flowchart TD
 | Blueprints | `alexandria/blueprints/` | Parse the request, call services, render a template or return JSON. No business rules. |
 | Services | `alexandria/services/` | Filtering and pagination, status transitions, stats aggregation, calendar events, per-book metrics, share-card data. Pure Python over models. |
 | Models | `alexandria/models.py` | SQLAlchemy `User` and `Book`, plus `to_dict()` and cover URL helpers. |
-| Integrations | `alexandria/integrations/` | The Google Books client and its caches. |
+| Integrations | `alexandria/integrations/` | The Google Books client and its caches; the Open Library ISBN lookup (fallback for scans). |
 | Utilities | `alexandria/utils/` | Cover URL resolution (Google Books and Open Library fallbacks), language names, HTML stripping. |
 | Bootstrap | `alexandria/bootstrap.py` | Instance folder, librarian user, optional metadata refresh at startup. |
 
@@ -87,7 +87,7 @@ runs the startup bootstrap.
 | :--- | :--- |
 | `main` | Home (shelves), book detail, stats, calendar, CSV/JSON export |
 | `auth` | Login (rate limited to 10 POSTs per minute) and logout |
-| `books` | Google Books search and the mutating actions: add, change status, finish, edit, delete. Login required. |
+| `books` | Google Books search, the barcode scanner (`/scan`, `/scan/lookup`, `POST /add/isbn/<isbn>`, resolved by `services/isbn_lookup.py`: Google Books, then Open Library) and the mutating actions: add, change status, finish, edit, delete. Login required. |
 | `api` | Read-only JSON API, optionally protected by `READING_API_TOKEN`. See [API.md](API.md). |
 | `share` | Renders the shareable card for a book from its metrics |
 

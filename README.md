@@ -50,6 +50,12 @@ extend.
 
 - **Archive search**: find and add books through Google Books (cached, with an
   optional API key).
+- **Barcode scanner**: `/scan` reads the ISBN barcode on a book's back cover
+  with the phone camera (or from a photo, or a typed ISBN), looks it up in Google
+  Books with Open Library as a fallback, and files it in one tap. The decoder is
+  vendored in `static/js/vendor` (no CDN) and runs on the device. Browsers only
+  open the camera on HTTPS pages (or `localhost`), so serve Alexandria over HTTPS
+  to scan from a phone; the photo and typed-ISBN options work without it.
 - **External links**: jump from any book to Open Library, Goodreads, WorldCat
   and others, built from its ISBN or title.
 - **Public JSON API**: read-only endpoints for books, per-book metrics, stats and

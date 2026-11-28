@@ -47,6 +47,10 @@ All three are self-hosted in `static/fonts` (latin subset, covers English, Spani
 
 Page-specific CSS goes in `static/src/pages/<page>.css`, inside `@layer components`.
 
+## Scanner (`/scan`)
+
+Reached from the "Scan a barcode" `.btn-line` under the search form on `/search` (owner only); it adds no nav item. A ruled 2px viewfinder (`.scan-view`) with a slip-coloured frame and a sweep line (static under reduced motion). Every state is a `.scan-note` slip with a dater-face heading: camera off, starting, looking, blocked, no camera, needs HTTPS, not an ISBN, not in the archives. A hit renders the same `.acc-slip` as search results with the status stock picker and "Accession"; a book already owned shows "In your library". Photo (`capture="environment"`) and typed ISBN are always offered, so the camera is never the only way in. Behaviour lives in `static/js/scan.js`; the camera is released on stop, on hide and on a successful read.
+
 ## Accessibility
 
 WCAG 2.1 AA: 3px type-colour focus ring with a slip halo, 44px minimum targets, `prefers-reduced-motion` turns off every transition and the stamp "thunk". Stamps and colour never carry meaning alone: every stamp has its word (STARTED, FINISHED) and every stock has its status label.

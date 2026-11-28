@@ -162,3 +162,41 @@
     .stock-pick input:hover + span, .stock-pick input:checked + span { transform: none; }
   }
 }
+
+@layer components {
+  /* ---------- scan (barcode) ---------- */
+  .scan-link { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: 14px 0 0; }
+  .scan-desk { display: grid; gap: 14px; max-width: 880px; }
+  .scan-view {
+    position: relative; background: var(--color-type); border: var(--rule);
+    aspect-ratio: 4 / 3; max-height: 70vh; overflow: hidden;
+  }
+  .scan-video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .scan-frame {
+    position: absolute; inset: 22% 8%; border: 3px solid var(--color-slip);
+    box-shadow: 0 0 0 100vmax rgb(20 20 20 / .45);
+  }
+  .scan-frame::after {
+    content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 3px; background: var(--color-slip);
+    animation: scan-sweep 2.2s ease-in-out infinite alternate;
+  }
+  @keyframes scan-sweep { from { top: 8%; } to { top: 92%; } }
+  .scan-note { background: var(--color-slip); border: var(--rule); padding: 14px 16px; display: grid; gap: 6px; }
+  .scan [hidden] { display: none !important; }
+  .scan-note h2 { margin: 0; font-family: var(--font-dater); font-weight: 900; font-size: 30px; line-height: .95; text-transform: uppercase; }
+  .scan-note p { margin: 0; }
+  .scan-note .btn-line { justify-self: start; }
+  .scan-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+  .scan-photo { cursor: pointer; display: inline-flex; align-items: center; }
+  .scan-photo:focus-within { outline: 3px solid var(--color-type); outline-offset: 2px; }
+  .scan-manual { margin-top: 22px; }
+  .scan-result { max-width: 880px; margin-top: 22px; }
+  .scan-slip { display: block; }
+  @media (max-width: 560px) {
+    .scan-actions .btn-stamp, .scan-actions .btn-line { flex: 1 1 100%; justify-content: center; text-align: center; }
+    .scan-view { aspect-ratio: 3 / 4; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scan-frame::after { animation: none; top: 50%; }
+  }
+}

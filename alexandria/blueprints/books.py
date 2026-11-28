@@ -2,8 +2,10 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import login_required
 
 from alexandria.constants import BookStatus
+from alexandria.extensions import limiter
 from alexandria.integrations.google_books import SearchOutcome, get_book_details, search_books
 from alexandria.services import books as book_service
+from alexandria.services.isbn_lookup import lookup_by_isbn
 
 bp = Blueprint('books', __name__)
 
@@ -37,6 +39,43 @@ def add_book(google_books_id):
         return redirect(url_for('main.book_detail', book_id=book.id))
     flash('Could not retrieve volume details from the archives.', 'error')
     return redirect(url_for('main.index'))
+
+
+@bp.route('/scan')
+@login_required
+def scan():
+    return render_template('scan.html')
+
+
+@bp.route('/scan/lookup')
+@login_required
+@limiter.limit('60 per minute')
+def scan_lookup():
+    """HTML fragment for one scanned ISBN: the book found, or why there is none."""
+    isbn, details = lookup_by_isbn(request.args.get('isbn', ''))
+    existing = book_service.book_by_isbn(isbn) if isbn else None
+    if not existing and details and details.get('google_books_id'):
+        existing = book_service.book_by_google_id(details['google_books_id'])
+    return render_template('_scan_result.html', isbn=isbn, book=details, existing=existing)
+
+
+@bp.route('/add/isbn/<isbn>', methods=['POST'])
+@login_required
+def add_by_isbn(isbn):
+    isbn, details = lookup_by_isbn(isbn)
+    if not details:
+        flash('Could not find that ISBN in the archives.', 'error')
+        return redirect(url_for('books.scan'))
+    existing = book_service.book_by_isbn(isbn)
+    if not existing and details.get('google_books_id'):
+        existing = book_service.book_by_google_id(details['google_books_id'])
+    if existing:
+        flash('This volume is already in your collection.', 'info')
+        return redirect(url_for('main.book_detail', book_id=existing.id))
+    status = request.form.get('status', BookStatus.READING)
+    book = book_service.add_book_from_api_details(details, status=status)
+    flash('Volume added to your collection.', 'success')
+    return redirect(url_for('main.book_detail', book_id=book.id))
 
 
 @bp.route('/status/<int:book_id>', methods=['POST'])

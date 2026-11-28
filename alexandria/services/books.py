@@ -163,11 +163,15 @@ def book_by_google_id(google_books_id: str):
     return Book.query.filter_by(google_books_id=google_books_id).first()
 
 
+def book_by_isbn(isbn: str):
+    return Book.query.filter_by(isbn=isbn).first()
+
+
 def add_book_from_api_details(details: dict, status: str = BookStatus.READING) -> Book:
     if status not in BookStatus.ALL:
         status = BookStatus.READING
     new_book = Book(
-        google_books_id=details['google_books_id'],
+        google_books_id=details.get('google_books_id'),
         title=details['title'],
         authors=details['authors'],
         thumbnail=details['thumbnail'],
